@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package lightning.wire;
+
+import "lightning/wire/types.proto";
+
+message Init {
+  uint32 type = 1 [(bits) = 16];
+  PascalString globalfeatures = 2;
+  PascalString localfeatures = 3;
+}

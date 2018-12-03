@@ -1,0 +1,13 @@
+/.bundle/
+/.vscode
+/.yardoc
+/Gemfile.lock
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+seed.dat
+/.byebug_history
+vendor

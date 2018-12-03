@@ -1,0 +1,4 @@
+---
+:checks_remove: []
+:checks_add:
+- :rubocop

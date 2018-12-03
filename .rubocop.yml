@@ -1,0 +1,19 @@
+RSpec/ExampleWording:
+  Enabled: false
+
+Style/LambdaCall:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 140
+
+RaiseArgs:
+  EnforcedStyle: compact
+
+Layout/SpaceAroundOperators:
+  Exclude:
+    - lib/lightning/transactions/scripts.rb
+
+Layout/ExtraSpacing:
+  Exclude:
+    - lib/lightning/transactions/scripts.rb
