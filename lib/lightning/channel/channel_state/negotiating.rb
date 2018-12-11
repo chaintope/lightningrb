@@ -51,7 +51,7 @@ module Lightning
         end
 
         def handle_mutual_close(tx, data, closing_signed: nil)
-          context.blockchain << WatchConfirmed[channel, tx.txid, context.node_params.min_depth_blocks]
+          context.blockchain << WatchConfirmed[channel, tx.txid.rhex, context.node_params.min_depth_blocks]
           context.spv.broadcast(tx)
           closing_signed = data[:closing_tx_proposed].last.local_closing_signed
           new_data = DataClosing[

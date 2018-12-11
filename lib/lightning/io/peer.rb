@@ -165,7 +165,7 @@ module Lightning
         private
 
         def create_new_channel(context, transport, funder, funding_satoshis)
-          default_final_script_pubkey = Helpers.final_script_pubkey(context.wallet)
+          default_final_script_pubkey = Helpers.final_script_pubkey(context)
           local_param = make_channel_params(context, default_final_script_pubkey, funder, funding_satoshis)
           forwarder = Forwarder.spawn(:forwarder)
           channel_context = ChannelContext.new(context, transport, forwarder, remote_node_id)

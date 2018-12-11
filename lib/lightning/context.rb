@@ -8,9 +8,9 @@ module Lightning
 
     def initialize(spv)
       @node_params = Lightning::NodeParams.new
-      @wallet = Lightning::Blockchain::Wallet.new(spv)
+      @wallet = Lightning::Blockchain::Wallet.new(spv, self)
       @spv = spv
-      @blockchain = Lightning::Blockchain::Watcher.spawn(:watcher, wallet)
+      @blockchain = Lightning::Blockchain::Watcher.spawn(:watcher)
       @broadcast = Lightning::IO::Broadcast.spawn(:broadcast)
 
       @node_db = Lightning::Store::NodeDb.new("tmp/node_db")

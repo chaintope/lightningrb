@@ -64,7 +64,7 @@ module Lightning
 
             # TODO Watch UTXO to detect it to be spent
 
-            context.blockchain << WatchConfirmed[channel, commit_utxo.txid, context.node_params.min_depth_blocks]
+            context.blockchain << WatchConfirmed[channel, commit_utxo.txid.rhex, context.node_params.min_depth_blocks]
 
             commitments = Commitments[
               local_param,

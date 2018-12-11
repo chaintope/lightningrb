@@ -53,7 +53,7 @@ module Lightning
             next_data = store(DataWaitForFundingConfirmed[commitments, ::Algebrick::None, funding_created])
 
             # TODO Watch UTXO to detect it to be spent
-            context.blockchain << WatchConfirmed[channel, commit_utxo.txid, context.node_params.min_depth_blocks]
+            context.blockchain << WatchConfirmed[channel, commit_utxo.txid.rhex, context.node_params.min_depth_blocks]
 
             context.wallet.commit(funding_tx)
             context.broadcast << ChannelSignatureReceived[channel, commitments]

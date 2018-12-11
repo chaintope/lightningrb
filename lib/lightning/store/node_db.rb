@@ -31,7 +31,7 @@ module Lightning
         db.execute('DELETE FROM nodes WHERE node_id = ?', [node_id])
       end
 
-      def find_by(node_id: node_id)
+      def find_by(node_id: nil)
         return [] unless node_id
         db.execute('SELECT payload FROM nodes WHERE node_id = ?', [node_id]).map do |record|
           Lightning::Wire::LightningMessages::NodeAnnouncement.load(record[0].htb)

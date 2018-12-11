@@ -22,8 +22,8 @@ module Lightning
               end)
       end
 
-      def self.final_script_pubkey(wallet)
-        wallet.new_receive_address
+      def self.final_script_pubkey(context)
+        context.spv.generate_new_address(context.node_params.node_id)
       end
     end
   end

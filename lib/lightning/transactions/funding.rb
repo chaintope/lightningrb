@@ -8,8 +8,8 @@ module Lightning
         tx.version = 2
         tx.outputs << Bitcoin::TxOut.new(value: funding_satoshis, script_pubkey: funding_pubkey_script)
         tx.lock_time = 0
-        wallet&.complete(tx)
-        MakeFundingTxResponse[tx, 0]
+        signed_tx = wallet&.complete(tx)
+        MakeFundingTxResponse[signed_tx, 0]
       end
 
       def self.make_funding_utxo(funding_tx_txid, funding_tx_output_index, funding_satoshis, local_funding_pubkey, remote_funding_pubkey)

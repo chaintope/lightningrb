@@ -14,8 +14,7 @@ module Lightning
           'method': 'getnewaddress',
           'params': [account_name]
         }
-        address = client.post(url, params).body
-        { address: address }
+        client.post(url, params).body
       end
 
       def create_account(account_name)
@@ -62,7 +61,7 @@ module Lightning
         client.post(url, params).body
       end
 
-      def signrawtransaction(account_name, tx)
+      def sign_transaction(account_name, tx)
         client = JSONClient.new
         client.debug_dev = STDOUT
         url = build_bitcoin_rpc_url

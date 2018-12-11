@@ -3,7 +3,7 @@ module Lightning
     module Messages
       WatchConfirmed = Algebrick.type do
         fields! listener: Object, # channel
-                txid: String,
+                tx_hash: String,
                 blocks: Numeric
       end
 
