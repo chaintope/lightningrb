@@ -17,7 +17,6 @@ module Lightning
               msg[:fee_satoshis],
               msg[:signature]
             )
-            puts "#{msg[:fee_satoshis]}:#{data[:closing_tx_proposed].last.local_closing_signed.fee_satoshis}"
             if msg[:fee_satoshis] == data[:closing_tx_proposed].last.local_closing_signed.fee_satoshis
               handle_mutual_close(tx, data)
             else

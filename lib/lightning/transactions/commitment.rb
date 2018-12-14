@@ -344,7 +344,7 @@ module Lightning
         log(Logger::DEBUG, 'commitments', "send_add")
         return InvalidPaymentHash.new(commitments, cmd) if cmd[:payment_hash].size != 64
 
-        block_count = spv.chain.latest_block.height
+        block_count = spv.blockchain_info['headers']
         if cmd[:cltv_expiry] <= block_count
           return ExpiryCannotBeInThePast.new(commitments, cmd, block_count)
         end
@@ -415,7 +415,7 @@ module Lightning
         raise UnexpectedHtlcId unless commitments[:remote_next_htlc_id] == add[:id]
         raise InvalidPaymentHash.new(commitments, add) unless add[:payment_hash]&.size == 64
 
-        block_count = spv.chain.latest_block.height
+        block_count = spv.blockchain_info['headers']
         raise ExpiryTooSmall.new(commitments, add) if add[:cltv_expiry] < block_count + 3
         raise ExpiryTooLarge.new(commitments, add) if add[:cltv_expiry] >= 500_000_000
         if add[:amount_msat] < commitments[:local_param][:htlc_minimum_msat]

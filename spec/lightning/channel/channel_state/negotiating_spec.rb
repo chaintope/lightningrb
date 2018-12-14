@@ -15,6 +15,8 @@ describe Lightning::Channel::ChannelState::Negotiating do
   describe '#message' do
     subject { state.next(message, data) }
 
+    before { spv.stub(:broadcast).and_return(nil) }
+
     context 'remote fee met local' do
       let(:message) { build(:closing_signed).get }
       let(:tx) { Bitcoin::Tx.new }

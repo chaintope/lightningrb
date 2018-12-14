@@ -11,8 +11,11 @@ describe Lightning::Payment::Relayer do
 
     let(:private_key) { '41' * 32 }
     let(:node_param) { build(:node_param, private_key: private_key) }
-    let(:context) { build(:context, node_params: node_param) }
+    let(:context) { build(:context, node_params: node_param, spv: spv) }
+    let(:spv) { create_test_spv }
     let(:relayer) { described_class.spawn(:relayer, context) }
+
+    before { spv.stub(:blockchain_info).and_return({ 'headers' => 999 }) }
 
     describe 'ChannelStateChanged' do
     end
@@ -149,7 +152,10 @@ describe Lightning::Payment::Relayer do
         let(:to) { Lightning::Payment::Relayer::Local }
 
         it do
-          expect(context.broadcast).to receive(:<<).with(Lightning::Payment::Events::PaymentSucceeded)
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Lightning::Payment::Events::PaymentSucceeded).ordered
           subject
         end
       end
@@ -173,7 +179,10 @@ describe Lightning::Payment::Relayer do
         let(:to) { Lightning::Payment::Relayer::Local }
 
         it do
-          expect(context.broadcast).to receive(:<<).with(Lightning::Payment::Events::PaymentFailed)
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Lightning::Payment::Events::PaymentFailed).ordered
           subject
         end
       end
@@ -182,7 +191,7 @@ describe Lightning::Payment::Relayer do
         let(:to) { Lightning::Payment::Relayer::Relayed['00' * 32, 1, 1000, 2000] }
 
         it do
-          expect(context.register).to receive(:<<).with(Lightning::Channel::Register::Forward)
+          expect(context.register).to receive(:<<).with(Lightning::Channel::Register::Forward).ordered
           subject
         end
       end
@@ -197,6 +206,9 @@ describe Lightning::Payment::Relayer do
         let(:to) { Lightning::Payment::Relayer::Local }
 
         it do
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
+          expect(context.broadcast).to receive(:<<).with(Array).ordered
           expect(context.broadcast).to receive(:<<).with(Lightning::Payment::Events::PaymentFailed)
           subject
         end

@@ -12,6 +12,8 @@ describe Lightning::Channel::ChannelState::Normal do
   let(:remote_node_id) { '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7' }
   let(:spv) { create_test_spv }
 
+  before { spv.stub(:blockchain_info).and_return({ 'headers' => 100 }) }
+
   describe '#origin' do
     subject { state.origin(command) }
 

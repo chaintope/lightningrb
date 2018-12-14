@@ -135,7 +135,7 @@ module Lightning
       end
 
       def block_height
-        context.spv.chain.latest_block.height
+        context.spv.blockchain_info['headers']
       end
     end
   end

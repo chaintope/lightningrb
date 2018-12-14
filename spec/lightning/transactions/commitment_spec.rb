@@ -5,6 +5,8 @@ require 'spec_helper'
 describe Lightning::Transactions::Commitment do
   let(:spv) { create_test_spv }
 
+  before { spv.stub(:blockchain_info).and_return( 'headers' => 999 ) }
+
   describe '#obscured_commit_tx_number' do
     # local_payment_basepoint: 034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa
     # remote_payment_basepoint: 032c0b7cf95324a07d05398b240174dc0c2be444d96b159aa6c7f7b1e668680991

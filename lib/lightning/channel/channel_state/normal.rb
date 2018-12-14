@@ -7,7 +7,7 @@ module Lightning
         def next(message, data)
           match message, (on ~CommandAddHtlc do |c|
             return handle_command_error("error", data) if data.shutting_down?
-            match Commitment.send_add(data[:commitments], c, origin(c), context.wallet.spv),
+            match Commitment.send_add(data[:commitments], c, origin(c), context.spv),
                   (on Array.(~Commitments, ~UpdateAddHtlc) do |commitments1, msg|
                     channel << CommandSignature if c[:commit]
                     return goto(self, data: data.copy(commitments: commitments1), sending: msg)
@@ -15,7 +15,7 @@ module Lightning
                     handle_command_error(error, data)
                   end)
           end), (on ~UpdateAddHtlc do |msg|
-            match Commitment.receive_add(data[:commitments], msg, context.wallet.spv),
+            match Commitment.receive_add(data[:commitments], msg, context.spv),
                   (on ~Commitments do |commitments1|
                     return goto(self, data: data.copy(commitments: commitments1))
                   end), (on ~any do |error|
@@ -218,6 +218,7 @@ module Lightning
               end
             end
           end), (on ~WatchEventConfirmed do |msg|
+            log(Logger::DEBUG, 'WatchEventConfirmed', "#{msg[:event_type]},#{data[:channel_announcement]}, #{msg[:event_type] == 'deeply_confirmed'}, #{data[:channel_announcement].is_a? None}")
             return [self, data] unless msg[:event_type] == 'deeply_confirmed'
             return [self, data] unless data[:channel_announcement].is_a? None
             output_index = data[:commitments][:commit_input].out_point.index

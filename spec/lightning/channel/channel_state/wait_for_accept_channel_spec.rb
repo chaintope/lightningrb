@@ -23,7 +23,7 @@ describe Lightning::Channel::ChannelState::WaitForAcceptChannel do
 
   before do
     allow(spv).to receive(:wallet).and_return(wallet)
-    allow(wallet).to receive(:complete).and_return(nil)
+    allow(wallet).to receive(:complete).and_return(Bitcoin::Tx.new)
     allow(wallet).to receive(:commit).and_return(nil)
   end
 

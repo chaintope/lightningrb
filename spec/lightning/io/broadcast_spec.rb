@@ -18,6 +18,7 @@ describe Lightning::IO::Broadcast do
 
   describe 'on_message(Init)' do
     subject do
+      receiver.ask(:await).wait
       broadcast.ask(:await).wait
       broadcast << message
       broadcast.ask(:await).wait
