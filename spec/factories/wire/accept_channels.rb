@@ -2,14 +2,14 @@
 
 FactoryBot.define do
   factory(:accept_channel, class: 'FactoryBotWrapper') do
-    temporary_channel_id '36155cae4b48d26ab48aa6ac239da93219615cb8dd846d2a2abeb455af9b3357'
-    dust_limit_satoshis 546
-    max_htlc_value_in_flight_msat 6
-    channel_reserve_satoshis 10_000
-    htlc_minimum_msat 8
-    minimum_depth 9
-    to_self_delay 10
-    max_accepted_htlcs 11
+    temporary_channel_id { '36155cae4b48d26ab48aa6ac239da93219615cb8dd846d2a2abeb455af9b3357' }
+    dust_limit_satoshis { 546 }
+    max_htlc_value_in_flight_msat { 6 }
+    channel_reserve_satoshis { 10_000 }
+    htlc_minimum_msat { 8 }
+    minimum_depth { 9 }
+    to_self_delay { 10 }
+    max_accepted_htlcs { 11 }
     funding_pubkey { build(:key, :remote_funding_pubkey).pubkey }
     revocation_basepoint { build(:revocation_basepoint) }
     payment_basepoint { build(:payment_basepoint) }

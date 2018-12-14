@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:local_commit, class: 'FactoryBotWrapper') do
-    index 0
+    index { 0 }
     spec { build(:commitment_spec, :local).get }
     publishable_txs { build(:publishable_tx).get }
     initialize_with do

@@ -2,9 +2,9 @@
 
 FactoryBot.define do
   factory(:init, class: 'FactoryBotWrapper') do
-    gflen 1
+    gflen { 1 }
     globalfeatures { FactoryBot.build(:localfeatures) }
-    lflen 2
+    lflen { 2 }
     localfeatures { FactoryBot.build(:localfeatures) }
 
     initialize_with do

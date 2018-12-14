@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:directed_htlc, class: 'FactoryBotWrapper') do
-    direction 0 # 0: offered, 1: received
+    direction { 0 } # 0: offered, 1: received
     add { build(:update_add_htlc).get }
 
     initialize_with do

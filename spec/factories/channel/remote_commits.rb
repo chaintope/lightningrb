@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:remote_commit, class: 'FactoryBotWrapper') do
-    index 0
+    index { 0 }
     spec { build(:commitment_spec, :remote).get }
     txid { '00' * 32 }
     remote_per_commitment_point { '00' * 33 }

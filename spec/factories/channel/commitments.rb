@@ -4,18 +4,18 @@ FactoryBot.define do
   factory(:commitment, class: 'FactoryBotWrapper') do
     local_param { build(:local_param).get }
     remote_param { build(:remote_param).get }
-    channel_flags 0
+    channel_flags { 0 }
     local_commit { build(:local_commit).get }
     remote_commit { build(:remote_commit).get }
     local_change { build(:local_change).get }
     remote_change { build(:remote_change).get }
-    local_next_htlc_id 0
-    remote_next_htlc_id 0
+    local_next_htlc_id { 0 }
+    remote_next_htlc_id { 0 }
     origin_channels { {} }
     remote_next_commit_info { build(:waiting_for_revocation).get }
     commit_input { build(:utxo, :multisig) }
     remote_per_commitment_secrets { ["\x00" * 32] }
-    channel_id '8984484a580b825b9972d7adb15050b3ab624ccd731946b3eeddb92f4e7ef6ff'
+    channel_id { '8984484a580b825b9972d7adb15050b3ab624ccd731946b3eeddb92f4e7ef6ff' }
     initialize_with do
       new(Lightning::Channel::Messages::Commitments[
         local_param: local_param,

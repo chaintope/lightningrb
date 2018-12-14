@@ -5,10 +5,10 @@ FactoryBot.define do
   h = Bitcoin.sha256(r)
 
   factory(:command_add_htlc, class: 'FactoryBotWrapper') do
-    amount_msat 5_000_000
+    amount_msat { 5_000_000 }
     payment_hash { h.bth }
-    cltv_expiry 400
-    onion ''
+    cltv_expiry { 400 }
+    onion { '' }
     upstream_opt { Algebrick::None }
     commit { true }
     initialize_with do

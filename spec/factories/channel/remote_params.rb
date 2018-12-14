@@ -2,13 +2,13 @@
 
 FactoryBot.define do
   factory(:remote_param, class: 'FactoryBotWrapper') do
-    node_id '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7'
-    dust_limit_satoshis 546
-    max_htlc_value_in_flight_msat 100_000_000
-    channel_reserve_satoshis 7
-    htlc_minimum_msat 5_000_000
-    to_self_delay 144
-    max_accepted_htlcs 483
+    node_id { '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7' }
+    dust_limit_satoshis { 546 }
+    max_htlc_value_in_flight_msat { 100_000_000 }
+    channel_reserve_satoshis { 7 }
+    htlc_minimum_msat { 5_000_000 }
+    to_self_delay { 144 }
+    max_accepted_htlcs { 483 }
     funding_pubkey { build(:key, :remote_funding_pubkey).pubkey }
     revocation_basepoint { build(:revocation_basepoint) }
     payment_basepoint { build(:payment_basepoint) }

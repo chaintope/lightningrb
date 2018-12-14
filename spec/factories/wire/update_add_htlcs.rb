@@ -5,10 +5,10 @@ FactoryBot.define do
   h = Bitcoin.sha256(r).bth
   factory(:update_add_htlc, class: 'FactoryBotWrapper') do
     channel_id { "00" * 32 }
-    id 0
-    amount_msat 5_000_000
+    id { 0 }
+    amount_msat { 5_000_000 }
     payment_hash { h }
-    cltv_expiry 400
+    cltv_expiry { 400 }
     onion_routing_packet do
       '0002eec7245d6b7d2ccb30380bfbe2a3648cd7a942653f5aa340edcea1f28368' \
       '6619e5f14350c2a76fc232b5e46d421e9615471ab9e0bc887beff8c95fdb878f' \
