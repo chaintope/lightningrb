@@ -55,16 +55,9 @@ module Lightning
           context.register << Lightning::Channel::Register::Forward[channel_id, command]
           Async::HTTP::Response[200, {}, []]
         when 'receive'
-          message = Lightning::Invoice::Message.new
-          message.prefix = 'lnbc'
-          message.amount, message.multiplier = Lightning::Invoice.msat_to_readable(params[0])
-          message.description = params[1]
-          message.expiry = params[2]
-          message.timestamp = Time.now.to_i
-          key = Bitcoin::Key.new(priv_key: context.node_params.private_key)
-          data = [message.prefix, message.amount].join('')
-          message.signature = Lightning::Wire::LightningMessages.der2wire(key.sign(data)).bth + '00'
-          response = message.to_bech32
+          payment = Lightning::Payment::Messages::ReceivePayment[params[0], params[1]]
+          message = context.payment_handler.ask!(payment)
+          response = { invoice: message.to_bech32 }.to_json
           Async::HTTP::Response[200, {}, [response]]
         when 'send'
           node_id = params[0]

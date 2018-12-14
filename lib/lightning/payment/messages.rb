@@ -11,6 +11,11 @@ module Lightning
                 final_cltv_expiry: Numeric
       end
 
+      ReceivePayment = Algebrick.type do
+        fields  amount_msat: Numeric,
+                description: String
+      end
+
       DataWaitForRequest = Algebrick.atom
 
       DataWaitForRoute = Algebrick.type do

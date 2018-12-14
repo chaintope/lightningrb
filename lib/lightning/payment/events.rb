@@ -19,7 +19,8 @@ module Lightning
 
       PaymentReceived = Algebrick.type do
         fields  amount: Numeric,
-                payment_hash: String
+                payment_hash: String,
+                channel_id: String
       end
 
       PaymentSucceeded = Algebrick.type do
