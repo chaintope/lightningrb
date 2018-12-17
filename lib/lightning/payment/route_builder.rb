@@ -12,7 +12,7 @@ module Lightning
         base_msat + (proportional * msat) / 1000000
       end
 
-      def build_command(amount_msat, expiry, payment_hash, hops)
+      def build_command(amount_msat, expiry, payment_hash, hops = [])
         output = build_payloads(amount_msat, expiry, hops[1..-1])
         first_amount_msat = output[:msat]
         final_expiry = output[:expiry]
@@ -25,7 +25,7 @@ module Lightning
         ]
       end
 
-      def build_payloads(amount_msat, expiry, hops)
+      def build_payloads(amount_msat, expiry, hops = [])
         first_payload = { msat: amount_msat, expiry: expiry, payloads: [PerHop.new(0, amount_msat, expiry, "\x00" * 12)] }
         hops.reverse.inject(first_payload) do |payloads, hop|
           fee = node_fee(hop.last_update.fee_base_msat, hop.last_update.fee_proportional_millionths, payloads[:msat])
