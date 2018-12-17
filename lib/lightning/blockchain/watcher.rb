@@ -7,33 +7,32 @@ module Lightning
       include Algebrick::Matching
       include Lightning::Blockchain::Messages
 
-      attr_reader :watchings, :stub
+      attr_reader :stub
       def initialize
-        @watchings = []
         @stub = Bitcoin::Grpc::Blockchain::Stub.new('localhost:8080', :this_channel_is_insecure)
       end
 
       def on_message(message)
         match message, (on WatchConfirmed.(~any, ~any, ~any) do |listener, tx_hash, blocks|
-          request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(tx_hash: tx_hash, confirmations: 3)
-          response = stub.watch_tx_confirmed(request)
-          Thread.start(response, listener) do |response, listener|
+          Thread.start(listener) do |listener|
+            id = SecureRandom.random_number(1 << 32)
+            request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash: tx_hash, confirmations: 3)
+            response = stub.watch_tx_confirmed(request)
             response.each do |r|
-              listener << WatchEventConfirmed["confirmed", r.confirmed.block_height, r.confirmed.tx_index]
+              listener << Lightning::Blockchain::Messages::WatchEventConfirmed["confirmed", r.confirmed.block_height, r.confirmed.tx_index]
               break
             end
           end
 
-          request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(tx_hash: tx_hash, confirmations: 6)
-          response = stub.watch_tx_confirmed(request)
-          Thread.start(response, listener) do |response, listener|
+          Thread.start(listener) do |listener|
+            id = SecureRandom.random_number(1 << 32)
+            request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash: tx_hash, confirmations: 6)
+            response = stub.watch_tx_confirmed(request)
             response.each do |r|
-              listener << WatchEventConfirmed["deeply_confirmed", r.confirmed.block_height, r.confirmed.tx_index]
+              listener << Lightning::Blockchain::Messages::WatchEventConfirmed["deeply_confirmed", r.confirmed.block_height, r.confirmed.tx_index]
               break
             end
           end
-        end), (on :watchings do
-          watchings
         end)
       end
     end
