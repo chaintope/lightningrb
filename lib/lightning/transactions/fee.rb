@@ -34,9 +34,14 @@ module Lightning
       end
 
       def self.first_closing_fee(commitments, local_script_pubkey, remote_script_pubkey)
-        _dummy_closing_tx = Closing.make_closing_tx(commitments, local_script_pubkey, remote_script_pubkey, 0)
-        # FIXME:
-        weight = 0
+        dummy_closing_tx = Closing.make_closing_tx(commitments, local_script_pubkey, remote_script_pubkey, 0)
+        tx = dummy_closing_tx.tx
+        script_witness = Bitcoin::ScriptWitness.new
+        script_witness.stack << ''
+        script_witness.stack << 'aa' * 71
+        script_witness.stack << 'bb' * 71
+        tx.inputs.first.script_witness = script_witness
+        weight = tx.weight
         feerate_per_kw = commitments[:local_commit][:spec][:feerate_per_kw]
         weight2fee(feerate_per_kw, weight)
       end
