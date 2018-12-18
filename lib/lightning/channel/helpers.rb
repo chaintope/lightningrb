@@ -23,7 +23,8 @@ module Lightning
       end
 
       def self.final_script_pubkey(context)
-        context.spv.generate_new_address(context.node_params.node_id)
+        address = context.spv.generate_new_address(context.node_params.node_id)
+        Bitcoin::Script.parse_from_addr(address).to_payload.bth
       end
     end
   end
