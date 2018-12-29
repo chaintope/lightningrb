@@ -40,7 +40,7 @@ module Lightning
       @max_accepted_htlcs = 10
       @globalfeatures = "\x00"
       @localfeatures = "\x00"
-      @feerates_per_kw = 46080
+      @feerates_per_kw = 46_080
       @chain_hash = '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f'
       @min_depth_blocks = 1
       @fee_base_msat = 1000

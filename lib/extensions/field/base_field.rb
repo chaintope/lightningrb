@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 module Protobuf
   module Field
@@ -6,8 +7,8 @@ module Protobuf
         stream << encode(value)
       end
 
-      def decode_from(stream)
-        fail NotImplementedError, "#{self.class.name}##{__method__}"
+      def decode_from(_stream)
+        raise NotImplementedError.new("#{self.class.name}##{__method__}")
       end
     end
   end

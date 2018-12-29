@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 module Protobuf
   module Field
@@ -7,10 +8,9 @@ module Protobuf
       end
 
       def decode_from(stream)
-        unless stream.eof?
-          length = get_option('.lightning.wire.length')
-          stream.read(length).unpack('a*').first
-        end
+        return if stream.eof?
+        length = get_option('.lightning.wire.length')
+        stream.read(length).unpack('a*').first
       end
     end
   end

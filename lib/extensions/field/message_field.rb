@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 module Protobuf
   module Field
@@ -7,9 +8,8 @@ module Protobuf
       end
 
       def decode_from(stream)
-        unless stream.eof?
-          type_class.decode_from(stream)
-        end
+        return if stream.eof?
+        type_class.decode_from(stream)
       end
     end
   end

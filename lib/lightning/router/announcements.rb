@@ -6,7 +6,7 @@ module Lightning
       class << self
         include Lightning::Wire::LightningMessages
         def make_announcement_signatures(node_params, commitments, short_channel_id)
-          features =  ''
+          features = ''
           local_node_signature, local_bitcoin_signature = channel_announcement_signature(
             node_params.chain_hash,
             short_channel_id,

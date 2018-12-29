@@ -49,7 +49,7 @@ module Lightning
             log(Logger::DEBUG, 'router_state', "signature invalid #{msg.to_payload.bth}")
             [self, data]
           else
-            [self, data.copy(channels: data[:channels].merge({ msg[:short_channel_id] => msg }))]
+            [self, data.copy(channels: data[:channels].merge(msg[:short_channel_id] => msg))]
           end
         end), (on ~NodeAnnouncement do |msg|
           if data[:nodes].key?(msg[:node_id]) && msg.older_than?(data[:nodes][msg[:node_id]])
@@ -61,11 +61,11 @@ module Lightning
           elsif data[:nodes].key?(msg[:node_id])
             # TODO: NodeUpdate event
             context.node_db.update(msg)
-            [self, data.copy(nodes: data[:nodes].merge({ msg[:node_id] => msg }))]
+            [self, data.copy(nodes: data[:nodes].merge(msg[:node_id] => msg))]
           elsif data[:channels].values.any? { |channel| related?(channel, msg[:node_id]) }
             # TODO: NodeDiscovered event
             context.node_db.create(msg)
-            [self, data.copy(nodes: data[:nodes].merge({ msg[:node_id] => msg }))]
+            [self, data.copy(nodes: data[:nodes].merge(msg[:node_id] => msg))]
           else
             context.node_db.destroy_by(node_id: msg[:node_id])
             [self, data]
@@ -75,7 +75,7 @@ module Lightning
             channel = data[:channels][msg[:short_channel_id]]
             desc = Announcements.to_channel_desc(channel)
             node_id =
-              if msg[:channel_flags] & (2**0) == 0
+              if (msg[:channel_flags] & (2**0)).zero?
                 channel[:node_id_2]
               else
                 channel[:node_id_1]
@@ -91,22 +91,21 @@ module Lightning
             elsif data[:updates].key?(desc)
               # TODO: ChannelUpdateReceived
               # context.channel_db.update_channel_update(msg)
-              log(Logger::INFO, :router_state, "================================================================================")
-              log(Logger::INFO, :router_state, "")
+              log(Logger::INFO, :router_state, '================================================================================')
+              log(Logger::INFO, :router_state, '')
               log(Logger::INFO, :router_state, "Channel Updated #{msg}")
-              log(Logger::INFO, :router_state, "")
-              log(Logger::INFO, :router_state, "================================================================================")
-
-              [self, data.copy(updates: data[:updates].merge({ desc => msg }))]
+              log(Logger::INFO, :router_state, '')
+              log(Logger::INFO, :router_state, '================================================================================')
+              [self, data.copy(updates: data[:updates].merge(desc => msg))]
             else
               # TODO: ChannelUpdateReceived
               # context.channel_db.add_channel_update(msg)
-              log(Logger::INFO, :router_state, "================================================================================")
-              log(Logger::INFO, :router_state, "")
+              log(Logger::INFO, :router_state, '================================================================================')
+              log(Logger::INFO, :router_state, '')
               log(Logger::INFO, :router_state, "Channel Registered #{msg}")
-              log(Logger::INFO, :router_state, "")
-              log(Logger::INFO, :router_state, "================================================================================")
-              [self, data.copy(updates: data[:updates].merge({ desc => msg }))]
+              log(Logger::INFO, :router_state, '')
+              log(Logger::INFO, :router_state, '================================================================================')
+              [self, data.copy(updates: data[:updates].merge(desc => msg))]
             end
           else
             # TODO: wait for channel_announcement
@@ -114,18 +113,19 @@ module Lightning
             [self, data]
           end
         end), (on RouteRequest.(~any, ~any, ~any) do |source, target, assisted_routes|
-          ignore_nodes, ignore_channels = [], []
+          ignore_nodes = []
+          ignore_channels = []
           hops = RouteFinder.find(source, target, data[:updates], assisted_routes)
           if router.envelope.sender.is_a? Concurrent::Actor::Reference
             router.envelope.sender << RouteResponse[hops, ignore_nodes, ignore_channels]
           end
           [self, data]
         rescue Lightning::Exceptions::RouteNotFound => e
-          log(Logger::DEBUG, 'router_state', "Route to the final node is not found. Retry after a while")
+          log(Logger::DEBUG, 'router_state', 'Route to the final node is not found. Retry after a while')
+          log(Logger::DEBUG, 'router_state', e.message)
           [self, data]
         end)
       end
-
 
       def related?(channel, node_id)
         node_id == channel.node_id_1 || node_id == channel.node_id_2
