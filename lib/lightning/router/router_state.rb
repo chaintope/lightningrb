@@ -75,7 +75,7 @@ module Lightning
             channel = data[:channels][msg[:short_channel_id]]
             desc = Announcements.to_channel_desc(channel)
             node_id =
-              if (msg[:channel_flags] & (2**0)).zero?
+              if msg[:channel_flags] & (2**0) == 0
                 channel[:node_id_2]
               else
                 channel[:node_id_1]
