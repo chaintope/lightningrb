@@ -135,7 +135,7 @@ module Lightning
             match Commitment.receive_revocation(data[:commitments], msg),
                   (on ~Commitments do |commitments1|
                     data[:commitments][:remote_changes][:signed].each do |change|
-                      context.relayer << ForwardAdd[change] if change.is_a?(UpdateAddHtlc)
+                      context.relayer << Lightning::Payment::Relayer::ForwardAdd[change] if change.is_a?(UpdateAddHtlc)
                     end
                     # TODO:
                     return goto(self, data: store(data.copy(commitments: commitments1)))

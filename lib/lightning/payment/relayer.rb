@@ -101,6 +101,8 @@ module Lightning
         end), (on 'ok' do |msg|
         end), (on :channel_updates do
           @channel_updates
+        end), (on any do
+
         end)
       end
 

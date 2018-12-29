@@ -20,14 +20,14 @@ module Lightning
         match message, (on ~ReceivePayment do |payment|
           preimage = SecureRandom.hex(32)
           payment_hash = Bitcoin.sha256(preimage.htb).bth
-          # FIXME expiry from message or default
+          # FIXME: expiry from message or default
           expiry = 600
-          prefix = case
-            when Bitcoin.chain_params.mainnet?
+          prefix =
+            if Bitcoin.chain_params.mainnet?
               'lnbc'
-            when Bitcoin.chain_params.testnet?
+            elsif Bitcoin.chain_params.testnet?
               'lntb'
-            when Bitcoin.chain_params.regtest?
+            elsif Bitcoin.chain_params.regtest?
               'lnbcrt'
             end
           key = context.node_params.private_key
@@ -42,17 +42,13 @@ module Lightning
             m.expiry = expiry
             m.sign(Bitcoin::Key.new(priv_key: key))
           end
-
           preimages[payment_hash] = [preimage, invoice]
-          if envelope.sender.is_a? Concurrent::Actor::Reference
-            envelope.sender << invoice
-          end
+          envelope.sender << invoice if envelope.sender.is_a? Concurrent::Actor::Reference
           invoice
         end), (on ~UpdateAddHtlc do |htlc|
-          preimage, invoice = preimages[htlc[:payment_hash]]
-          if envelope.sender.is_a? Concurrent::Actor::Reference
-            envelope.sender << CommandFulfillHtlc[htlc.id, preimage, true]
-          end
+          preimage, = preimages[htlc[:payment_hash]]
+          command = CommandFulfillHtlc[htlc.id, preimage, true]
+          context.register << Lightning::Channel::Register::Forward[htlc[:channel_id], command]
           context.broadcast << PaymentReceived[htlc[:amount_msat], htlc[:payment_hash], htlc[:channel_id]]
           preimages.delete(htlc[:payment_hash])
         end), (on :preimages do
