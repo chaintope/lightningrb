@@ -66,4 +66,12 @@ describe Lightning::Channel::Messages do
 
     it { expect(subject[0].to_payload.bth).to eq publishable_txs.to_payload.bth }
   end
+
+  describe 'Commitments#to_poayload/load' do
+    subject { Lightning::Channel::Messages::Commitments.load(commitments.to_payload) }
+
+    let(:commitments) { build(:commitment).get }
+
+    it { expect(subject[0].to_payload.bth).to eq commitments.to_payload.bth }
+  end
 end

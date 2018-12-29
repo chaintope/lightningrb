@@ -12,6 +12,7 @@ message PascalString {
 message PublicKey {
   bytes value = 1 [(length) = 33];
 }
+
 message PrivateKey {
   bytes value = 1 [(length) = 32];
 }

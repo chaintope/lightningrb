@@ -9,8 +9,8 @@ FactoryBot.define do
     remote_commit { build(:remote_commit).get }
     local_change { build(:local_change).get }
     remote_change { build(:remote_change).get }
-    local_next_htlc_id { 0 }
-    remote_next_htlc_id { 0 }
+    local_next_htlc_id { 1 }
+    remote_next_htlc_id { 2 }
     origin_channels { {} }
     remote_next_commit_info { build(:waiting_for_revocation).get }
     commit_input { build(:utxo, :multisig) }

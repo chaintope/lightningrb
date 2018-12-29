@@ -245,14 +245,14 @@ module Lightning
             proposed << update
           end
 
-          len, rest = payload.unpack('na*')
+          len, rest = rest.unpack('na*')
           signed = []
           len.times do
             update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
             signed << update
           end
 
-          len, rest = payload.unpack('na*')
+          len, rest = rest.unpack('na*')
           acked = []
           len.times do
             update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
@@ -305,21 +305,21 @@ module Lightning
             proposed << update
           end
 
-          len, rest = payload.unpack('na*')
+          len, rest = rest.unpack('na*')
           acked = []
           len.times do
             update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
             acked << update
           end
 
-          len, rest = payload.unpack('na*')
+          len, rest = rest.unpack('na*')
           signed = []
           len.times do
             update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
             signed << update
           end
 
-          [new(proposed, signed, acked), rest]
+          [new(proposed, acked, signed), rest]
         end
       end
 
@@ -882,12 +882,17 @@ module Lightning
           channel_flags, rest = rest.unpack('na*')
           local_commit, rest = LocalCommit.load(rest)
           remote_commit, rest = RemoteCommit.load(rest)
-          local_changes, rest = LocalChange.load(rest)
-          remote_changes, rest = RemoteChange.load(rest)
+          local_changes, rest = LocalChanges.load(rest)
+          remote_changes, rest = RemoteChanges.load(rest)
           local_next_htlc_id, rest = rest.unpack('q>a*')
           remote_next_htlc_id, rest = rest.unpack('q>a*')
           len, rest = rest.unpack('na*')
-          origin_channels, rest = JSON.parse(rest.unpack("H#{2 * len}a*").htb)
+          origin_channels = if len > 0
+            origin_channels, rest = rest.unpack("H#{2 * len}a*")
+            JSON.parse(origin_channels.htb)
+          else
+            {}
+          end
           type, rest = rest.unpack('Ca*')
           if type == 0
             remote_next_commit_info, rest = WaitingForRevocation.load(rest)
@@ -898,7 +903,7 @@ module Lightning
           commit_input, rest = Lightning::Transactions::Utxo.load(rest)
           len, rest = rest.unpack('na*')
           remote_per_commitment_secrets_as_hex, rest = rest.unpack("H#{64 * len}a*")
-          remote_per_commitment_secrets = [0..(len - 1)].map do |i|
+          remote_per_commitment_secrets = (0..(len - 1)).map do |i|
             remote_per_commitment_secrets_as_hex[i..(i + 64)]
           end
           channel_id, rest = rest.unpack('H64a*')
@@ -945,7 +950,8 @@ module Lightning
             payload << self[:remote_next_commit_info].htb
           end
           payload << self[:commit_input].to_payload
-          payload << self[:remote_per_commitment_secrets].join('')
+          payload << [self[:remote_per_commitment_secrets].length].pack('n')
+          payload << self[:remote_per_commitment_secrets].join('').htb
           payload << self[:channel_id].htb
           payload
         end
