@@ -43,10 +43,6 @@ module Lightning
                 to: Origin,
                 htlc: UpdateAddHtlc
       end
-      AckFulfillCommand = Algebrick.type do
-        fields! channel_id: String,
-                htlc_id: Numeric
-      end
 
       attr_accessor :context
 
@@ -97,7 +93,8 @@ module Lightning
         end), (on ForwardFailMalformed.(~any, ~Relayed, any) do |fail, origin|
           command = CommandFailMalformedHtlc[origin[:original_htlc_id], fail[:sha256_of_onion], fail[:failure_code], true]
           context.register << Register::Forward[origin[:original_channel_id], command]
-        end), (on ~AckFulfillCommand do |msg|
+        end), (on ~CommandAck do |command|
+          context.register << Register::Forward[command[:channel_id], command]
         end), (on 'ok' do |msg|
         end), (on :channel_updates do
           @channel_updates

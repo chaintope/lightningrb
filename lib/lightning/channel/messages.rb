@@ -45,6 +45,11 @@ module Lightning
 
       CommandSignature = Algebrick.atom
 
+      CommandAck = Algebrick.type do
+        fields! channel_id: String,
+                id: Numeric
+      end
+
       Command = Algebrick.type do
         variants  CommandAddHtlc,
                   CommandFulfillHtlc,
@@ -52,7 +57,8 @@ module Lightning
                   CommandFailMalformedHtlc,
                   CommandUpdateFee,
                   CommandClose,
-                  CommandSignature
+                  CommandSignature,
+                  CommandAck
       end
 
       ## Data

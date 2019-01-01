@@ -223,8 +223,5 @@ describe Lightning::Payment::Relayer do
         end
       end
     end
-
-    describe 'AckFulfillCmd' do
-    end
   end
 end
