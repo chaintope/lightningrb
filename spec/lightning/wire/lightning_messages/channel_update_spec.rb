@@ -59,4 +59,51 @@ describe Lightning::Wire::LightningMessages::ChannelUpdate do
 
     it { is_expected.to eq payload }
   end
+
+  describe 'valid_signature?' do
+    subject { msg.valid_signature?(node_id) }
+
+    let(:msg) do
+      described_class[
+        signature,
+        chain_hash,
+        short_channel_id,
+        timestamp,
+        message_flags,
+        channel_flags,
+        cltv_expiry_delta,
+        htlc_minimum_msat,
+        fee_base_msat,
+        fee_proportional_millionths
+      ]
+    end
+    let(:node_id) { node_key.pubkey }
+    let(:node_secret) { '11' * 32 }
+    let(:node_key) { Bitcoin::Key.new(priv_key: node_secret) }
+    let(:signature) do
+      witness = described_class.witness(
+        chain_hash,
+        short_channel_id,
+        timestamp,
+        message_flags,
+        channel_flags,
+        cltv_expiry_delta,
+        htlc_minimum_msat,
+        fee_base_msat,
+        fee_proportional_millionths
+      )
+      node_key.sign(witness).bth
+    end
+    let(:chain_hash) { '12' * 32 }
+    let(:short_channel_id) { 1 }
+    let(:timestamp) { 2 }
+    let(:message_flags) { 3 }
+    let(:channel_flags) { 4 }
+    let(:cltv_expiry_delta) { 5 }
+    let(:htlc_minimum_msat) { 6 }
+    let(:fee_base_msat) { 7 }
+    let(:fee_proportional_millionths) { 8 }
+
+    it { expect(subject).to be_truthy }
+  end
 end
