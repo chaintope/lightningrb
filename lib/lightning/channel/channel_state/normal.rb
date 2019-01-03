@@ -142,6 +142,8 @@ module Lightning
                   end), (on ~any do |error|
                     handle_local_error(error, data)
                   end)
+          end), (on ~CommandAck do |c|
+            
           end), (on ~CommandClose do |c|
             local_script_pubkey =
               c[:script_pubkey]&.value || data[:commitments][:local_param][:default_final_script_pubkey]
