@@ -777,11 +777,40 @@ module Lightning
         end
 
         def status
-          'open'
+          self[:buried] == 1 ? 'open' : 'opening'
         end
 
-        def self.load
-          # TODO : implement
+        def self.load(payload)
+          _type, rest = payload.unpack('Ca*')
+          commitments, rest = Commitments.load(rest)
+          short_channel_id, rest = rest.unpack('q>a*')
+          buried, rest = rest.unpack('Ca*')
+          len, rest = rest.unpack('na*')
+          if len == 0
+            channel_announcement = Algebrick::None
+          else
+            channel_announcement = Lightning::Wire::LightningMessages::ChannelAnnouncement.load(rest[0...len])
+            channel_announcement = Algebrick::Some[Lightning::Wire::LightningMessages::ChannelAnnouncement][channel_announcement]
+            rest = rest[len..-1]
+          end
+
+          len, rest = rest.unpack('na*')
+          channel_update = Lightning::Wire::LightningMessages::ChannelUpdate.load(rest[0...len])
+          rest = rest[len..-1]
+
+          len, rest = rest.unpack('na*')
+          if len == 0
+            local_shutdown = Algebrick::None
+          else
+            local_shutdown, rest = Lightning::Wire::LightningMessages::Shutdown.load(rest)
+          end
+          len, rest = rest.unpack('na*')
+          if len == 0
+            remote_shutdown = Algebrick::None
+          else
+            remote_shutdown, rest = Lightning::Wire::LightningMessages::Shutdown.load(rest)
+          end
+          [new(commitments, short_channel_id, buried, channel_announcement, channel_update, local_shutdown, remote_shutdown), rest]
         end
 
         def to_payload
@@ -790,10 +819,25 @@ module Lightning
           payload << self[:commitments].to_payload
           payload << [self[:short_channel_id]].pack('q>')
           payload << [self[:buried]].pack('C')
-          payload << self[:channel_announcement].value.to_payload unless self[:channel_announcement].is_a? Algebrick::None
+          if self[:channel_announcement].is_a? Algebrick::None
+            payload << [0].pack('n')
+          else
+            channel_announcement = self[:channel_announcement].value.to_payload
+            payload << [channel_announcement.bytesize].pack('n')
+            payload << self[:channel_announcement].value.to_payload
+          end
+          payload << [self[:channel_update].to_payload.bytesize].pack('n')
           payload << self[:channel_update].to_payload
-          payload << self[:local_shutdown].value.to_payload unless self[:local_shutdown].is_a? Algebrick::None
-          payload << self[:remote_shutdown].value.to_payload unless self[:remote_shutdown].is_a? Algebrick::None
+          if self[:local_shutdown].is_a? Algebrick::None
+            payload << [0].pack('n')
+          else
+            payload << self[:local_shutdown].value.to_payload
+          end
+          if self[:remote_shutdown].is_a? Algebrick::None
+            payload << [0].pack('n')
+          else
+            payload << self[:remote_shutdown].value.to_payload
+          end
           payload
         end
       end

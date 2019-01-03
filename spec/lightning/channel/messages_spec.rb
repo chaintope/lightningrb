@@ -74,4 +74,12 @@ describe Lightning::Channel::Messages do
 
     it { expect(subject[0].to_payload.bth).to eq commitments.to_payload.bth }
   end
+
+  describe 'DataNormal#to_payload/load' do
+    subject { Lightning::Channel::Messages::DataNormal.load(data.to_payload) }
+
+    let(:data) { build(:data_normal).get }
+
+    it { expect(subject[0].to_payload.bth).to eq data.to_payload.bth }
+  end
 end

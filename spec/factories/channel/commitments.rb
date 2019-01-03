@@ -14,7 +14,7 @@ FactoryBot.define do
     origin_channels { {} }
     remote_next_commit_info { build(:waiting_for_revocation).get }
     commit_input { build(:utxo, :multisig) }
-    remote_per_commitment_secrets { ["\x00" * 32] }
+    remote_per_commitment_secrets { ["00" * 32] }
     channel_id { '8984484a580b825b9972d7adb15050b3ab624ccd731946b3eeddb92f4e7ef6ff' }
     initialize_with do
       new(Lightning::Channel::Messages::Commitments[
