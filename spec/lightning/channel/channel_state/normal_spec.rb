@@ -57,7 +57,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with UpdateAddHtlc' do
-      let(:message) { build(:update_add_htlc).get }
+      let(:message) { build(:update_add_htlc, id: 2).get }
 
       it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
       it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }

@@ -160,6 +160,7 @@ describe Lightning::Transactions::Commitment do
     let(:add) do
       build(
         :update_add_htlc,
+        id: 2,
         amount_msat: amount_msat,
         cltv_expiry: cltv_expiry
       ).get
