@@ -28,6 +28,12 @@ module Lightning
 
       def log_commitments(data)
         commitments = data[:commitments]
+        log(Logger::DEBUG, "LocalCommit")
+        log(Logger::DEBUG, "    to_local_msat:#{commitments[:local_commit][:spec][:to_local_msat]}")
+        log(Logger::DEBUG, "    to_remote_msat:#{commitments[:local_commit][:spec][:to_remote_msat]}")
+        log(Logger::DEBUG, "RemoteCommit")
+        log(Logger::DEBUG, "    to_local_msat:#{commitments[:remote_commit][:spec][:to_local_msat]}")
+        log(Logger::DEBUG, "    to_remote_msat:#{commitments[:remote_commit][:spec][:to_remote_msat]}")
         log(Logger::DEBUG, "LocalChanges")
         log(Logger::DEBUG, "    proposed:#{commitments[:local_changes][:proposed].size}")
         log(Logger::DEBUG, "    signed:  #{commitments[:local_changes][:signed].size}")
