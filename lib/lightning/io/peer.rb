@@ -54,7 +54,7 @@ module Lightning
             transport << Listener[actor, conn]
             transport << Init[0, '', 1, '08'.htb]
             outgoing = conn.is_a?(Client)
-            # db.insert_or_update(node_id, conn.host, conn.port) if outgoing
+            db.insert_or_update(node_id, conn.host, conn.port) if outgoing
             [
               PeerStateInitializing.new(actor, authenticator, context, remote_node_id, transport: transport),
               InitializingData[outgoing ? URI[host, port] : Algebrick::None, transport, channels, Algebrick::None],

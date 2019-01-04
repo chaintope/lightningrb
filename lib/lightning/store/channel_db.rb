@@ -24,6 +24,10 @@ module Lightning
         )
       end
 
+      def all
+        db.execute('SELECT * FROM channels')
+      end
+
       def remove(channel_id)
         db.execute(
           'DELETE FROM channels WHERE channel_id = ?',
