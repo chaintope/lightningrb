@@ -539,6 +539,25 @@ module Lightning
                 remote_per_commitment_secrets: Array,
                 channel_id: String
       end
+
+      module HasCommitments
+        def channel_id
+          self[:commitments][:channel_id]
+        end
+
+        def self.load(payload)
+          type, rest = payload.unpack('Ca*')
+          case type
+          when 1
+            DataWaitForFundingConfirmed.load(payload)
+          when 2
+            DataWaitForFundingLocked.load(payload)
+          when 3
+            DataNormal.load(payload)
+          end
+        end
+      end
+
       InputInitFunder = Algebrick.type do
         fields! temporary_channel_id: String,
                 funding_satoshis: Numeric,
@@ -679,12 +698,6 @@ module Lightning
                   DataNegotiating,
                   DataClosing,
                   DataWaitForRemotePublishFutureCommitment
-      end
-
-      module HasCommitments
-        def channel_id
-          self[:commitments][:channel_id]
-        end
       end
 
       module DataWaitForFundingConfirmed
