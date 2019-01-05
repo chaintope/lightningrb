@@ -577,8 +577,12 @@ module Lightning
       InputCloseCompleteTimeout = Algebrick.atom
       InputPublishLocalcommit = Algebrick.atom
       InputDisconnected = Algebrick.atom
-      InputReconnected = Algebrick.type do
+      InputRestored = Algebrick.type do
         fields! remote: Concurrent::Actor::Reference
+      end
+      InputReconnected = Algebrick.type do
+        fields! remote: Concurrent::Actor::Reference,
+                data: HasCommitments
       end
 
       BitcoinEvent = Algebrick.atom

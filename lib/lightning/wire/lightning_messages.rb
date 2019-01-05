@@ -217,7 +217,8 @@ module Lightning
                   CommitmentSigned,
                   RevokeAndAck,
                   UpdateFee,
-                  AnnouncementSignatures
+                  AnnouncementSignatures,
+                  ChannelReestablish
       end
       UpdateMessage = Algebrick.type do
         variants  UpdateAddHtlc,

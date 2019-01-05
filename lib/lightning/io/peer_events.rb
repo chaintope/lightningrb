@@ -39,8 +39,7 @@ module Lightning
         end
         DisconnectedData = type do
           fields! address_opt: type { variants Algebrick::None, URI },
-                  channels: Hash,
-                  attempts: Numeric
+                  channels: Hash
         end
         InitializingData = type do
           fields! address_opt: type { variants Algebrick::None, URI },
@@ -51,7 +50,7 @@ module Lightning
         ConnectedData = type do
           fields! address_opt: type { variants Algebrick::None, URI },
                   transport: Concurrent::Actor::Reference,
-                  remoteInit: Init,
+                  remote_init: Init,
                   channels: Hash
         end
         variants DisconnectedData, InitializingData, ConnectedData
