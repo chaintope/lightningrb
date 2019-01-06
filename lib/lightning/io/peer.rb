@@ -86,7 +86,11 @@ module Lightning
               ConnectedData[address_opt, transport, remote_init, channels],
             ]
           end), (on Array.(~ChannelReestablish, ~InitializingData) do |msg, data|
-            transport << Lightning::Wire::LightningMessages::Error[msg[:channel_id], 0, '']
+            task = Concurrent::TimerTask.new(execution_interval: 60, run_now: true) do
+              actor << msg
+              task.shutdown
+            end
+            task.execute
             [self, data]
           end), (on any do
             log(Logger::WARN, '/peer@initializing', "unhandled message: #{message}")
