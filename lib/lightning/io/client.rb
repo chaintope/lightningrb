@@ -5,7 +5,7 @@ module Lightning
     class Client < Concurrent::Actor::Context
       def self.connect(host, port, authenticator, static_key, remote_key)
         spawn(:client, authenticator, static_key, remote_key).tap do |me|
-          EM.connect(host, port, ClientConnection, me)
+          EM.connect(host, port, ClientConnection, host, port, me)
         end
       end
 
@@ -51,10 +51,12 @@ module Lightning
       include Concurrent::Concern::Logging
       include Lightning::Wire::HandshakeMessages
 
-      attr_accessor :transport
+      attr_accessor :transport, :host, :port
 
-      def initialize(client)
+      def initialize(host, port, client)
         @client = client
+        @host = host
+        @port = port
       end
 
       def post_init

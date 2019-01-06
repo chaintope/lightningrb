@@ -8,7 +8,7 @@ module Lightning
 
       def initialize(authenticator, context, remote_node_id, initial_channels = [])
         @status = PeerStateDisconnected.new(self, authenticator, context, remote_node_id)
-        channels = Hash.new(initial_channels.map {|c| [c[:commitments][:channel_id], c]})
+        channels = initial_channels.map {|c| [c[:commitments][:channel_id], c]}.to_h
         @data = DisconnectedData[Algebrick::None, channels]
       end
 
@@ -54,11 +54,11 @@ module Lightning
           end), (on Array.(Authenticated.(~any, ~any, ~any), DisconnectedData.(any, ~any)) do |conn, transport, node_id, channels|
             transport << Listener[actor, conn]
             transport << Init[0, '', 1, '08'.htb]
-            outgoing = conn.is_a?(Client)
+            outgoing = conn.is_a?(Lightning::IO::ClientConnection)
             db.insert_or_update(node_id, conn.host, conn.port) if outgoing
             [
               PeerStateInitializing.new(actor, authenticator, context, remote_node_id, transport: transport),
-              InitializingData[outgoing ? URI[host, port] : Algebrick::None, transport, channels, Algebrick::None],
+              InitializingData[outgoing ? URI[conn.host, conn.port] : Algebrick::None, transport, channels, Algebrick::None],
             ]
           end), (on any do
             log(Logger::WARN, '/peer@disconnected', "unhandled message: #{message}")
@@ -77,7 +77,7 @@ module Lightning
             log(Logger::INFO, :peer, "================================================================================")
             channels.values.each do |channel_data|
               forwarder = Forwarder.spawn(:forwarder)
-              channel_context = ChannelContext.new(context, transport, forwarder, remote_init[:remote_node_id])
+              channel_context = ChannelContext.new(context, transport, forwarder, remote_node_id)
               channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
               channel << Lightning::Channel::Messages::InputReconnected[transport, channel_data]
             end

@@ -22,10 +22,11 @@ module Lightning
         channels = channels.group_by { |c| c[:commitments][:remote_param][:node_id] }
         @peers = context.peer_db.all
           .select { |node_id, peer| channels.keys.include?(node_id) }
-          .inject({}) do |(node_id, peer), peers|
+          .inject({}) do |peers, (node_id, host, port)|
             peer = create_or_get_peer(peers, node_id, channels[node_id])
-            peer << Connect[node_id, peer[0], peer[1], {}]
+            peer << Connect[node_id, host, port, {}]
             peers[node_id] = peer
+            peers
           end
       end
 

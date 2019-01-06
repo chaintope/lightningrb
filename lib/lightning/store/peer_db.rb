@@ -13,7 +13,7 @@ module Lightning
         SQL
       end
 
-      def insert_or_update(node_id, host, port: 9735)
+      def insert_or_update(node_id, host, port)
         db.execute(
           'INSERT INTO peers (node_id, host, port) VALUES (?, ?, ?)',
           [node_id, host, port]
@@ -21,7 +21,7 @@ module Lightning
       rescue SQLite3::ConstraintException => _
         db.execute(
           'UPDATE peers SET host = ?, port = ? WHERE node_id = ?',
-          [host, port, node_rgb_color]
+          [host, port, node_id]
         )
       end
 
