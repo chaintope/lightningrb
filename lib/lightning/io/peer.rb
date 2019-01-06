@@ -184,7 +184,7 @@ module Lightning
           [channel, local_param]
         end
 
-        def make_channel_params(node_params, script_pubkey, funder, funding_satoshis)
+        def make_channel_params(context, script_pubkey, funder, funding_satoshis)
           index = SecureRandom.random_number(2**64)
           LocalParam[
             context.node_params.node_id,
