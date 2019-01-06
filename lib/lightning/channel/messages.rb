@@ -1012,8 +1012,8 @@ module Lightning
             payload << self[:remote_next_commit_info].to_payload
           else
             payload << [1].pack('C')
-            len = self[:remote_next_commit_info].length
-            payload << [len].pack('C')
+            len = self[:remote_next_commit_info].htb.bytesize
+            payload << [len].pack('n')
             payload << self[:remote_next_commit_info].htb
           end
           payload << self[:commit_input].to_payload

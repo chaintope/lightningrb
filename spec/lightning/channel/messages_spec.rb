@@ -73,6 +73,12 @@ describe Lightning::Channel::Messages do
     let(:commitments) { build(:commitment).get }
 
     it { expect(subject[0].to_payload.bth).to eq commitments.to_payload.bth }
+
+    context 'remote_next_commit_info is String' do
+      let(:commitments) { build(:commitment, remote_next_commit_info: 'test').get }
+
+      it { expect(subject[0].to_payload.bth).to eq commitments.to_payload.bth }
+    end
   end
 
   describe 'DataNormal#to_payload/load' do
