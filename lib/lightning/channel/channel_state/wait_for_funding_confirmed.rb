@@ -20,11 +20,12 @@ module Lightning
               commitments[:channel_id],
               next_per_commitment_point
             ]
+            temporary_channel_id = data[:temporary_channel_id]
             short_channel_id = Channel.to_short_id(block_height, tx_index, commitments[:commit_input].out_point.index)
             goto(
               WaitForFundingLocked.new(channel, context),
               data: store(DataWaitForFundingLocked[
-                commitments, short_channel_id, funding_locked
+                temporary_channel_id, commitments, short_channel_id, funding_locked
               ]),
               sending: funding_locked
             )

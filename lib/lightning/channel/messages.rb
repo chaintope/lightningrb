@@ -545,6 +545,10 @@ module Lightning
           self[:commitments][:channel_id]
         end
 
+        def temporary_channel_id
+          self[:temporary_channel_id]
+        end
+
         def self.load(payload)
           type, rest = payload.unpack('Ca*')
           case type
@@ -633,7 +637,8 @@ module Lightning
                   last_sent: OpenChannel
         end
         DataWaitForFundingSigned = type do
-          fields  channel_id: String,
+          fields  temporary_channel_id: String,
+                  channel_id: String,
                   local_param: LocalParam,
                   remote_param: RemoteParam,
                   funding_tx: Bitcoin::Tx,
@@ -644,17 +649,20 @@ module Lightning
                   last_sent: FundingCreated
         end
         DataWaitForFundingConfirmed = type do
-          fields  commitments: Commitments,
+          fields  temporary_channel_id: String,
+                  commitments: Commitments,
                   deferred: Algebrick::Maybe[FundingLocked],
                   last_sent: type { variants FundingCreated, FundingSigned }
         end
         DataWaitForFundingLocked = type do
-          fields  commitments: Commitments,
+          fields  temporary_channel_id: String,
+                  commitments: Commitments,
                   short_channel_id: Numeric,
                   last_sent: FundingLocked
         end
         DataNormal = type do
-          fields  commitments: Commitments,
+          fields  temporary_channel_id: String,
+                  commitments: Commitments,
                   short_channel_id: Numeric,
                   buried: Numeric,
                   channel_announcement: Algebrick::Maybe[ChannelAnnouncement],
@@ -713,25 +721,27 @@ module Lightning
 
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
+          temporary_channel_id, rest = rest.unpack('H64a*')
           commitments, rest = Commitments.load(rest)
           maybe, rest = rest.unpack('Ca*')
           if maybe
-            deferred, rest = FundingLocked.load(rest)
+            deferred, rest = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
           else
             deferred = Algebrick::None
           end
           last_sent_type, rest = rest.unpack('na*')
-          if last_sent_type == FundingCreated.to_type
-            last_sent, rest = FundingCreated.load(rest)
+          if last_sent_type == Lightning::Wire::LightningMessages::FundingCreated.to_type
+            last_sent, rest = Lightning::Wire::LightningMessages::FundingCreated.load(rest)
           else
-            last_sent, rest = FundingSigned.load(rest)
+            last_sent, rest = Lightning::Wire::LightningMessages::FundingSigned.load(rest)
           end
-          [new(commitments, deferred, last_sent), rest]
+          [new(temporary_channel_id, commitments, deferred, last_sent), rest]
         end
 
         def to_payload
           payload = +''
           payload << [1].pack('C')
+          payload << self[:temporary_channel_id].htb
           payload << self[:commitments].to_payload
           if self[:deferred].is_a? Algebrick::None
             payload << [0].pack('C')
@@ -759,6 +769,7 @@ module Lightning
         def to_payload
           payload = +''
           payload << [2].pack('C')
+          payload << self[:temporary_channel_id].htb
           payload << self[:commitments].to_payload
           payload << [self[:short_channel_id]].pack('q>')
           payload << self[:last_sent].to_payload
@@ -774,6 +785,7 @@ module Lightning
         end
 
         def copy(
+          temporary_channel_id: self[:temporary_channel_id],
           commitments: self[:commitments],
           short_channel_id: self[:short_channel_id],
           buried: self[:buried],
@@ -783,6 +795,7 @@ module Lightning
           remote_shutdown: self[:remote_shutdown]
         )
           DataNormal[
+            temporary_channel_id,
             commitments,
             short_channel_id,
             buried,
@@ -799,6 +812,7 @@ module Lightning
 
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
+          temporary_channel_id, rest = rest.unpack('H64a*')
           commitments, rest = Commitments.load(rest)
           short_channel_id, rest = rest.unpack('q>a*')
           buried, rest = rest.unpack('Ca*')
@@ -833,6 +847,7 @@ module Lightning
         def to_payload
           payload = +''
           payload << [3].pack('C')
+          payload << self[:temporary_channel_id].htb
           payload << self[:commitments].to_payload
           payload << [self[:short_channel_id]].pack('q>')
           payload << [self[:buried]].pack('C')

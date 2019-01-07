@@ -92,6 +92,7 @@ module Lightning
             goto(
               WaitForFundingConfirmed.new(channel, context),
               data: store(DataWaitForFundingConfirmed[
+                temporary_channel_id,
                 commitments,
                 ::Algebrick::None,
                 funding_signed

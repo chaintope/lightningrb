@@ -63,7 +63,7 @@ module Lightning
         if data.is_a? None
           "null"
         elsif  data.is_a? Lightning::Channel::Messages::HasCommitments
-          { channel_id: data.channel_id , status: data.status }
+          { temporary_channel_id: data.temporary_channel_id, channel_id: data.channel_id , status: data.status }
         end
       end
     end

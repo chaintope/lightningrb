@@ -15,6 +15,7 @@ module Lightning
       def on_message(message)
         log(Logger::DEBUG, "#{@status}, message: #{message}")
         match message, (on :channels do
+          log(Logger::DEBUG, "#{@status}, channels: #{@status.channels}")
           return @status.channels.values.map {|channel| channel.ask!(:data) }
         end), (on any do
         end)
@@ -69,17 +70,18 @@ module Lightning
 
       class PeerStateInitializing < PeerState
         def next(message, data)
-          match [message, data], (on Array.(~Init, InitializingData.(~any, ~any, ~any, any)) do |remote_init, address_opt, transport, channels|
+          match [message, data], (on Array.(~Init, InitializingData.(~any, ~any, ~any, any)) do |remote_init, address_opt, transport, initial_channels|
             log(Logger::INFO, :peer, "================================================================================")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "PEER CONNECTED")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "================================================================================")
-            channels.values.each do |channel_data|
+            initial_channels.values.each do |channel_data|
               forwarder = Forwarder.spawn(:forwarder)
               channel_context = ChannelContext.new(context, transport, forwarder, remote_node_id)
               channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
               channel << Lightning::Channel::Messages::InputReconnected[transport, channel_data]
+              channels[channel_data[:commitments][:channel_id]] = channel
             end
             [
               PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: transport),
@@ -164,10 +166,7 @@ module Lightning
             channels[channel_id] = channel
           end), (on Array.(~RoutingMessage, ~ConnectedData) do |msg, _data|
             context.router << msg
-          end), (on Array.(~ChannelReestablish, ~ConnectedData) do |msg, data|
-            transport << Lightning::Wire::LightningMessages::Error[msg[:channel_id], 0, '']
-            [self, data]
-          end), (on any do
+          end)  , (on any do
             log(Logger::WARN, '/peer@connected', "unhandled message: #{message}, data:#{data}")
           end)
           [self, data]

@@ -6,6 +6,7 @@ module Lightning
       class WaitForFundingSigned < ChannelState
         def next(message, data)
           match message, (on FundingSigned.(any, ~any) do |remote_sig|
+            temporary_channel_id = data[:temporary_channel_id]
             channel_id = data[:channel_id]
             local_param = data[:local_param]
             remote_param = data[:remote_param]
@@ -50,7 +51,7 @@ module Lightning
               channel_id
             ]
 
-            next_data = store(DataWaitForFundingConfirmed[commitments, ::Algebrick::None, funding_created])
+            next_data = store(DataWaitForFundingConfirmed[temporary_channel_id, commitments, ::Algebrick::None, funding_created])
 
             # TODO Watch UTXO to detect it to be spent
             context.blockchain << WatchConfirmed[channel, commit_utxo.txid.rhex, context.node_params.min_depth_blocks]

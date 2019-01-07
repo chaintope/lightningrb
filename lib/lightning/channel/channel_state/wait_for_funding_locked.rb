@@ -7,6 +7,7 @@ module Lightning
         def next(message, data)
           match message, (on FundingLocked.(any, ~any) do |next_per_commitment_point|
             commitments = data[:commitments]
+            temporary_channel_id = data[:temporary_channel_id]
             short_channel_id = data[:short_channel_id]
             channel_update = Lightning::Router::Announcements.make_channel_update(
               context.node_params.chain_hash,
@@ -44,7 +45,7 @@ module Lightning
 
             goto(
               Normal.new(channel, context),
-              data: store(DataNormal[new_commitments, short_channel_id, 0, None, channel_update, None, None])
+              data: store(DataNormal[temporary_channel_id, new_commitments, short_channel_id, 0, None, channel_update, None, None])
             )
           end), (on ~WatchEventConfirmed do |msg|
             task = Concurrent::TimerTask.new(execution_interval: 60) do

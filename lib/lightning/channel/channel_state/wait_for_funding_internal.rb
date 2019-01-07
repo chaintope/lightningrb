@@ -45,6 +45,7 @@ module Lightning
             goto(
               WaitForFundingSigned.new(channel, context),
               data: DataWaitForFundingSigned[
+                temporary_channel_id,
                 channel_id,
                 local_param,
                 remote_param,
