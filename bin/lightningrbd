@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'lightning'
+
+
+require 'thor'
+require 'daemon_spawn'
+
+
+class LightningDaemon < DaemonSpawn::Base
+  def start(args)
+    puts "Lightning daemon start : #{Time.now} #{args}"
+
+    spv = Lightning::Blockchain::BitcoinService.new
+    context = Lightning::Context.new(spv)
+
+    host = '0.0.0.0'
+    port = 9735
+    authenticator = Lightning::IO::Authenticator.spawn(:authenticator)
+    context.switchboard = Lightning::IO::Switchboard.spawn(:switchboard, authenticator, context)
+    Thread.start do
+      EM.run do
+        Lightning::IO::Server.start(
+          host,
+          port,
+          authenticator,
+          context.node_params.private_key
+        )
+      end
+    end
+    Lightning::Rpc::Server.run(context)
+  end
+
+  def stop
+    puts "Lightning daemon stop : #{Time.now}"
+  end
+end
+
+class Lightningrbd < Thor
+
+  class_option :network, aliases: '-n', default: :mainnet
+
+  desc 'start', 'start bitcoinrb daemon.'
+  def start
+    network = options['network'] ? options['network'].to_sym : :mainnet
+    Bitcoin.chain_params = network
+    execute_daemon(['start', network: network])
+  end
+  #
+  desc 'stop', 'stop bitcoinrb daemon.'
+  def stop
+    network = options['network'] ? options['network'].to_sym : :mainnet
+    Bitcoin.chain_params = network
+    execute_daemon(['stop', network: network])
+  end
+
+  private
+
+  def execute_daemon(cmd_args)
+    FileUtils.mkdir_p("#{Dir.home}/.lightningrb/log")
+    FileUtils.mkdir_p("#{Dir.home}/.lightningrb/tmp")
+    LightningDaemon.spawn!({working_dir: "#{Dir.home}/.lightningrb",
+                                     log_file: "#{Dir.home}/.lightningrb/log/debug.log",
+                                     pid_file: "#{Dir.home}/.lightningrb/lightningrb.pid",
+                                     sync_log: true,
+                                     singleton: true}, cmd_args)
+  end
+end
+
+Lightningrbd.start(ARGV)
