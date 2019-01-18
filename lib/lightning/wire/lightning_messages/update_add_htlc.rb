@@ -6,7 +6,7 @@ module Lightning
       module UpdateAddHtlc
         def self.load(payload)
           _, rest = payload.unpack('na*')
-          new(*rest.unpack('H64q>2H64NH27132'))
+          new(*rest.unpack('H64q>2H64NH2732'))
         end
 
         def self.to_type
@@ -22,10 +22,6 @@ module Lightning
           payload << [self[:cltv_expiry]].pack('N')
           payload << self[:onion_routing_packet].htb
           payload
-        end
-
-        def self.builder
-          @builder ||= Lightning::Utils::Serializer.new.hex(32).uint64.x(2).hex(32).uint32.hex(13566)
         end
 
         def self.unpack(payload)
