@@ -37,6 +37,7 @@ describe Lightning::Channel::ChannelState::Normal do
     let(:commitment) { build(:commitment, :funder).get }
     let(:data) do
       Lightning::Channel::Messages::DataNormal[
+        temporary_channel_id: '36155cae4b48d26ab48aa6ac239da93219615cb8dd846d2a2abeb455af9b3357',
         commitments: commitment,
         short_channel_id: 1,
         buried: 1,
@@ -153,8 +154,23 @@ describe Lightning::Channel::ChannelState::Normal do
     describe 'with CommandSignature' do
       let(:message) { build(:command_signature).get }
 
-      it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
-      it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
+      context 'when remote_next_commit_info is WaitingForRevocation' do
+        it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
+        it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
+      end
+
+      context 'when remote_next_commit_info is String' do
+        let(:commitment) do
+          build(:commitment,
+            :funder,
+            remote_next_commit_info: '025f7117a78150fe2ef97db7cfc83bd57b2e2c0d0dd25eaf467a4a1c2a45ce1486',
+            local_change: build(:local_change, :has_local_change).get
+          ).get
+        end
+
+        it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
+        it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
+      end
     end
 
     describe 'with CommitmentSigned' do

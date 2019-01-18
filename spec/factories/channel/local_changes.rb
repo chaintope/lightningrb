@@ -8,5 +8,9 @@ FactoryBot.define do
     initialize_with do
       new(Lightning::Channel::Messages::LocalChanges[proposed, signed, acked])
     end
+
+    trait :has_local_change do
+      proposed { [ build(:update_add_htlc).get ] }
+    end
   end
 end

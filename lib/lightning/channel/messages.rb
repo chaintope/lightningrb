@@ -724,10 +724,10 @@ module Lightning
           temporary_channel_id, rest = rest.unpack('H64a*')
           commitments, rest = Commitments.load(rest)
           maybe, rest = rest.unpack('Ca*')
-          if maybe
-            deferred, rest = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
-          else
+          if maybe == 0
             deferred = Algebrick::None
+          else
+            deferred, rest = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
           end
           last_sent_type, rest = rest.unpack('na*')
           if last_sent_type == Lightning::Wire::LightningMessages::FundingCreated.to_type
@@ -749,6 +749,7 @@ module Lightning
             payload << [1].pack('C')
             payload << self[:deferred].value.to_payload
           end
+          payload << [self[:last_sent].type.to_type].pack('n')
           payload << self[:last_sent].to_payload
           payload
         end
@@ -763,7 +764,11 @@ module Lightning
 
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
-          [new, rest]
+          temporary_channel_id, rest = rest.unpack('H64a*')
+          commitments, rest = Commitments.load(rest)
+          short_channel_id, rest = rest.unpack('q>a*')
+          last_sent, rest = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
+          [new(temporary_channel_id, commitments, short_channel_id, last_sent), rest]
         end
 
         def to_payload
@@ -776,6 +781,7 @@ module Lightning
           payload
         end
       end
+
 
       module DataNormal
         include HasCommitments
@@ -841,7 +847,7 @@ module Lightning
           else
             remote_shutdown, rest = Lightning::Wire::LightningMessages::Shutdown.load(rest)
           end
-          [new(commitments, short_channel_id, buried, channel_announcement, channel_update, local_shutdown, remote_shutdown), rest]
+          [new(temporary_channel_id, commitments, short_channel_id, buried, channel_announcement, channel_update, local_shutdown, remote_shutdown), rest]
         end
 
         def to_payload
@@ -969,11 +975,21 @@ module Lightning
           local_next_htlc_id, rest = rest.unpack('q>a*')
           remote_next_htlc_id, rest = rest.unpack('q>a*')
           len, rest = rest.unpack('na*')
-          origin_channels = if len > 0
-            origin_channels, rest = rest.unpack("H#{2 * len}a*")
-            JSON.parse(origin_channels.htb)
-          else
-            {}
+          origin_channels = {}
+          if len > 0
+            len.times do |i|
+              key, rest = rest.unpack("na*")
+              type, rest = rest.unpack("Ca*")
+              if type == 0
+                origin_channels[key] = Lightning::Payment::Relayer::Local
+              else
+                original_channel_id, rest = rest.unpack("H64a*")
+                original_htlc_id, amount_msat_in, amount_msat_out, rest = rest.unpack("nq>2a*")
+                origin_channels[key] = Lightning::Payment::Relayer::Relayed[
+                  original_channel_id, original_htlc_id, amount_msat_in, amount_msat_out
+                ]
+              end
+            end
           end
           type, rest = rest.unpack('Ca*')
           if type == 0
@@ -1019,9 +1035,18 @@ module Lightning
           payload << self[:remote_changes].to_payload
           payload << [self[:local_next_htlc_id]].pack('q>')
           payload << [self[:remote_next_htlc_id]].pack('q>')
-          json = self[:origin_channels].to_json
-          payload << [json.length].pack('n')
-          payload << json
+          keys = self[:origin_channels].keys
+          payload << [keys.length].pack('n')
+          self[:origin_channels].each do |k, v|
+            payload << [k].pack('n')
+            if v.is_a?(Lightning::Payment::Relayer::Local)
+              payload << [0].pack('C')
+            else
+              payload << [1].pack('C')
+              payload << v[:original_channel_id].htb
+              payload << [v[:original_htlc_id], v[:amount_msat_in], v[:amount_msat_out]].pack('nq>2')
+            end
+          end
           if self[:remote_next_commit_info].is_a? WaitingForRevocation
             payload << [0].pack('C')
             payload << self[:remote_next_commit_info].to_payload

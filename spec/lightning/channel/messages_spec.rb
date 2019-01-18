@@ -79,6 +79,14 @@ describe Lightning::Channel::Messages do
 
       it { expect(subject[0].to_payload.bth).to eq commitments.to_payload.bth }
     end
+
+
+    context 'when including origin_channels' do
+      let(:original_channels) do
+        { 1 => Lightning::Payment::Relayer::Local, 2 => Lightning::Payment::Relayer::Relayed['00'*32, 1, 2, 3] }
+      end
+      let(:data) { build(:commitment, original_channels: original_channels).get }
+    end
   end
 
   describe 'DataNormal#to_payload/load' do
