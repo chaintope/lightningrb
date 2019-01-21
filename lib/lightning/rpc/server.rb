@@ -66,10 +66,10 @@ module Lightning
           context.payment_initiator << Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, node_id, [], 144]
           Async::HTTP::Response[200, {}, []]
         when 'nodes'
-          response = context.router.ask!(:nodes).map(&:to_json).join('')
+          response = context.router.ask!(:nodes).map(&:to_h).to_json
           Async::HTTP::Response[200, {}, [response]]
         when 'channels'
-          response = context.switchboard.ask!(:channels).map(&:to_json).join('')
+          response = context.switchboard.ask!(:channels).map(&:to_h).to_json
           Async::HTTP::Response[200, {}, [response]]
         when 'payments'
           response = context.payment_initiator.ask!(:payments).map(&:to_h).to_json

@@ -16,7 +16,7 @@ module Lightning
         log(Logger::DEBUG, "state=#{@state}")
         case message
         when :data
-          return to_json(@data)
+          return to_h(@data)
         end
         log_commitments(@data) if @data.is_a? Lightning::Channel::Messages::HasCommitments
         next_state, next_data = @state.next(message, @data)
@@ -59,9 +59,9 @@ module Lightning
         ((block_height & 0xFFFFFF) << 40) | ((tx_index & 0xFFFFFF) << 16) | (output_index & 0xFFFF)
       end
 
-      def to_json(data)
+      def to_h(data)
         if data.is_a? None
-          "null"
+          {}
         elsif  data.is_a? Lightning::Channel::Messages::HasCommitments
           { temporary_channel_id: data.temporary_channel_id, channel_id: data.channel_id , status: data.status }
         end
