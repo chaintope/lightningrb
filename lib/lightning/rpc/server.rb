@@ -57,7 +57,7 @@ module Lightning
         when 'receive'
           payment = Lightning::Payment::Messages::ReceivePayment[params[0], params[1]]
           message = context.payment_handler.ask!(payment)
-          response = { invoice: message.to_bech32 }.to_json
+          response = message.to_h.merge(invoice: message.to_bech32).to_json
           Async::HTTP::Response[200, {}, [response]]
         when 'send'
           node_id = params[0]
@@ -70,6 +70,9 @@ module Lightning
           Async::HTTP::Response[200, {}, [response]]
         when 'channels'
           response = context.switchboard.ask!(:channels).map(&:to_json).join('')
+          Async::HTTP::Response[200, {}, [response]]
+        when 'payments'
+          response = context.payment_initiator.ask!(:payments).map(&:to_h).to_json
           Async::HTTP::Response[200, {}, [response]]
         else
           Async::HTTP::Response[400, {}, ["Unsupported method. #{request['method']}"]]
