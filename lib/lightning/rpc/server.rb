@@ -72,7 +72,7 @@ module Lightning
           response = context.switchboard.ask!(:channels).map(&:to_h).to_json
           Async::HTTP::Response[200, {}, [response]]
         when 'payments'
-          response = context.payment_initiator.ask!(:payments).map(&:to_h).to_json
+          response = context.payment_initiator.ask!(:payments).to_json
           Async::HTTP::Response[200, {}, [response]]
         else
           Async::HTTP::Response[400, {}, ["Unsupported method. #{request['method']}"]]
