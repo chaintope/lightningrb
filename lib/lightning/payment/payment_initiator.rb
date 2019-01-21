@@ -19,7 +19,7 @@ module Lightning
           cycle = Lightning::Payment::PaymentLifecycle.spawn(:payment, node_id, context)
           cycle << msg
           payments[msg[:payment_hash]] = msg
-        end), (on Lightning::Payment::Events::PaymentSucceeded do |event|
+        end), (on ~Lightning::Payment::Events::PaymentSucceeded do |event|
           payments.delete(event[:payment_hash])
         end), (on :payments do
           payments
