@@ -18,12 +18,9 @@ module Lightning
       end
 
       def load_peers
-        channels = context.channel_db.all.map { |channel_id, data| Lightning::Channel::Messages::HasCommitments.load(data.htb).first }
-        channels = channels.group_by { |c| c[:commitments][:remote_param][:node_id] }
         @peers = context.peer_db.all
-          .select { |node_id, peer| channels.keys.include?(node_id) }
           .inject({}) do |peers, (node_id, host, port)|
-            peer = create_or_get_peer(peers, node_id, channels[node_id])
+            peer = create_or_get_peer(peers, node_id)
             peer << Connect[node_id, host, port, {}]
             peers[node_id] = peer
             peers
@@ -60,8 +57,8 @@ module Lightning
         end)
       end
 
-      def create_or_get_peer(peers, remote_node_id, initial_channels = [])
-        peers[remote_node_id] || Peer.spawn(:peer, authenticator, context, remote_node_id, initial_channels)
+      def create_or_get_peer(peers, remote_node_id)
+        peers[remote_node_id] || Peer.spawn(:peer, authenticator, context, remote_node_id)
       end
 
       def valid_connect?(connect)

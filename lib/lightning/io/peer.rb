@@ -6,9 +6,19 @@ module Lightning
       include Algebrick
       include Lightning::IO::PeerEvents
 
-      def initialize(authenticator, context, remote_node_id, initial_channels = [])
+      def initialize(authenticator, context, remote_node_id)
         @status = PeerStateDisconnected.new(self, authenticator, context, remote_node_id)
-        channels = initial_channels.map {|c| [c[:commitments][:channel_id], c]}.to_h
+        channels = context.channel_db.all.map { |channel_id, data| Lightning::Channel::Messages::HasCommitments.load(data.htb).first }
+        # channels = channels.group_by { |c| c[:commitments][:remote_param][:node_id] }
+        channels.map do |channel_data|
+          forwarder = Lightning::Channel::Forwarder.spawn(:forwarder)
+          channel_context = Lightning::Channel::ChannelContext.new(context, forwarder, remote_node_id)
+          channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
+          channel << Lightning::Channel::Messages::InputRestored[channel_data]
+          channel
+        end
+
+        channels = channels.map {|c| [c[:commitments][:channel_id], c]}.to_h
         @data = DisconnectedData[Algebrick::None, channels]
       end
 
@@ -76,12 +86,9 @@ module Lightning
             log(Logger::INFO, :peer, "PEER CONNECTED")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "================================================================================")
-            initial_channels.values.each do |channel_data|
-              forwarder = Forwarder.spawn(:forwarder)
-              channel_context = ChannelContext.new(context, transport, forwarder, remote_node_id)
-              channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
-              channel << Lightning::Channel::Messages::InputReconnected[transport, channel_data]
-              channels[channel_data[:commitments][:channel_id]] = channel
+            initial_channels.each do |channel_id, channel|
+              channel << Lightning::Channel::Messages::InputReconnected[transport]
+              channels[channel_id] = channel
             end
             [
               PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: transport),
@@ -122,7 +129,7 @@ module Lightning
           end), (on Array.(Pong.(~any, any), any) do |pong_size|
             log(Logger::DEBUG, actor.path, "received pong with #{pong_size} bytes")
           end), (on Array.(~PeerEvents::OpenChannel, ConnectedData.(any, any, ~any, any)) do |open_channel, remote_init|
-            channel, local_param = create_new_channel(context, transport, true, open_channel[:funding_satoshis])
+            channel, local_param = create_new_channel(context, true, open_channel[:funding_satoshis])
             temporary_channel_id = SecureRandom.hex(32)
             channel << Lightning::Channel::Messages::InputInitFunder[
               temporary_channel_id,
@@ -141,7 +148,7 @@ module Lightning
             if channel
               log(Logger::WARN, '/peer@connected', "temporary_channel_id is duplicated. #{open_channel.temporary_channel_id}")
             else
-              channel, local_param = create_new_channel(context, transport, false, open_channel[:funding_satoshis])
+              channel, local_param = create_new_channel(context, false, open_channel[:funding_satoshis])
               channel << Lightning::Channel::Messages::InputInitFundee[
                 temporary_channel_id, local_param, @transport, remote_init
               ]
@@ -174,11 +181,11 @@ module Lightning
 
         private
 
-        def create_new_channel(context, transport, funder, funding_satoshis)
+        def create_new_channel(context, funder, funding_satoshis)
           default_final_script_pubkey = Helpers.final_script_pubkey(context)
           local_param = make_channel_params(context, default_final_script_pubkey, funder, funding_satoshis)
           forwarder = Forwarder.spawn(:forwarder)
-          channel_context = ChannelContext.new(context, transport, forwarder, remote_node_id)
+          channel_context = ChannelContext.new(context, forwarder, remote_node_id)
           channel = ::Lightning::Channel::Channel.spawn(:channel, channel_context)
           [channel, local_param]
         end

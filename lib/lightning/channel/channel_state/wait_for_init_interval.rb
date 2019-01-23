@@ -46,21 +46,16 @@ module Lightning
           end), (on ~OpenChannel do |msg|
             # TODO: pending open_channel message.
             [self, data]
-          end), (on ~InputReconnected do |msg|
+          end), (on ~InputRestored do |msg|
             data = msg[:data]
             log(Logger::ERROR, :channel, "channel restoring ... #{data[:commitments][:channel_id]}")
+
             case data
             when DataNormal
               context.forwarder << msg[:remote]
-
-              reestablish = ChannelReestablish[
-                data[:commitments][:channel_id],
-                data[:commitments][:local_commit][:index] + 1,
-                data[:commitments][:remote_commit][:index],
-                '',
-                ''
-              ]
-              goto(Syncing.new(channel, context), data: data, sending: reestablish)
+              context.broadcast << ChannelRestored[channel, channel.parent, context.remote_node_id, data[:commitments][:local_param][:funder], data[:commitments][:channel_id], data]
+              context.broadcast << ShortChannelIdAssigned[channel, data[:commitments][:channel_id], data[:short_channel_id]]
+              goto(Offline.new(channel, context), data: data)
             else
               log(Logger::ERROR, :channel, 'channel data is not supported.')
               [self, data]

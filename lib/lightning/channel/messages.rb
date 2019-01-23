@@ -582,11 +582,10 @@ module Lightning
       InputPublishLocalcommit = Algebrick.atom
       InputDisconnected = Algebrick.atom
       InputRestored = Algebrick.type do
-        fields! remote: Concurrent::Actor::Reference
+        fields! data: HasCommitments
       end
       InputReconnected = Algebrick.type do
-        fields! remote: Concurrent::Actor::Reference,
-                data: HasCommitments
+        fields! remote: Concurrent::Actor::Reference
       end
 
       BitcoinEvent = Algebrick.atom
@@ -1062,10 +1061,6 @@ module Lightning
           payload << self[:channel_id].htb
           payload
         end
-      end
-
-      InputRestored = Algebrick.type do
-        fields! data: HasCommitments
       end
     end
   end

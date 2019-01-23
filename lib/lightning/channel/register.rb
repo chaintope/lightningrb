@@ -28,6 +28,8 @@ module Lightning
       def on_message(message)
         log(Logger::INFO, message)
         match message, (on ~ChannelRestored do |msg|
+          @channels[msg[:channel_id]] = msg[:channel]
+          @remotes[msg[:channel_id]] = msg[:remote_node_id]
         end), (on ~ChannelCreated do |msg|
           @channels[msg[:temporary_channel_id]] = msg[:channel]
           @remotes[msg[:temporary_channel_id]] = msg[:remote_node_id]
