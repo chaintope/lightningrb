@@ -63,7 +63,14 @@ module Lightning
         if data.is_a? None
           {}
         elsif  data.is_a? Lightning::Channel::Messages::HasCommitments
-          { temporary_channel_id: data.temporary_channel_id, channel_id: data.channel_id , status: data.status }
+          commitments = data[:commitments]
+          {
+            temporary_channel_id: data.temporary_channel_id,
+            channel_id: data.channel_id,
+            status: data.status,
+            to_local_msat: commitments[:local_commit][:spec][:to_local_msat],
+            to_remote_msat: commitments[:local_commit][:spec][:to_remote_msat]
+          }
         end
       end
     end
