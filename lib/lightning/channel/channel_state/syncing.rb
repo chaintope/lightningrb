@@ -16,18 +16,18 @@ module Lightning
                   data[:short_channel_id]
                 )
               end
-              channel_update = Lightning::Router::Announcements.make_channel_update(
-                context.node_params.chain_hash,
-                context.node_params.private_key,
-                data[:commitments][:remote_param][:node_id],
-                data[:short_channel_id],
-                context.node_params.expiry_delta_blocks,
-                data[:commitments][:remote_param][:htlc_minimum_msat],
-                context.node_params.fee_base_msat,
-                context.node_params.fee_proportional_millionths
-              )
-              goto(Normal.new(channel, context), data: data.copy(channel_update: channel_update))
             end
+            channel_update = Lightning::Router::Announcements.make_channel_update(
+              context.node_params.chain_hash,
+              context.node_params.private_key,
+              data[:commitments][:remote_param][:node_id],
+              data[:short_channel_id],
+              context.node_params.expiry_delta_blocks,
+              data[:commitments][:remote_param][:htlc_minimum_msat],
+              context.node_params.fee_base_msat,
+              context.node_params.fee_proportional_millionths
+            )
+            goto(Normal.new(channel, context), data: data.copy(channel_update: channel_update))
           end)
         end
       end

@@ -10,13 +10,13 @@ module Lightning
         @status = PeerStateDisconnected.new(self, authenticator, context, remote_node_id)
         channels = context.channel_db.all.map { |channel_id, data| Lightning::Channel::Messages::HasCommitments.load(data.htb).first }
         # channels = channels.group_by { |c| c[:commitments][:remote_param][:node_id] }
-        channels.map do |channel_data|
+        channels = channels.map do |channel_data|
           forwarder = Lightning::Channel::Forwarder.spawn(:forwarder)
           channel_context = Lightning::Channel::ChannelContext.new(context, forwarder, remote_node_id)
           channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
           channel << Lightning::Channel::Messages::InputRestored[channel_data]
-          channel
-        end
+          [channel_data[:commitments][:channel_id], channel]
+        end.to_h
 
         @data = DisconnectedData[Algebrick::None, channels]
       end
@@ -24,8 +24,8 @@ module Lightning
       def on_message(message)
         log(Logger::DEBUG, "#{@status}, message: #{message}")
         match message, (on :channels do
-          log(Logger::DEBUG, "#{@status}, channels: #{@status.channels}")
-          return @status.channels.values.map {|channel| channel.ask!(:data) }
+          log(Logger::DEBUG, "#{@status}, channels: #{@data[:channels]}")
+          return @data[:channels].values.map {|channel| channel.ask!(:data) }
         end), (on any do
         end)
         @status, @data = @status.next(message, @data)
@@ -43,7 +43,7 @@ module Lightning
         include Lightning::Channel::Events
         include Lightning::Channel::Messages
 
-        attr_accessor :actor, :context, :remote_node_id, :authenticator, :transport, :channels, :db
+        attr_accessor :actor, :context, :remote_node_id, :authenticator, :transport, :db
 
         def initialize(actor, authenticator, context, remote_node_id, transport: nil)
           @actor = actor
@@ -51,7 +51,6 @@ module Lightning
           @remote_node_id = remote_node_id
           @authenticator = authenticator
           @transport = transport
-          @channels = {}
           @db = context.peer_db
         end
       end
@@ -79,15 +78,14 @@ module Lightning
 
       class PeerStateInitializing < PeerState
         def next(message, data)
-          match [message, data], (on Array.(~Init, InitializingData.(~any, ~any, ~any, any)) do |remote_init, address_opt, transport, initial_channels|
+          match [message, data], (on Array.(~Init, InitializingData.(~any, ~any, ~any, any)) do |remote_init, address_opt, transport, channels|
             log(Logger::INFO, :peer, "================================================================================")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "PEER CONNECTED")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "================================================================================")
-            initial_channels.each do |channel_id, channel|
+            channels.each do |channel_id, channel|
               channel << Lightning::Channel::Messages::InputReconnected[transport]
-              channels[channel_id] = channel
             end
             [
               PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: transport),
@@ -127,7 +125,7 @@ module Lightning
             transport << Pong[byteslen: pong_size, ignored: "\x00" * pong_size] if pong_size.positive?
           end), (on Array.(Pong.(~any, any), any) do |pong_size|
             log(Logger::DEBUG, actor.path, "received pong with #{pong_size} bytes")
-          end), (on Array.(~PeerEvents::OpenChannel, ConnectedData.(any, any, ~any, any)) do |open_channel, remote_init|
+          end), (on Array.(~PeerEvents::OpenChannel, ConnectedData.(any, any, ~any, ~any)) do |open_channel, remote_init, channels|
             channel, local_param = create_new_channel(context, true, open_channel[:funding_satoshis])
             temporary_channel_id = SecureRandom.hex(32)
             channel << Lightning::Channel::Messages::InputInitFunder[
@@ -141,7 +139,7 @@ module Lightning
               open_channel[:channel_flags]
             ]
             channels[temporary_channel_id] = channel
-          end), (on Array.(~Lightning::Channel::Messages::OpenChannel, ConnectedData.(any, any, ~any, any)) do |open_channel, remote_init|
+          end), (on Array.(~Lightning::Channel::Messages::OpenChannel, ConnectedData.(any, any, ~any, ~any)) do |open_channel, remote_init, channels|
             temporary_channel_id = open_channel[:temporary_channel_id]
             channel = channels[temporary_channel_id]
             if channel
@@ -154,21 +152,21 @@ module Lightning
               channel << open_channel
               channels[temporary_channel_id] = channel
             end
-          end), (on Array.(~HasChannelId, ~ConnectedData) do |msg, _data|
+          end), (on Array.(~HasChannelId, ConnectedData.(any, any, any, ~any)) do |msg, channels|
             channel = channels[msg[:channel_id]]
             if channel
               channel << msg
             else
               # TODO : raise ERROR
             end
-          end), (on Array.(~HasTemporaryChannelId, ~ConnectedData) do |msg, _data|
+          end), (on Array.(~HasTemporaryChannelId, ConnectedData.(any, any, any, ~any)) do |msg, channels|
             channel = channels[msg[:temporary_channel_id]]
             if channel
               channel << msg
             else
               # TODO : raise ERROR
             end
-          end), (on Array.(ChannelIdAssigned.(~any, any, ~any, ~any), ConnectedData) do |channel, temporary_channel_id, channel_id|
+          end), (on Array.(ChannelIdAssigned.(~any, any, ~any, ~any), ConnectedData.(any, any, any, ~any)) do |channel, temporary_channel_id, channel_id, channels|
             channels[channel_id] = channel
           end), (on Array.(~RoutingMessage, ~ConnectedData) do |msg, _data|
             context.router << msg

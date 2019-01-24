@@ -52,7 +52,6 @@ module Lightning
 
             case data
             when DataNormal
-              context.forwarder << msg[:remote]
               context.broadcast << ChannelRestored[channel, channel.parent, context.remote_node_id, data[:commitments][:local_param][:funder], data[:commitments][:channel_id], data]
               context.broadcast << ShortChannelIdAssigned[channel, data[:commitments][:channel_id], data[:short_channel_id]]
               goto(Offline.new(channel, context), data: data)

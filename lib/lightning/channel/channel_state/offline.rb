@@ -6,6 +6,7 @@ module Lightning
       class Offline < ChannelState
         def next(message, data)
           match message, (on ~InputReconnected do |msg|
+            context.forwarder << msg[:remote]
             reestablish = ChannelReestablish[
               data[:commitments][:channel_id],
               data[:commitments][:local_commit][:index] + 1,
@@ -13,7 +14,7 @@ module Lightning
               '',
               ''
             ]
-            goto(Normal.new(channel, context), data: data, sending: reestablish)
+            goto(Syncing.new(channel, context), data: data, sending: reestablish)
           end)
         end
       end
