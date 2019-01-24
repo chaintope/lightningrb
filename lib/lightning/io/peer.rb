@@ -18,7 +18,6 @@ module Lightning
           channel
         end
 
-        channels = channels.map {|c| [c[:commitments][:channel_id], c]}.to_h
         @data = DisconnectedData[Algebrick::None, channels]
       end
 
@@ -105,7 +104,7 @@ module Lightning
             log(Logger::WARN, '/peer@initializing', "unhandled message: #{message}")
             [self, data]
           end)
-        end
+        endlib/lightning/channel/channel_context.rb
       end
 
       class PeerStateConnected < PeerState

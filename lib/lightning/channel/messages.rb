@@ -102,26 +102,73 @@ module Lightning
           funder == 1
         end
 
-        def self.builder
-          @builder ||= Lightning::Utils::Serializer.new.
-            public_key.uint64.x(4).uint16.x(2).bitcoin_key.uint64.x(4).pascal_string.binary(32).char.pascal_string.x(2)
-        end
-
-        def self.unpack(payload)
-          args = builder.to_a(payload)
-          [new(*(args[0])), args[1]]
-        end
-
-        def pack
-          LocalParam.builder.to_binary(*to_a)
-        end
-
         def to_payload
-          pack
+          payload = +''
+          payload << self[:node_id].htb
+          payload << [self[:dust_limit_satoshis]].pack('q>')
+          payload << [self[:max_htlc_value_in_flight_msat]].pack('q>')
+          payload << [self[:channel_reserve_satoshis]].pack('q>')
+          payload << [self[:htlc_minimum_msat]].pack('q>')
+          payload << [self[:to_self_delay]].pack('n')
+          payload << [self[:max_accepted_htlcs]].pack('n')
+          payload << [self[:funding_priv_key].priv_key].pack('H64')
+          payload << self[:revocation_secret].to_s(16).rjust(64, '0').htb
+          payload << self[:payment_key].to_s(16).rjust(64, '0').htb
+          payload << self[:delayed_payment_key].to_s(16).rjust(64, '0').htb
+          payload << self[:htlc_key].to_s(16).rjust(64, '0').htb
+          payload << [self[:default_final_script_pubkey].htb.bytesize].pack('n')
+          payload << self[:default_final_script_pubkey].htb
+          payload << self[:sha_seed]
+          payload << [self[:funder]].pack('C')
+          payload << [self[:globalfeatures].htb.bytesize].pack('n')
+          payload << self[:globalfeatures].htb
+          payload << [self[:localfeatures].htb.bytesize].pack('n')
+          payload << self[:localfeatures].htb
+          payload
         end
 
         def self.load(payload)
-          unpack(payload)
+          node_id, rest = payload.unpack('H66a*')
+          dust_limit_satoshis, rest = rest.unpack('q>a*')
+          max_htlc_value_in_flight_msat, rest = rest.unpack('q>a*')
+          channel_reserve_satoshis, rest = rest.unpack('q>a*')
+          htlc_minimum_msat, rest = rest.unpack('q>a*')
+          to_self_delay, rest = rest.unpack('na*')
+          max_accepted_htlcs, rest = rest.unpack('na*')
+          funding_priv_key, rest = rest.unpack('H64a*')
+          funding_priv_key = Bitcoin::Key.new(priv_key: funding_priv_key)
+          revocation_secret, rest = rest.unpack('H64a*')
+          payment_key, rest = rest.unpack('H64a*')
+          delayed_payment_key, rest = rest.unpack('H64a*')
+          htlc_key, rest = rest.unpack('H64a*')
+          len, rest = rest.unpack('na*')
+          default_final_script_pubkey, rest = rest.unpack("H#{2 * len}a*")
+          sha_seed, rest = rest.unpack('a32a*')
+          funder, rest = rest.unpack('Ca*')
+          len, rest = rest.unpack('na*')
+          globalfeatures, rest = rest.unpack("H#{2 * len}a*")
+          len, rest = rest.unpack('na*')
+          localfeatures, rest = rest.unpack("H#{2 * len}a*")
+          param = new(
+            node_id,
+            dust_limit_satoshis,
+            max_htlc_value_in_flight_msat,
+            channel_reserve_satoshis,
+            htlc_minimum_msat,
+            to_self_delay,
+            max_accepted_htlcs,
+            funding_priv_key,
+            revocation_secret.to_i(16),
+            payment_key.to_i(16),
+            delayed_payment_key.to_i(16),
+            htlc_key.to_i(16),
+            default_final_script_pubkey,
+            sha_seed,
+            funder,
+            globalfeatures,
+            localfeatures
+          )
+          [param, rest]
         end
 
         def ==(other)
