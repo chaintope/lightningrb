@@ -75,16 +75,7 @@ module Lightning
             else
               [remote_node_id, local_node_id, remote_funding_key, local_funding_key]
             end
-          payload = +''
-          payload << [features.bytesize].pack('n')
-          payload << features
-          payload << chain_hash.htb
-          payload << [short_channel_id].pack('q>')
-          payload << node_id_1.htb
-          payload << node_id_2.htb
-          payload << bitcoin_key_1.htb
-          payload << bitcoin_key_2.htb
-          witness = Bitcoin.double_sha256(payload)
+          witness = ChannelAnnouncement.witness(features, chain_hash, short_channel_id, node_id_1, node_id_2, bitcoin_key_1, bitcoin_key_2)
           [node_key.sign(witness).bth, funding_key.sign(witness).bth]
         end
 

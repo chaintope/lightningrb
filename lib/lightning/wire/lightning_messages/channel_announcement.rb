@@ -57,6 +57,27 @@ module Lightning
         def witness
           Bitcoin.double_sha256(witness_data)
         end
+
+        def self.witness(features,
+          chain_hash,
+          short_channel_id,
+          node_id_1,
+          node_id_2,
+          bitcoin_key_1,
+          bitcoin_key_2
+        )
+          new(
+            '', '', '', '',
+            features.bytesize,
+            features,
+            chain_hash,
+            short_channel_id,
+            node_id_1,
+            node_id_2,
+            bitcoin_key_1,
+            bitcoin_key_2
+          ).witness
+        end
       end
     end
   end
