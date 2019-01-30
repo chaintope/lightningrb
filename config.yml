@@ -1,0 +1,5 @@
+bitcoinrb:
+  rpc:
+    url: 'localhost:18443'
+  grpc:
+    url: 'localhost:8080'

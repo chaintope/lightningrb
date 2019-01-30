@@ -84,7 +84,18 @@ module Lightning
       end
 
       def build_bitcoin_rpc_url
-        'http://localhost:18443/'
+        @config ||= load_config
+        @config['bitcoin']['rpc']['url']
+      end
+
+      def build_bitcoin_grpc_url
+        @config ||= load_config
+        @config['bitcoin']['grpc']['url']
+      end
+
+      def load_config
+        file = 'config.yml'
+        YAML.load_file(file)
       end
     end
   end

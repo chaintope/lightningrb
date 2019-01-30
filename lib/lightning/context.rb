@@ -10,7 +10,7 @@ module Lightning
       @node_params = Lightning::NodeParams.new
       @wallet = Lightning::Blockchain::Wallet.new(spv, self)
       @spv = spv
-      @blockchain = Lightning::Blockchain::Watcher.spawn(:watcher)
+      @blockchain = Lightning::Blockchain::Watcher.spawn(:watcher, spv)
       @broadcast = Lightning::IO::Broadcast.spawn(:broadcast)
 
       @node_db = Lightning::Store::NodeDb.new("tmp/node_db")

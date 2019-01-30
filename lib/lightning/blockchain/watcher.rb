@@ -8,8 +8,8 @@ module Lightning
       include Lightning::Blockchain::Messages
 
       attr_reader :stub
-      def initialize
-        @stub = Bitcoin::Grpc::Blockchain::Stub.new('localhost:8080', :this_channel_is_insecure)
+      def initialize(spv)
+        @stub = Bitcoin::Grpc::Blockchain::Stub.new(spv.build_bitcoin_grpc_url, :this_channel_is_insecure)
       end
 
       def on_message(message)
