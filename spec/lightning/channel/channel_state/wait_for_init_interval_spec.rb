@@ -11,7 +11,6 @@ describe Lightning::Channel::ChannelState::WaitForInitInterval do
   let(:channel_context) do
     build(:channel_context,
           context: build(:context, spv: spv, wallet: wallet),
-          transport: transport,
           forwarder: forwarder)
   end
   let(:transport) { spawn_dummy_actor(name: :transport) }
