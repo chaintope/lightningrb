@@ -11,7 +11,7 @@ Async.logger.level = Logger::DEBUG
 
 module Lightning
   module Rpc
-    END_POINT = Async::HTTP::URLEndpoint.parse('http://127.0.0.1:9222')
+    END_POINT = Async::HTTP::URLEndpoint.parse('http://0.0.0.0:9222')
 
     class Server
       def self.run(context)
