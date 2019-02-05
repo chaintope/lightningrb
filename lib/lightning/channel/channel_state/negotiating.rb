@@ -5,7 +5,8 @@ module Lightning
     class ChannelState
       class Negotiating < ChannelState
         def next(message, data)
-          match message, (on ~ClosingSigned do |msg|
+          case message
+          when ClosingSigned
             # TODO: verify signature.
             local_script = Bitcoin::Script.parse_from_payload(data[:local_shutdown][:scriptpubkey].htb)
             remote_script = Bitcoin::Script.parse_from_payload(data[:remote_shutdown][:scriptpubkey].htb)
@@ -14,15 +15,15 @@ module Lightning
               data[:commitments],
               local_script,
               remote_script,
-              msg[:fee_satoshis],
-              msg[:signature]
+              message.fee_satoshis,
+              message.signature
             )
-            if msg[:fee_satoshis] == data[:closing_tx_proposed].last.local_closing_signed.fee_satoshis
+            if message.fee_satoshis == data[:closing_tx_proposed].last.local_closing_signed.fee_satoshis
               handle_mutual_close(tx, data)
             else
               fee = Lightning::Transactions::Closing.next_closing_fee(
                 data[:closing_tx_proposed].last.local_closing_signed.fee_satoshis,
-                msg[:fee_satoshis]
+                message.fee_satoshis
               )
               closing = Lightning::Transactions::Closing.make_closing_tx(
                 data[:commitments],
@@ -43,10 +44,10 @@ module Lightning
                 goto(self, data: store(data), sending: closing.closing_signed)
               end
             end
-          rescue InvalidCloseFee, RuntimeError => e
-            puts e.backtrace
-            handler_local_error(data)
-          end)
+          end
+        rescue InvalidCloseFee, RuntimeError => e
+          puts e.backtrace
+          handler_local_error(data)
         end
 
         def handle_mutual_close(tx, data, closing_signed: nil)

@@ -58,7 +58,7 @@ describe Lightning::Channel::Register do
     end
 
     describe 'Forward' do
-      let(:lightning_message) { build(:update_fulfill_htlc).get }
+      let(:lightning_message) { build(:update_fulfill_htlc) }
       let(:message) { Lightning::Channel::Register::Forward[channel_id, lightning_message] }
 
       before do
@@ -73,7 +73,7 @@ describe Lightning::Channel::Register do
     end
 
     describe 'ForwardShortId' do
-      let(:lightning_message) { build(:update_fulfill_htlc).get }
+      let(:lightning_message) { build(:update_fulfill_htlc) }
       let(:message) { Lightning::Channel::Register::ForwardShortId[short_channel_id, lightning_message] }
 
       before do

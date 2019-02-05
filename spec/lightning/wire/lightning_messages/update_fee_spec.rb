@@ -13,16 +13,16 @@ describe Lightning::Wire::LightningMessages::UpdateFee do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:channel_id]).to eq channel_id }
-    it { expect(subject[:feerate_per_kw]).to eq feerate_per_kw }
+    it { expect(subject.channel_id).to eq channel_id }
+    it { expect(subject.feerate_per_kw).to eq feerate_per_kw }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        channel_id,
-        feerate_per_kw
-      ].to_payload.bth
+      described_class.new(
+        channel_id: channel_id,
+        feerate_per_kw: feerate_per_kw
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

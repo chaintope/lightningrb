@@ -5,7 +5,9 @@ module Lightning
     class ChannelState
       class WaitForFundingLocked < ChannelState
         def next(message, data)
-          match message, (on FundingLocked.(any, ~any) do |next_per_commitment_point|
+          case message
+          when FundingLocked
+            next_per_commitment_point = message.next_per_commitment_point
             commitments = data[:commitments]
             temporary_channel_id = data[:temporary_channel_id]
             short_channel_id = data[:short_channel_id]
@@ -47,14 +49,14 @@ module Lightning
               Normal.new(channel, context),
               data: store(DataNormal[temporary_channel_id, new_commitments, short_channel_id, 0, None, channel_update, None, None])
             )
-          end), (on ~WatchEventConfirmed do |msg|
+          when WatchEventConfirmed
             task = Concurrent::TimerTask.new(execution_interval: 60) do
-              channel.reference << msg
+              channel.reference << message
               task.shutdown
             end
             task.execute
             [self, data]
-          end)
+          end
         end
       end
     end

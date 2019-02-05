@@ -27,42 +27,42 @@ describe Lightning::Router::Router do
 
       context "Route exists" do
         before do
-          channel1 = build(:channel_announcement, short_channel_id: 0, node_id_1: public_key0, node_id_2: public_key1).get
+          channel1 = build(:channel_announcement, short_channel_id: 0, node_id_1: public_key0, node_id_2: public_key1)
           expect(channel1).to receive(:valid_signature?).and_return(true)
           router << channel1
           router.ask(:await).wait
 
-          channel2 = build(:channel_announcement, short_channel_id: 1, node_id_1: public_key1, node_id_2: public_key2).get
+          channel2 = build(:channel_announcement, short_channel_id: 1, node_id_1: public_key1, node_id_2: public_key2)
           expect(channel2).to receive(:valid_signature?).and_return(true)
           router << channel2
           router.ask(:await).wait
 
-          channel3 = build(:channel_announcement, short_channel_id: 2, node_id_1: public_key2, node_id_2: public_key3).get
+          channel3 = build(:channel_announcement, short_channel_id: 2, node_id_1: public_key2, node_id_2: public_key3)
           expect(channel3).to receive(:valid_signature?).and_return(true)
           router << channel3
           router.ask(:await).wait
 
-          channel4 = build(:channel_announcement, short_channel_id: 3, node_id_1: public_key3, node_id_2: public_key4).get
+          channel4 = build(:channel_announcement, short_channel_id: 3, node_id_1: public_key3, node_id_2: public_key4)
           expect(channel4).to receive(:valid_signature?).and_return(true)
           router << channel4
           router.ask(:await).wait
 
-          update1 = build(:channel_update,  short_channel_id: 0).get
+          update1 = build(:channel_update,  short_channel_id: 0)
           expect(update1).to receive(:valid_signature?).and_return(true)
           router << update1
           router.ask(:await).wait
 
-          update2 = build(:channel_update,  short_channel_id: 1).get
+          update2 = build(:channel_update,  short_channel_id: 1)
           expect(update2).to receive(:valid_signature?).and_return(true)
           router << update2
           router.ask(:await).wait
 
-          update3 = build(:channel_update,  short_channel_id: 2).get
+          update3 = build(:channel_update,  short_channel_id: 2)
           expect(update3).to receive(:valid_signature?).and_return(true)
           router << update3
           router.ask(:await).wait
 
-          update4 = build(:channel_update,  short_channel_id: 3).get
+          update4 = build(:channel_update,  short_channel_id: 3)
           expect(update4).to receive(:valid_signature?).and_return(true)
           router << update4
           router.ask(:await).wait

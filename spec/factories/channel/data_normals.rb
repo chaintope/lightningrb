@@ -7,7 +7,7 @@ FactoryBot.define do
     short_channel_id { 1 }
     buried { 0 }
     channel_announcement { Algebrick::None }
-    channel_update { build(:channel_update).get }
+    channel_update { build(:channel_update) }
     local_shutdown { Algebrick::None }
     remote_shutdown { Algebrick::None }
     initialize_with do

@@ -16,10 +16,10 @@ module Lightning
             return [self, data] unless event_type == 'confirmed'
             commitments = data[:commitments]
             next_per_commitment_point = Lightning::Crypto::Key.per_commitment_point(commitments[:local_param].sha_seed, 1)
-            funding_locked = FundingLocked[
-              commitments[:channel_id],
-              next_per_commitment_point
-            ]
+            funding_locked = FundingLocked.new(
+              channel_id: commitments[:channel_id],
+              next_per_commitment_point: next_per_commitment_point
+            )
             temporary_channel_id = data[:temporary_channel_id]
             short_channel_id = Channel.to_short_id(block_height, tx_index, commitments[:commit_input].out_point.index)
             goto(

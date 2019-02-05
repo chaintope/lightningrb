@@ -14,7 +14,7 @@ describe Lightning::IO::Broadcast do
 
   let(:receiver) { Receiver.spawn(:receiver, broadcast) }
   let(:broadcast) { build(:broadcast) }
-  let(:message) { Lightning::Wire::LightningMessages::Init[0, '', 0, ''] }
+  let(:message) { build(:init) }
 
   describe 'on_message(Init)' do
     subject do

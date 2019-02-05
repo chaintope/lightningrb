@@ -26,7 +26,7 @@ describe Lightning::Channel::ChannelState::WaitForAcceptChannel do
   end
 
   describe 'with AcceptChannel' do
-    let(:message) { build(:accept_channel).get }
+    let(:message) { build(:accept_channel) }
 
     it 'transition to WaitForFundingCreated' do
       expect(action[0]).to be_a Lightning::Channel::ChannelState::WaitForFundingInternal

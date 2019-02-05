@@ -17,7 +17,8 @@ module Lightning
       end
 
       def on_message(message)
-        match message, (on ~ReceivePayment do |payment|
+        case message
+        when ReceivePayment
           preimage = SecureRandom.hex(32)
           payment_hash = Bitcoin.sha256(preimage.htb).bth
           # FIXME: expiry from message or default
@@ -31,29 +32,29 @@ module Lightning
               'lnbcrt'
             end
           key = context.node_params.private_key
-          amount, multiplier = Lightning::Invoice.msat_to_readable(payment[:amount_msat])
+          amount, multiplier = Lightning::Invoice.msat_to_readable(message[:amount_msat])
           invoice = Lightning::Invoice::Message.new.tap do |m|
             m.prefix = prefix
             m.amount = amount
             m.multiplier = multiplier
             m.timestamp = Time.now.to_i
             m.payment_hash = payment_hash
-            m.description = payment[:description]
+            m.description = message[:description]
             m.expiry = expiry
             m.sign(Bitcoin::Key.new(priv_key: key))
           end
           preimages[payment_hash] = [preimage, invoice]
           envelope.sender << invoice if envelope.sender.is_a? Concurrent::Actor::Reference
           invoice
-        end), (on ~UpdateAddHtlc do |htlc|
-          preimage, = preimages[htlc[:payment_hash]]
-          command = CommandFulfillHtlc[htlc.id, preimage, true]
-          context.register << Lightning::Channel::Register::Forward[htlc[:channel_id], command]
-          context.broadcast << PaymentReceived[htlc[:amount_msat], htlc[:payment_hash], htlc[:channel_id]]
-          preimages.delete(htlc[:payment_hash])
-        end), (on :preimages do
+        when UpdateAddHtlc
+          preimage, = preimages[message.payment_hash]
+          command = CommandFulfillHtlc[message.id, preimage, true]
+          context.register << Lightning::Channel::Register::Forward[message.channel_id, command]
+          context.broadcast << PaymentReceived[message.amount_msat, message.payment_hash, message.channel_id]
+          preimages.delete(message.payment_hash)
+        when :preimages
           preimages
-        end)
+        end
       end
     end
   end

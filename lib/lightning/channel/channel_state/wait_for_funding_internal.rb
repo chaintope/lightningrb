@@ -26,12 +26,12 @@ module Lightning
             )
             Transactions.inspect(remote_commit_tx.tx)
             local_sig_of_remote_tx = Transactions.sign(remote_commit_tx.tx, remote_commit_tx.utxo, local_param.funding_priv_key)
-            funding_created = FundingCreated[
-              temporary_channel_id,
-              funding_tx.txid,
-              funding_tx_output_index,
-              local_sig_of_remote_tx
-            ]
+            funding_created = FundingCreated.new(
+              temporary_channel_id: temporary_channel_id,
+              funding_tx: funding_tx.txid,
+              funding_tx_output_index: funding_tx_output_index,
+              signature: Lightning::Wire::Signature.new(value: local_sig_of_remote_tx)
+            )
 
             channel_id = Channel.to_channel_id(funding_tx.txid, funding_tx_output_index)
             event = ChannelIdAssigned[

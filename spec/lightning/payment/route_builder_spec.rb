@@ -16,7 +16,21 @@ describe Lightning::Payment::RouteBuilder do
   end
   let(:public_keys) { keys.map(&:pubkey) }
   let(:sig) { keys[0].sign(Bitcoin.sha256('')).bth + '01' }
-  let(:channel_update) { Lightning::Wire::LightningMessages::ChannelUpdate[sig, '00' * 32, 0, 0, 0, 0, 42000, 0, 0] }
+  let(:channel_update) do
+    Lightning::Wire::LightningMessages::ChannelUpdate.new(
+      signature: Lightning::Wire::Signature.new(value: sig),
+      chain_hash1: '00' * 32,
+      short_channel_id: 0,
+      timestamp: 0,
+      message_flags: "00",
+      channel_flags: "00",
+      cltv_expiry_delta: 42000,
+      htlc_minimum_msat: 0,
+      fee_base_msat: 0,
+      fee_proportional_millionths: 0,
+      htlc_maximum_msat: 0
+    )
+  end
   let(:channel_update_ab) do
     channel_update.copy(short_channel_id: 1, cltv_expiry_delta: 4, fee_base_msat: 642000, fee_proportional_millionths: 7)
   end

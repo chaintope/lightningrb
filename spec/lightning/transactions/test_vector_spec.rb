@@ -42,11 +42,11 @@ describe Lightning::Transactions do
       '0404040404040404040404040404040404040404040404040404040404040404',
     ]
   end
-  let(:receive0) { build(:update_add_htlc, amount_msat: 1_000_000, payment_hash: keys[0], cltv_expiry: 500).get }
-  let(:receive1) { build(:update_add_htlc, amount_msat: 2_000_000, payment_hash: keys[1], cltv_expiry: 501).get }
-  let(:offer2) { build(:update_add_htlc, amount_msat: 2_000_000, payment_hash: keys[2], cltv_expiry: 502).get }
-  let(:offer3) { build(:update_add_htlc, amount_msat: 3_000_000, payment_hash: keys[3], cltv_expiry: 503).get }
-  let(:receive4) { build(:update_add_htlc, amount_msat: 4_000_000, payment_hash: keys[4], cltv_expiry: 504).get }
+  let(:receive0) { build(:update_add_htlc, amount_msat: 1_000_000, payment_hash: keys[0], cltv_expiry: 500) }
+  let(:receive1) { build(:update_add_htlc, amount_msat: 2_000_000, payment_hash: keys[1], cltv_expiry: 501) }
+  let(:offer2) { build(:update_add_htlc, amount_msat: 2_000_000, payment_hash: keys[2], cltv_expiry: 502) }
+  let(:offer3) { build(:update_add_htlc, amount_msat: 3_000_000, payment_hash: keys[3], cltv_expiry: 503) }
+  let(:receive4) { build(:update_add_htlc, amount_msat: 4_000_000, payment_hash: keys[4], cltv_expiry: 504) }
   let(:htlc0) { build(:directed_htlc, :received, add: receive0).get }
   let(:htlc1) { build(:directed_htlc, :received, add: receive1).get }
   let(:htlc2) { build(:directed_htlc, :offered, add: offer2).get }

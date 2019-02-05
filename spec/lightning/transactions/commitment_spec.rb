@@ -163,7 +163,7 @@ describe Lightning::Transactions::Commitment do
         id: 2,
         amount_msat: amount_msat,
         cltv_expiry: cltv_expiry
-      ).get
+      )
     end
 
     # [BOLT-2](02-peer-protocol.md#requirements-9)
@@ -231,14 +231,14 @@ describe Lightning::Transactions::Commitment do
   describe '.receive_fulfill' do
     subject { Lightning::Transactions::Commitment.receive_fulfill(commitment, fulfill) }
 
-    let(:fulfill) { build(:update_fulfill_htlc).get }
+    let(:fulfill) { build(:update_fulfill_htlc) }
     let(:commitment) do
       build(:commitment, :funder, :has_local_offered_htlcs, :has_remote_received_htlcs, remote_next_commit_info: '').get
     end
 
     describe 'A receiving node:' do
       context 'if the `id` does not correspond to an HTLC in its current commitment transaction:' do
-        let(:fulfill) { build(:update_fulfill_htlc, id: 999).get }
+        let(:fulfill) { build(:update_fulfill_htlc, id: 999) }
 
         it 'MUST fail the channel.' do
           expect { subject }.to raise_error(Lightning::Exceptions::UnknownHtlcId)
@@ -246,7 +246,7 @@ describe Lightning::Transactions::Commitment do
       end
 
       context 'if the payment_preimage value in update_fulfill_htlc doesn\'t SHA256 hash to the corresponding HTLC payment_hash:' do
-        let(:fulfill) { build(:update_fulfill_htlc, payment_preimage: Bitcoin.sha256("\x00" * 32)).get }
+        let(:fulfill) { build(:update_fulfill_htlc, payment_preimage: Bitcoin.sha256("\x00" * 32)) }
 
         it 'MUST fail the channel' do
           expect { subject }.to raise_error(Lightning::Exceptions::InvalidHtlcPreimage)
@@ -262,7 +262,7 @@ describe Lightning::Transactions::Commitment do
   describe '.receive_fail' do
     subject(:result) { Lightning::Transactions::Commitment.receive_fail(commitment, fail) }
 
-    let(:fail) { build(:update_fail_htlc).get }
+    let(:fail) { build(:update_fail_htlc) }
     let(:commitment) { build(:commitment, :funder).get }
 
     describe 'A receiving node:' do
@@ -283,12 +283,12 @@ describe Lightning::Transactions::Commitment do
   describe '.receive_fail_malformed' do
     subject { Lightning::Transactions::Commitment.receive_fail_malformed(commitment, fail_malformed) }
 
-    let(:fail_malformed) { build(:update_fail_malformed_htlc).get }
+    let(:fail_malformed) { build(:update_fail_malformed_htlc) }
     let(:commitment) { build(:commitment, :funder, :has_local_offered_htlcs, :has_remote_received_htlcs).get }
 
     describe 'A receiving node:' do
       context 'if the `id` does not correspond to an HTLC in its current commitment transaction:' do
-        let(:fail_malformed) { build(:update_fail_malformed_htlc, id: 999).get }
+        let(:fail_malformed) { build(:update_fail_malformed_htlc, id: 999) }
 
         it 'MUST fail the channel.' do
           expect { subject }.to raise_error(Lightning::Exceptions::UnknownHtlcId)
@@ -300,7 +300,7 @@ describe Lightning::Transactions::Commitment do
           build(
             :update_fail_malformed_htlc,
             failure_code: Lightning::Onion::FailureMessages::TYPES[:permanent_channel_failure]
-          ).get
+          )
         end
 
         it 'MUST fail the channel.' do
@@ -323,7 +323,7 @@ describe Lightning::Transactions::Commitment do
     subject { Lightning::Transactions::Commitment.send_commit(commitment) }
 
     describe 'A sending node:' do
-      let(:update) { build(:update_add_htlc).get }
+      let(:update) { build(:update_add_htlc) }
       let(:local_change) { build(:local_change, proposed: [update]).get }
       let(:remote_next_commit_info) { '025f7117a78150fe2ef97db7cfc83bd57b2e2c0d0dd25eaf467a4a1c2a45ce1486' }
       let(:commitment) do
@@ -366,10 +366,9 @@ describe Lightning::Transactions::Commitment do
   describe '.receive_commit' do
     subject(:result) { Lightning::Transactions::Commitment.receive_commit(commitment, commitment_signed) }
 
-    let(:commitment_signed) { build(:commitment_signed, num_htlcs: num_htlcs, htlc_signature: htlc_signature).get }
-    let(:num_htlcs) { 0 }
+    let(:commitment_signed) { build(:commitment_signed, htlc_signature: htlc_signature) }
     let(:htlc_signature) { [] }
-    let(:update) { build(:update_add_htlc).get }
+    let(:update) { build(:update_add_htlc) }
     let(:local_change) { build(:local_change, acked: [update]).get }
     let(:commitment) do
       build(:commitment, :funder, local_change: local_change).get
@@ -389,8 +388,12 @@ describe Lightning::Transactions::Commitment do
         end
 
         context 'if num_htlcs is not equal to the number of HTLC outputs in the local commitment transaction:' do
-          let(:num_htlcs) { 1 }
-          let(:htlc_signature) { ['77' * 32, '88' * 32] }
+          let(:htlc_signature) do
+            [
+              Lightning::Wire::Signature.new(value: '77' * 32),
+              Lightning::Wire::Signature.new(value: '88' * 32),
+            ]
+          end
 
           it 'MUST fail the channel.' do
             expect { subject }.to raise_error(Lightning::Exceptions::HtlcSigCountMismatch)
@@ -402,9 +405,8 @@ describe Lightning::Transactions::Commitment do
         let(:commitment_signed) do
           build(
             :commitment_signed,
-            num_htlcs: num_htlcs,
             htlc_signature: htlc_signature
-          ).get
+          )
         end
         let(:commitment) do
           build(
@@ -415,12 +417,13 @@ describe Lightning::Transactions::Commitment do
             local_change: local_change
           ).get
         end
-        let(:num_htlcs) { 1 }
         let(:htlc_signature) do
           [
-            '304402202e807ac73c2726a92b5f36df8987025039968bee8a985ae1d699014c' \
-            '3d8be45f02201c545477a57a547fe99b2e3e8326f7f399283448aedf03d20505' \
-            '9782bd181b3c',
+            Lightning::Wire::Signature.new(value:
+              '304402202e807ac73c2726a92b5f36df8987025039968bee8a985ae1d699014c' \
+              '3d8be45f02201c545477a57a547fe99b2e3e8326f7f399283448aedf03d20505' \
+              '9782bd181b3c'
+            ),
           ]
         end
 

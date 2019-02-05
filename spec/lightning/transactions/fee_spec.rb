@@ -36,10 +36,10 @@ describe Lightning::Transactions::Fee do
     # `to_local` or `to_remote` outputs fall below `dust_limit_satoshis`.
     subject { described_class.commit_tx_fee(546, spec) }
 
-    let(:add1) { build(:update_add_htlc, id: 0, amount_msat: 5_000 * 1_000, cltv_expiry: 552).get }
-    let(:add2) { build(:update_add_htlc, id: 0, amount_msat: 1_000 * 1_000, cltv_expiry: 553).get }
-    let(:add3) { build(:update_add_htlc, id: 0, amount_msat: 7_000 * 1_000, cltv_expiry: 550).get }
-    let(:add4) { build(:update_add_htlc, id: 0, amount_msat: 800 * 1_000, cltv_expiry: 551).get }
+    let(:add1) { build(:update_add_htlc, id: 0, amount_msat: 5_000 * 1_000, cltv_expiry: 552) }
+    let(:add2) { build(:update_add_htlc, id: 0, amount_msat: 1_000 * 1_000, cltv_expiry: 553) }
+    let(:add3) { build(:update_add_htlc, id: 0, amount_msat: 7_000 * 1_000, cltv_expiry: 550) }
+    let(:add4) { build(:update_add_htlc, id: 0, amount_msat: 800 * 1_000, cltv_expiry: 551) }
 
     let(:htlc1) { build(:directed_htlc, :offered, add: add1).get }
     let(:htlc2) { build(:directed_htlc, :offered, add: add2).get }

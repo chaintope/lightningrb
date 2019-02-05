@@ -18,40 +18,28 @@ module Lightning
     ##
     # Message Classes
     #
-    class PascalString < ::Protobuf::Message; end
-    class PublicKey < ::Protobuf::Message; end
-    class PrivateKey < ::Protobuf::Message; end
     class Signature < ::Protobuf::Message; end
 
 
     ##
     # Message Fields
     #
-    class PascalString
-      optional :uint32, :length, 1, :".lightning.wire.bits" => 16
-      optional :string, :value, 2
-    end
-
-    class PublicKey
-      optional :bytes, :value, 1, :".lightning.wire.length" => 33
-    end
-
-    class PrivateKey
-      optional :bytes, :value, 1, :".lightning.wire.length" => 32
-    end
-
     class Signature
-      optional :bytes, :r, 1, :".lightning.wire.length" => 32
-      optional :bytes, :s, 2, :".lightning.wire.length" => 32
+      optional :string, :value, 1, :".lightning.wire.hex" => true
     end
 
 
     ##
     # Extended Message Fields
     #
+    class ::Google::Protobuf::MessageOptions < ::Protobuf::Message
+      optional :uint32, :".lightning.wire.type", 50001, :extension => true
+    end
+
     class ::Google::Protobuf::FieldOptions < ::Protobuf::Message
-      optional :uint32, :".lightning.wire.bits", 50001, :extension => true
-      optional :uint32, :".lightning.wire.length", 50002, :extension => true
+      optional :uint32, :".lightning.wire.bits", 60001, :extension => true
+      optional :uint32, :".lightning.wire.length", 60002, :extension => true
+      optional :bool, :".lightning.wire.hex", 60003, :extension => true
     end
 
   end

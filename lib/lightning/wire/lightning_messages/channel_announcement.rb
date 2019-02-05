@@ -3,59 +3,40 @@
 module Lightning
   module Wire
     module LightningMessages
-      module ChannelAnnouncement
-        def self.load(payload)
-          _, signatures, len, rest = payload.unpack('na256na*')
-          signatures = signatures.unpack('a64a64a64a64').map { |sig| LightningMessages.wire2der(sig) }
-          new(*(signatures + [len] + rest.unpack("a#{len}H64q>H66H66H66H66")))
-        end
+      class ChannelAnnouncement < Lightning::Wire::LightningMessages::Generated::ChannelAnnouncement
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        TYPE = 256
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::CHANNEL_ANNOUNCEMENT
-        end
-
-        def to_payload
-          payload = +''
-          payload << [ChannelAnnouncement.to_type].pack('n')
-          payload << [
-            self[:node_signature_1],
-            self[:node_signature_2],
-            self[:bitcoin_signature_1],
-            self[:bitcoin_signature_2],
-          ].map { |der| LightningMessages.der2wire(der.htb) }.join('')
-          payload << [self[:len]].pack('n')
-          payload << self[:features]
-          payload << self[:chain_hash].htb
-          payload << [self[:short_channel_id]].pack('q>')
-          payload << self[:node_id_1].htb
-          payload << self[:node_id_2].htb
-          payload << self[:bitcoin_key_1].htb
-          payload << self[:bitcoin_key_2].htb
-          payload
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
 
         def valid_signature?
-          Bitcoin::Key.new(pubkey: self[:node_id_1]).verify(self[:node_signature_1].htb, witness) &&
-          Bitcoin::Key.new(pubkey: self[:node_id_2]).verify(self[:node_signature_2].htb, witness) &&
-          Bitcoin::Key.new(pubkey: self[:bitcoin_key_1]).verify(self[:bitcoin_signature_1].htb, witness) &&
-          Bitcoin::Key.new(pubkey: self[:bitcoin_key_2]).verify(self[:bitcoin_signature_2].htb, witness)
-        end
-
-        def witness_data
-          payload = +''
-          payload << [self[:len]].pack('n')
-          payload << self[:features]
-          payload << self[:chain_hash].htb
-          payload << [self[:short_channel_id]].pack('q>')
-          payload << self[:node_id_1].htb
-          payload << self[:node_id_2].htb
-          payload << self[:bitcoin_key_1].htb
-          payload << self[:bitcoin_key_2].htb
-          payload
+          Bitcoin::Key.new(pubkey: node_id_1).verify(node_signature_1.value.htb, witness) &&
+          Bitcoin::Key.new(pubkey: node_id_2).verify(node_signature_2.value.htb, witness) &&
+          Bitcoin::Key.new(pubkey: bitcoin_key_1).verify(bitcoin_signature_1.value.htb, witness) &&
+          Bitcoin::Key.new(pubkey: bitcoin_key_2).verify(bitcoin_signature_2.value.htb, witness)
         end
 
         def witness
-          Bitcoin.double_sha256(witness_data)
+          self.class.witness(features, chain_hash, short_channel_id, node_id_1, node_id_2, bitcoin_key_1, bitcoin_key_2)
+        end
+
+        def self.witness(features, chain_hash, short_channel_id, node_id_1, node_id_2, bitcoin_key_1, bitcoin_key_2)
+          witness = ChannelAnnouncementWitness.new(
+            features: features,
+            chain_hash: chain_hash,
+            short_channel_id: short_channel_id,
+            node_id_1: node_id_1,
+            node_id_2: node_id_2,
+            bitcoin_key_1: bitcoin_key_1,
+            bitcoin_key_2: bitcoin_key_2
+          )
+          stream = StringIO.new
+          Protobuf::Encoder.encode(witness, stream)
+          Bitcoin.double_sha256(stream.string)
         end
 
         def self.witness(features,
@@ -78,6 +59,11 @@ module Lightning
             bitcoin_key_2
           ).witness
         end
+      end
+
+      class ChannelAnnouncementWitness < Lightning::Wire::LightningMessages::Generated::ChannelAnnouncementWitness
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
       end
     end
   end

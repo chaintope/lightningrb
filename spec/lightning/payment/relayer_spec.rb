@@ -58,7 +58,21 @@ describe Lightning::Payment::Relayer do
       end
       let(:public_keys) { keys.map(&:pubkey) }
       let(:sig) { keys[0].sign(Bitcoin.sha256('')).bth }
-      let(:channel_update) { Lightning::Wire::LightningMessages::ChannelUpdate[sig, '00' * 32, 0, 0, 0, 0, 0, 42000, 0, 0] }
+      let(:channel_update) do
+        Lightning::Wire::LightningMessages::ChannelUpdate.new(
+          signature: Lightning::Wire::Signature.new(value: sig),
+          chain_hash1: '00' * 32,
+          short_channel_id: 0,
+          timestamp: 0,
+          message_flags: "00",
+          channel_flags: "00",
+          cltv_expiry_delta: 42000,
+          htlc_minimum_msat: 0,
+          fee_base_msat: 0,
+          fee_proportional_millionths: 0,
+          htlc_maximum_msat: 0
+        )
+    end
       let(:channel_update_ab) do
         channel_update.copy(short_channel_id: 1, cltv_expiry_delta: 4, fee_base_msat: 642000, fee_proportional_millionths: 7)
       end
@@ -105,7 +119,7 @@ describe Lightning::Payment::Relayer do
           amount_msat: command_add_htlc[:amount_msat],
           cltv_expiry: command_add_htlc[:cltv_expiry],
           onion_routing_packet: command_add_htlc[:onion]
-        ).get
+        )
       end
       let(:local_channel_update) do
         build(
@@ -145,8 +159,8 @@ describe Lightning::Payment::Relayer do
 
     describe 'ForwardFulfill' do
       let(:message) { Lightning::Payment::Relayer::ForwardFulfill[fulfill, to, htlc] }
-      let(:fulfill) { build(:update_fulfill_htlc).get }
-      let(:htlc) { build(:update_add_htlc).get }
+      let(:fulfill) { build(:update_fulfill_htlc) }
+      let(:htlc) { build(:update_add_htlc) }
 
       context 'to local' do
         let(:to) { Lightning::Payment::Relayer::Local }
@@ -172,8 +186,8 @@ describe Lightning::Payment::Relayer do
 
     describe 'ForwardFail' do
       let(:message) { Lightning::Payment::Relayer::ForwardFail[fail, to, htlc] }
-      let(:fail) { build(:update_fail_htlc).get }
-      let(:htlc) { build(:update_add_htlc).get }
+      let(:fail) { build(:update_fail_htlc) }
+      let(:htlc) { build(:update_add_htlc) }
 
       context 'to local' do
         let(:to) { Lightning::Payment::Relayer::Local }
@@ -199,8 +213,8 @@ describe Lightning::Payment::Relayer do
 
     describe 'ForwardFailMalformed' do
       let(:message) { Lightning::Payment::Relayer::ForwardFailMalformed[fail, to, htlc] }
-      let(:fail) { build(:update_fail_malformed_htlc).get }
-      let(:htlc) { build(:update_add_htlc).get }
+      let(:fail) { build(:update_fail_malformed_htlc) }
+      let(:htlc) { build(:update_add_htlc) }
 
       context 'to local' do
         let(:to) { Lightning::Payment::Relayer::Local }

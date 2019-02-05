@@ -5,7 +5,8 @@ module Lightning
     class ChannelState
       class Syncing < ChannelState
         def next(message, data)
-          match message, (on ~ChannelReestablish do |msg|
+          case message
+          when ChannelReestablish
             if data[:buried] == 1
               context.blockchain << WatchConfirmed[channel, data[:commitments][:commit_input].txid.rhex, context.node_params.min_depth_blocks]
             else

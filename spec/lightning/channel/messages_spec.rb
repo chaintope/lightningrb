@@ -56,7 +56,7 @@ describe Lightning::Channel::Messages do
 
     let(:waiting_for_revocation) { build(:waiting_for_revocation).get }
 
-    it { expect(subject[0]).to eq waiting_for_revocation }
+    it { expect(subject[0].to_payload.bth).to eq waiting_for_revocation.to_payload.bth }
   end
 
   describe 'PublishableTxs#to_payload/load' do

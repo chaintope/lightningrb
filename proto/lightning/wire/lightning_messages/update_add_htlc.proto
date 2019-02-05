@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message UpdateAddHtlc {
+  uint32 type = 1 [(bits) = 16];
+  string channel_id = 2 [(hex) = true, (length) = 32];
+  uint64 id = 3;
+  uint64 amount_msat = 4;
+  string payment_hash = 5[(hex) = true, (length) = 32];
+  uint32 cltv_expiry = 6;
+  string onion_routing_packet = 7[(hex) = true, (length) = 1366];
+}

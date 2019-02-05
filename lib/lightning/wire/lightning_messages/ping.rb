@@ -3,25 +3,20 @@
 module Lightning
   module Wire
     module LightningMessages
-      module Ping
-        def self.load(payload)
-          _, rest = payload.unpack('nH*')
-          num_pong_bytes, byteslen, rest = rest.htb.unpack('n2H*')
-          return nil if byteslen.nil?
-          return nil if byteslen > rest&.htb&.bytesize
-          ignored = rest&.htb&.byteslice(0, byteslen)
-          new(num_pong_bytes, byteslen, ignored)
+      class Ping < Lightning::Wire::LightningMessages::Generated::Ping
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        TYPE = 18
+
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::PING
-        end
-
-        def to_payload
-          payload = +''
-          payload << [Ping.to_type, self[:num_pong_bytes], self[:byteslen]].pack('n3')
-          payload << self[:ignored]
-          payload
+        def valid?
+          return false if num_pong_bytes == 0
+          return false if ignored.empty?
+          true
         end
       end
     end

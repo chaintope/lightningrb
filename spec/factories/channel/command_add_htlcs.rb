@@ -28,7 +28,7 @@ FactoryBot.define do
 
     trait :remote do
       upstream_opt do
-        Algebrick::Some[Lightning::Wire::LightningMessages::UpdateAddHtlc][build(:update_add_htlc).get]
+        Algebrick::Some[Lightning::Wire::LightningMessages::UpdateAddHtlc][build(:update_add_htlc)]
       end
     end
   end

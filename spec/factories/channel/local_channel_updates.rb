@@ -7,7 +7,7 @@ FactoryBot.define do
     short_channel_id { 42 }
     remote_node_id { '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7' }
     channel_announcement { Algebrick::None }
-    channel_update { build(:channel_update).get }
+    channel_update { build(:channel_update) }
     initialize_with do
       new(Lightning::Channel::Events::LocalChannelUpdate[
         channel, channel_id, short_channel_id, remote_node_id, channel_announcement, channel_update

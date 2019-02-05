@@ -15,10 +15,10 @@ describe Lightning::Router::RouteFinder do
     let(:target) { public_key4 }
     let(:updates) do
       {
-        Lightning::Router::Messages::ChannelDesc[1, public_key1, public_key2] => build(:channel_update).get,
-        Lightning::Router::Messages::ChannelDesc[0, public_key0, public_key1] => build(:channel_update).get,
-        Lightning::Router::Messages::ChannelDesc[3, public_key4, public_key3] => build(:channel_update).get,
-        Lightning::Router::Messages::ChannelDesc[2, public_key2, public_key3] => build(:channel_update).get,
+        Lightning::Router::Messages::ChannelDesc[1, public_key1, public_key2] => build(:channel_update),
+        Lightning::Router::Messages::ChannelDesc[0, public_key0, public_key1] => build(:channel_update),
+        Lightning::Router::Messages::ChannelDesc[3, public_key4, public_key3] => build(:channel_update),
+        Lightning::Router::Messages::ChannelDesc[2, public_key2, public_key3] => build(:channel_update),
       }
     end
     let(:assisted_routes) { [] }

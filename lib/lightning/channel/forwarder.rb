@@ -8,12 +8,13 @@ module Lightning
 
       def on_message(message)
         log(Logger::DEBUG, "Forwarder:#{self} message: #{message}, destination: #{@destination}")
-        match message, (on ~LightningMessage do |m|
-          @destination << m if @destination
-        end), (on ~any do |actor|
-          log(Logger::DEBUG, "set destination: #{actor}")
-          @destination = actor
-        end)
+        case message
+        when Lightning::Wire::LightningMessages
+          @destination << message if @destination
+        else
+          log(Logger::DEBUG, "set destination: #{message}")
+          @destination = message
+        end
       end
     end
   end

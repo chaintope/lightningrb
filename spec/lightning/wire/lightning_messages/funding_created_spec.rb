@@ -7,9 +7,11 @@ describe Lightning::Wire::LightningMessages::FundingCreated do
   let(:funding_txid) { '0000000000000000000000000000000000000000000000000000000000000000' }
   let(:funding_output_index) { 3 }
   let(:signature) do
-    '3044022006738efd3950b5afde00bb3a751446b6f66a9f3aa922270f77e393d0' \
-    'f94ef2ea022011e92f342b707aefd3defee91bdbb1a2fc2b824c9a542903d878' \
-    '9b2a7e1a6088'
+    Lightning::Wire::Signature.new(value:
+      '3044022006738efd3950b5afde00bb3a751446b6f66a9f3aa922270f77e393d0' \
+      'f94ef2ea022011e92f342b707aefd3defee91bdbb1a2fc2b824c9a542903d878' \
+      '9b2a7e1a6088'
+    )
   end
   let(:payload) do
     '002236155cae4b48d26ab48aa6ac239da93219615cb8dd846d2a2abeb4' \
@@ -22,20 +24,20 @@ describe Lightning::Wire::LightningMessages::FundingCreated do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:temporary_channel_id]).to eq temporary_channel_id }
-    it { expect(subject[:funding_txid]).to eq funding_txid }
-    it { expect(subject[:funding_output_index]).to eq funding_output_index }
-    it { expect(subject[:signature]).to eq signature }
+    it { expect(subject.temporary_channel_id).to eq temporary_channel_id }
+    it { expect(subject.funding_txid).to eq funding_txid }
+    it { expect(subject.funding_output_index).to eq funding_output_index }
+    it { expect(subject.signature).to eq signature }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        temporary_channel_id,
-        funding_txid,
-        funding_output_index,
-        signature,
-      ].to_payload.bth
+      described_class.new(
+        temporary_channel_id: temporary_channel_id,
+        funding_txid: funding_txid,
+        funding_output_index: funding_output_index,
+        signature: signature,
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }
@@ -43,12 +45,12 @@ describe Lightning::Wire::LightningMessages::FundingCreated do
 
   describe '#validate!' do
     subject do
-      described_class[
-        temporary_channel_id,
-        funding_txid,
-        funding_output_index,
-        signature,
-      ].validate!(open_temporary_channel_id)
+      described_class.new(
+        temporary_channel_id: temporary_channel_id,
+        funding_txid: funding_txid,
+        funding_output_index: funding_output_index,
+        signature: signature,
+      ).validate!(open_temporary_channel_id)
     end
 
     let(:open_temporary_channel_id) { '36155cae4b48d26ab48aa6ac239da93219615cb8dd846d2a2abeb455af9b3357' }

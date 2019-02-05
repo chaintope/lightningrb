@@ -3,7 +3,7 @@
 FactoryBot.define do
   factory(:directed_htlc, class: 'FactoryBotWrapper') do
     direction { 0 } # 0: offered, 1: received
-    add { build(:update_add_htlc).get }
+    add { build(:update_add_htlc) }
 
     initialize_with do
       new(Lightning::Transactions::DirectedHtlc[direction, add])

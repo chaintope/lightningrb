@@ -5,17 +5,55 @@ module Lightning
     class ChannelState
       class Normal < ChannelState
         def next(message, data)
+          # case message
+          # when CommandAddHtlc
+          #   return handle_command_error("error", data) if data.shutting_down?
+          #
+          # when UpdateAddHtlc
+          #
+          # when CommandFulfillHtlc
+          #
+          # when UpdateFulfillHtlc
+          #
+          # when CommandFailHtlc
+          #
+          # when UpdateFailHtlc
+          #
+          # when CommandFailMalformedHtlc
+          #
+          # when UpdateFailMalformedHtlc
+          #
+          # when CommandUpdateFee
+          #
+          # when UpdateFee
+          #
+          # when CommandSignature
+          #
+          # when CommitmentSigned
+          #
+          # when RevokeAndAck
+          #
+          # when CommandAck
+          #
+          # when CommandClose
+          #
+          # when Shutdown
+          #
+          # when WatchEventConfirmed
+          #
+          # end
+
           match message, (on ~CommandAddHtlc do |c|
             return handle_command_error("error", data) if data.shutting_down?
             match Commitment.send_add(data[:commitments], c, origin(c), context.spv),
-                  (on Array.(~Commitments, ~UpdateAddHtlc) do |commitments1, msg|
+                  (on Array.(~Commitments, ~any) do |commitments1, msg|
                     channel << CommandSignature if c[:commit]
                     return goto(self, data: data.copy(commitments: commitments1), sending: msg)
                   end), (on ~any do |error|
                     handle_command_error(error, data)
                   end)
-          end), (on ~UpdateAddHtlc do |msg|
-            match Commitment.receive_add(data[:commitments], msg, context.spv),
+          end), (on UpdateAddHtlc do
+            match Commitment.receive_add(data[:commitments], message, context.spv),
                   (on ~Commitments do |commitments1|
                     return goto(self, data: data.copy(commitments: commitments1))
                   end), (on ~any do |error|
@@ -23,16 +61,16 @@ module Lightning
                   end)
           end), (on ~CommandFulfillHtlc do |c|
             match Commitment.send_fulfill(data[:commitments], c),
-                  (on Array.(~Commitments, ~UpdateFulfillHtlc) do |commitments1, msg|
+                  (on Array.(~Commitments, ~any) do |commitments1, msg|
                     channel << CommandSignature if c[:commit]
                     return goto(self, data: data.copy(commitments: commitments1), sending: msg)
                   end), (on ~any do |error|
                     handle_command_error(error, data)
                   end)
-          end), (on ~UpdateFulfillHtlc do |msg|
-            match Commitment.receive_fulfill(data[:commitments], msg),
+          end), (on UpdateFulfillHtlc do
+            match Commitment.receive_fulfill(data[:commitments], message),
                   (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
-                    context.relayer << Lightning::Payment::Relayer::ForwardFulfill[msg, origin, htlc]
+                    context.relayer << Lightning::Payment::Relayer::ForwardFulfill[message, origin, htlc]
                     return goto(self, data: data.copy(commitments: commitments1))
                   end), (on Array do
                     [self, data]
@@ -41,16 +79,16 @@ module Lightning
                   end)
           end), (on ~CommandFailHtlc do |c|
             match Commitment.send_fail(data[:commitments], c, context.node_params.private_key),
-                  (on Array.(~Commitments, ~UpdateFailHtlc) do |commitments1, msg|
+                  (on Array.(~Commitments, ~any) do |commitments1, msg|
                     channel << CommandSignature if c[:commit]
                     return goto(self, data: data.copy(commitments: commitments1), sending: msg)
                   end), (on ~any do |error|
                     handle_command_error(error, data)
                   end)
-          end), (on ~UpdateFailHtlc do |msg|
-            match Commitment.receive_fail(data[:commitments], msg),
+          end), (on UpdateFailHtlc do
+            match Commitment.receive_fail(data[:commitments], message),
                   (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
-                    context.relayer << Lightning::Payment::Relayer::ForwardFail[msg, origin, htlc]
+                    context.relayer << Lightning::Payment::Relayer::ForwardFail[message, origin, htlc]
                     return goto(self, data: data.copy(commitments: commitments1))
                   end), (on Array do
                     [self, data]
@@ -59,16 +97,16 @@ module Lightning
                   end)
           end), (on ~CommandFailMalformedHtlc do |c|
             match Commitment.send_fail_malformed(data[:commitments], c),
-                  (on Array.(~Commitments, ~UpdateFailMalformedHtlc) do |commitments1, msg|
+                  (on Array.(~Commitments, ~any) do |commitments1, msg|
                     channel << CommandSignature if c[:commit]
                     return goto(self, data: data.copy(commitments: commitments1), sending: msg)
                   end), (on ~any do |error|
                     handle_command_error(error, data)
                   end)
-          end), (on ~UpdateFailMalformedHtlc do |msg|
-            match Commitment.receive_fail_malformed(data[:commitments], msg),
+          end), (on UpdateFailMalformedHtlc do
+            match Commitment.receive_fail_malformed(data[:commitments], message),
                   (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
-                    context.relayer << Lightning::Payment::Relayer::ForwardFailMalformed[msg, origin, htlc]
+                    context.relayer << Lightning::Payment::Relayer::ForwardFailMalformed[message, origin, htlc]
                     return goto(self, data: data.copy(commitments: commitments1))
                   end), (on Array do
                     [self, data]
@@ -77,14 +115,14 @@ module Lightning
                   end)
           end), (on ~CommandUpdateFee do |c|
             match Commitment.send_fee(data[:commitments], c),
-                  (on Array.(~Commitments, ~UpdateFee) do |commitments1, msg|
+                  (on Array.(~Commitments, ~any) do |commitments1, msg|
                     channel << CommandSignature if c[:commit]
                     return goto(self, data: data.copy(commitments: commitments1), sending: msg)
                   end), (on ~any do |error|
                     handle_command_error(error, data)
                   end)
-          end), (on ~UpdateFee do |msg|
-            match Commitment.receive_fee(data[:commitments], msg),
+          end), (on UpdateFee do
+            match Commitment.receive_fee(data[:commitments], message),
                   (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
                     return goto(self, data: data.copy(commitments: commitments1))
                   end), (on Array do
@@ -108,7 +146,7 @@ module Lightning
                       return [self, data]
                     end
                     match Commitment.send_commit(data[:commitments]),
-                          (on Array.(~Commitments, ~CommitmentSigned) do |commitments1, msg|
+                          (on Array.(~Commitments, ~any) do |commitments1, msg|
                             commitments1[:local_changes][:signed].each do |change|
                               match change, (on ~UpdateFulfillHtlc do |update|
                                 context.relayer << CommandAck[update.channel_id, update.id]
@@ -120,8 +158,8 @@ module Lightning
                             handle_command_error(error, data)
                           end)
                   end)
-          end), (on ~CommitmentSigned do |msg|
-            match Commitment.receive_commit(data[:commitments], msg),
+          end), (on CommitmentSigned do
+            match Commitment.receive_commit(data[:commitments], message),
                   (on Array.(~Commitments, ~any) do |commitments1, revocation|
                     if Commitment.local_has_changes?(commitments1)
                       channel << CommandSignature
@@ -131,8 +169,8 @@ module Lightning
                   end), (on ~any do |error|
                     handle_local_error(error, data)
                   end)
-          end), (on ~RevokeAndAck do |msg|
-            match Commitment.receive_revocation(data[:commitments], msg),
+          end), (on RevokeAndAck do
+            match Commitment.receive_revocation(data[:commitments], message),
                   (on ~Commitments do |commitments1|
                     data[:commitments][:remote_changes][:signed].each do |change|
                       context.relayer << Lightning::Payment::Relayer::ForwardAdd[change] if change.is_a?(UpdateAddHtlc)
@@ -143,6 +181,10 @@ module Lightning
                     handle_local_error(error, data)
                   end)
           end), (on ~CommandAck do |c|
+<<<<<<< HEAD
+=======
+
+>>>>>>> Generate classes from protobuf schema file
           end), (on ~CommandClose do |c|
             local_script_pubkey =
               c[:script_pubkey]&.value || data[:commitments][:local_param][:default_final_script_pubkey]
@@ -155,14 +197,14 @@ module Lightning
             unless Lightning::Transactions::Closing.valid_final_script_pubkey?(local_script_pubkey)
               return handle_command_error(InvalidFinalScript.new(data[:commitments]), data)
             end
-            shutdown = Shutdown[data.channel_id, local_script_pubkey.htb.bytesize, local_script_pubkey]
+            shutdown = Shutdown.new(channel_id: data.channel_id, scriptpubkey: local_script_pubkey)
             return goto(
               self,
               data: store(data.copy(local_shutdown: Some[Shutdown][shutdown])),
               sending: shutdown
             )
-          end), (on ~Shutdown do |msg|
-            unless Lightning::Transactions::Closing.valid_final_script_pubkey?(msg[:scriptpubkey])
+          end), (on Shutdown do
+            unless Lightning::Transactions::Closing.valid_final_script_pubkey?(message.scriptpubkey)
               return handle_local_error(InvalidFinalScript.new(data[:commitments]), data)
             end
             if Commitment.remote_has_unsigned_outgoing_htlcs?(data[:commitments])
@@ -174,7 +216,7 @@ module Lightning
                       commitments1 = data[:commitments].tap do |commitments|
                         commitments.remote_next_commit_info = wait.tap { |w| w.re_sign_asap = true }
                       end
-                      return goto(self, data: data.copy(commitments: commitments1, remote_shutdown: msg))
+                      return goto(self, data: data.copy(commitments: commitments1, remote_shutdown: message))
                     end), (on ~String do |info|
                       channel << CommandSignature
                       return goto(self, data: data.copy(remote_shutdown: msg))
@@ -185,7 +227,7 @@ module Lightning
                   [shutdown, []]
                 end), (on any do
                   script = data[:commitments][:local_param][:default_final_script_pubkey]
-                  local_shutdown = Shutdown[data.channel_id, script.htb.bytesize, script]
+                  local_shutdown = Shutdown.new(channel_id: data.channel_id, scriptpubkey: script)
                   [local_shutdown, [local_shutdown]]
                 end)
               if data[:commitments].has_no_pending_htlcs?
@@ -193,14 +235,14 @@ module Lightning
                 closing = Lightning::Transactions::Closing.make_first_closing_tx(
                   data[:commitments],
                   Bitcoin::Script.parse_from_payload(local_shutdown[:scriptpubkey].htb),
-                  Bitcoin::Script.parse_from_payload(msg[:scriptpubkey].htb)
+                  Bitcoin::Script.parse_from_payload(message.scriptpubkey.htb)
                 )
                 return goto(
                   negotiating,
                   data: store(DataNegotiating[
                     data[:commitments],
                     local_shutdown,
-                    msg,
+                    message,
                     [ClosingTxProposed[closing.tx, closing.closing_signed]],
                     Algebrick::None
                   ]),
@@ -212,7 +254,7 @@ module Lightning
                   data: store(DataShutdown[
                     data[:commitments],
                     local_shutdown,
-                    msg
+                    message
                   ]),
                   sending: send_list
                 )
@@ -252,7 +294,7 @@ module Lightning
               data: data.copy(short_channel_id: short_channel_id, buried: 1, channel_update: channel_update),
               sending: local_announcement_signatures
             )
-          end), (on ~AnnouncementSignatures do |msg|
+          end), (on AnnouncementSignatures do
             if data[:buried] == 1
               local_announcement_signatures = Lightning::Router::Announcements.make_announcement_signatures(
                 context.node_params,
@@ -269,9 +311,9 @@ module Lightning
                   data[:commitments][:local_param][:funding_priv_key].pubkey,
                   data[:commitments][:remote_param][:funding_pubkey],
                   local_announcement_signatures[:node_signature],
-                  msg[:node_signature],
+                  message.node_signature,
                   local_announcement_signatures[:bitcoin_signature],
-                  msg[:bitcoin_signature]
+                  message.bitcoin_signature
                 )
                 goto(self, data: store(data.copy(channel_announcement: Some[ChannelAnnouncement][channel_announcement])))
               else
@@ -280,7 +322,7 @@ module Lightning
               end
             else
               task = Concurrent::TimerTask.new(execution_interval: 60) do
-                channel.reference << msg
+                channel.reference << message
                 task.shutdown
               end
               task.execute
@@ -305,7 +347,7 @@ module Lightning
         end
 
         def origin(c)
-          match c[:upstream_opt], (on Algebrick::Some.(~UpdateAddHtlc) do |u|
+          match c[:upstream_opt], (on Algebrick::Some.(~any) do |u|
             Lightning::Payment::Relayer::Relayed[u.channel_id, u.id, u.amount_msat, u.amount_msat]
           end), (on Algebrick::None do
             Lightning::Payment::Relayer::Local

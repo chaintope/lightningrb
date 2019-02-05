@@ -19,18 +19,16 @@ describe Lightning::Wire::LightningMessages::Shutdown do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:channel_id]).to eq channel_id }
-    it { expect(subject[:len]).to eq len }
-    it { expect(subject[:scriptpubkey]).to eq scriptpubkey }
+    it { expect(subject.channel_id).to eq channel_id }
+    it { expect(subject.scriptpubkey).to eq scriptpubkey }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        channel_id,
-        len,
-        scriptpubkey
-      ].to_payload.bth
+      described_class.new(
+        channel_id: channel_id,
+        scriptpubkey: scriptpubkey
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

@@ -9,7 +9,7 @@ FactoryBot.define do
     push_msat { 4 }
     initial_feerate_per_kw { 15000 }
     remote_first_per_commitment_point { build(:remote_first_per_commitment_point) }
-    last_sent { build(:open_channel).get }
+    last_sent { build(:open_channel) }
 
     initialize_with do
       new(Lightning::Channel::Messages::DataWaitForFundingInternal[

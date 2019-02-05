@@ -4,24 +4,16 @@ package lightning.wire;
 
 import "google/protobuf/descriptor.proto";
 
-message PascalString {
-  uint32 length = 1 [(bits) = 16];
-  string value = 2;
-}
-
-message PublicKey {
-  bytes value = 1 [(length) = 33];
-}
-
-message PrivateKey {
-  bytes value = 1 [(length) = 32];
-}
-message Signature {
-  bytes r = 1 [(length) = 32];
-  bytes s = 2 [(length) = 32];
+extend google.protobuf.MessageOptions {
+  uint32 type = 50001;
 }
 
 extend google.protobuf.FieldOptions {
-  uint32 bits = 50001;
-  uint32 length = 50002;
+  uint32 bits = 60001;
+  uint32 length = 60002;
+  bool hex = 60003;
+}
+
+message Signature {
+  string value = 1 [(hex) = true];
 }

@@ -22,7 +22,7 @@ describe Lightning::Channel::ChannelState::WaitForFundingCreated do
   before { allow(Lightning::Transactions).to receive(:add_sigs).and_return(Bitcoin::Tx.new) }
 
   describe 'with FundingCreated' do
-    let(:message) { build(:funding_created).get }
+    let(:message) { build(:funding_created) }
 
     it 'transition to WaitForFundingCreated' do
       expect(action[0]).to be_a Lightning::Channel::ChannelState::WaitForFundingConfirmed

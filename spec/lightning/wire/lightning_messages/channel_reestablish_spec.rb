@@ -15,18 +15,18 @@ describe Lightning::Wire::LightningMessages::ChannelReestablish do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:channel_id]).to eq channel_id }
-    it { expect(subject[:next_local_commitment_number]).to eq next_local_commitment_number }
-    it { expect(subject[:next_remote_revocation_number]).to eq next_remote_revocation_number }
+    it { expect(subject.channel_id).to eq channel_id }
+    it { expect(subject.next_local_commitment_number).to eq next_local_commitment_number }
+    it { expect(subject.next_remote_revocation_number).to eq next_remote_revocation_number }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        channel_id,
-        next_local_commitment_number,
-        next_remote_revocation_number
-      ].to_payload.bth
+      described_class.new(
+        channel_id: channel_id,
+        next_local_commitment_number: next_local_commitment_number,
+        next_remote_revocation_number: next_remote_revocation_number
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

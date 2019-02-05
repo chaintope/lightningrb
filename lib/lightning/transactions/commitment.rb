@@ -357,14 +357,14 @@ module Lightning
         # for Bitcoin blockchain only
         return HtlcValueTooLarge.new(commitments, cmd) if cmd[:amount_msat] > 0x00000000FFFFFFFF
 
-        add = UpdateAddHtlc[
-          commitments[:channel_id],
-          commitments[:local_next_htlc_id],
-          cmd[:amount_msat],
-          cmd[:payment_hash],
-          cmd[:cltv_expiry],
-          cmd[:onion]
-        ]
+        add = UpdateAddHtlc.new(
+          channel_id: commitments[:channel_id],
+          id: commitments[:local_next_htlc_id],
+          amount_msat: cmd[:amount_msat],
+          payment_hash: cmd[:payment_hash],
+          cltv_expiry: cmd[:cltv_expiry],
+          onion_routing_packet: cmd[:onion]
+        )
         commitments1 = add_local_proposal(
           commitments,
           add,
@@ -473,7 +473,11 @@ module Lightning
         raise UnknownHtlcId.new(commitments, command.id) if exist
         payment_hash = Bitcoin.sha256(command.r.htb).bth
         raise InvalidHtlcPreimage.new(htlc, payment_hash) unless htlc.payment_hash == payment_hash
-        fulfill = UpdateFulfillHtlc[commitments[:channel_id], command.id, command.r]
+        fulfill = UpdateFulfillHtlc.new(
+          channel_id: commitments[:channel_id],
+          id: command.id,
+          payment_preimage: command.r
+        )
         commitments1 = add_local_proposal(commitments, fulfill)
         [commitments1, fulfill]
       end
@@ -515,7 +519,11 @@ module Lightning
         end), (on ~any do |forwarded|
           Lightning::Onion::Sphinx.forward_error_packet(forwarded, shared_secret)
         end)
-        fail = UpdateFailHtlc[commitments[:channel_id], command.id, reason.bytesize, reason.bth]
+        fail = UpdateFailHtlc.new(
+          channel_id: commitments[:channel_id],
+          id: command.id,
+          reason: reason
+        )
         commitments1 = add_local_proposal(commitments, fail)
         [commitments1, fail]
       end
@@ -546,12 +554,12 @@ module Lightning
           end
 
         raise UnknownHtlcId.new(commitments, command.id) if exist
-        fail = UpdateFailMalformedHtlc[
-          commitments[:channel_id],
-          command.id,
-          command.onion_hash,
-          command.failure_code
-        ]
+        fail = UpdateFailMalformedHtlc.new(
+          channel_id: commitments[:channel_id],
+          id: command.id,
+          sha256_of_onion: command.onion_hash,
+          failure_code: command.failure_code
+        )
         commitments1 = add_local_proposal(commitments, fail)
         [commitments1, fail]
       end
@@ -568,7 +576,7 @@ module Lightning
       def self.send_fee(commitments, command)
         raise FundeeCannotSendUpdateFee.new('fundee cannot send update fee') if commitments[:local_param][:funder] == 0
 
-        fee = UpdateFee[commitments[:channel_id], command[:feerate_per_kw]]
+        fee = UpdateFee.new(channel_id: commitments[:channel_id], feerate_per_kw: command[:feerate_per_kw])
         commitments1 = add_local_proposal(commitments, fee)
         reduced = CommitmentSpec.reduce(
           commitments1[:remote_commit][:spec],
@@ -639,14 +647,13 @@ module Lightning
           amount = tx.utxo.value
           redeem_script = tx.utxo.redeem_script
           sighash = tx.tx.sighash_for_input(index, redeem_script, amount: amount, sig_version: :witness_v0)
-          Bitcoin::Key.new(priv_key: key).sign(sighash).bth
+          Lightning::Wire::Signature.new(value: Bitcoin::Key.new(priv_key: key).sign(sighash).bth)
         end
-        commit_sig = CommitmentSigned[
-          commitments[:channel_id],
-          sig,
-          htlc_sigs.size,
-          htlc_sigs
-        ]
+        commit_sig = CommitmentSigned.new(
+          channel_id: commitments[:channel_id],
+          signature: Lightning::Wire::Signature.new(value: sig),
+          htlc_signature: htlc_sigs
+        )
 
         remote_next_commit_info = WaitingForRevocation[
           RemoteCommit[
@@ -693,7 +700,7 @@ module Lightning
               local_commit_tx.utxo,
               commitments[:local_param].funding_priv_key.pubkey,
               commitments[:remote_param].funding_pubkey,
-              sig,
+              Lightning::Wire::Signature.new(value: sig),
               commit[:signature]
             )
           rescue => e
@@ -708,7 +715,7 @@ module Lightning
         sorted_htlc_txs = (htlc_timeout_txs + htlc_success_txs).sort_by do |tx|
           tx.tx.inputs[0].out_point.index
         end
-        raise HtlcSigCountMismatch.new(commit[:num_htlcs], sorted_htlc_txs.size) if commit[:htlc_signature].size != sorted_htlc_txs.size
+        raise HtlcSigCountMismatch.new(commit.htlc_signature.size, sorted_htlc_txs.size) if commit.htlc_signature.size != sorted_htlc_txs.size
         htlc_sigs = sorted_htlc_txs.map do |tx|
           key = Key.derive_private_key(commitments[:local_param].htlc_key.to_s(16).rjust(64, '0'), local_per_commitment_point)
           index = 0
@@ -723,19 +730,19 @@ module Lightning
         htlc_txs_and_sigs = [sorted_htlc_txs, htlc_sigs, commit[:htlc_signature]].transpose
         htlc_txs_and_sigs = htlc_txs_and_sigs.select do |htlc_tx, local_sig, remote_sig|
           match htlc_tx, (on ~HtlcTimeout do |htlc_timeout|
-            htlc_timeout.add_sigs(local_sig, remote_sig)
+            htlc_timeout.add_sigs(local_sig, remote_sig.value)
             unless Transactions.spendable?(htlc_timeout.tx)
-              raise InvalidHtlcSignature.new(local_sig, remote_sig)
+              raise InvalidHtlcSignature.new(local_sig, remote_sig.value)
             end
             unless Transactions.check_sig(htlc_tx, remote_sig, remote_htlc_pubkey)
-              raise InvalidHtlcSignature.new(local_sig, remote_sig)
+              raise InvalidHtlcSignature.new(local_sig, remote_sig.value)
             end
-            [htlc_timeout, local_sig, remote_sig]
+            [htlc_timeout, local_sig, remote_sig.value]
           end), (on ~HtlcSuccess do |htlc_success|
             unless Transactions.check_sig(htlc_tx, remote_sig, remote_htlc_pubkey)
-              raise InvalidHtlcSignature.new(local_sig, remote_sig)
+              raise InvalidHtlcSignature.new(local_sig, remote_sig.value)
             end
-            [htlc_tx, local_sig, remote_sig]
+            [htlc_tx, local_sig, remote_sig.value]
           end)
         end
 
@@ -745,11 +752,11 @@ module Lightning
         local_next_per_commitment_point = Key.per_commitment_point(
           commitments[:local_param].sha_seed, commitments[:local_commit].index + 2
         )
-        revocation = RevokeAndAck[
-          commitments[:channel_id],
-          local_per_commitment_secret,
-          local_next_per_commitment_point
-        ]
+        revocation = RevokeAndAck.new(
+          channel_id: commitments[:channel_id],
+          per_commitment_secret: local_per_commitment_secret,
+          next_per_commitment_point: local_next_per_commitment_point
+        )
 
         local_commit1 = LocalCommit[
           commitments[:local_commit].index + 1,

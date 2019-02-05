@@ -3,10 +3,10 @@
 require 'spec_helper'
 
 describe Lightning::Transactions::CommitmentSpec do
-  let(:add1) { build(:update_add_htlc, id: 1, amount_msat: 2_000 * 1_000).get }
-  let(:add2) { build(:update_add_htlc, id: 2, amount_msat: 1_000 * 1_000).get }
-  let(:ful1) { build(:update_fulfill_htlc, id: add1.id).get }
-  let(:fail1) { build(:update_fail_htlc, id: add2.id).get }
+  let(:add1) { build(:update_add_htlc, id: 1, amount_msat: 2_000 * 1_000) }
+  let(:add2) { build(:update_add_htlc, id: 2, amount_msat: 1_000 * 1_000) }
+  let(:ful1) { build(:update_fulfill_htlc, id: add1.id) }
+  let(:fail1) { build(:update_fail_htlc, id: add2.id) }
 
   describe 'add, fulfill and fail htlcs from the sender side' do
     let(:spec) { build(:commitment_spec, to_local_msat: 5000 * 1000).get }
@@ -53,6 +53,6 @@ describe Lightning::Transactions::CommitmentSpec do
 
     let(:spec) { build(:commitment_spec, :has_received_htlcs).get }
 
-    it { expect(subject[0]).to eq spec }
+    it { expect(subject[0].to_payload).to eq spec.to_payload }
   end
 end

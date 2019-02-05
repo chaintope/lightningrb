@@ -61,18 +61,21 @@ module Lightning
           @channel_updates[msg[:short_channel_id]] = msg[:channel_update]
         end), (on ~LocalChannelDown do |msg|
           @channel_updates.delete(msg[:short_channel_id])
-        end), (on ForwardAdd.(~UpdateAddHtlc) do |add|
+        end), (on ~ForwardAdd do |add|
+          add = message[:add]
           hop_data, next_packet, secret = Sphinx.parse(context.node_params.private_key, add.onion_routing_packet.htb)
 
           command = packet_to_command(hop_data, next_packet, add)
-          match command, (on ~CommandFailHtlc do |command|
+          case command
+          when CommandFailHtlc
             parent << command
-          end), (on ~CommandAddHtlc do |command|
+          when CommandAddHtlc
             context.register << Register::ForwardShortId[hop_data.per_hop.short_channel_id, command]
-          end), (on ~UpdateAddHtlc do |msg|
+          when UpdateAddHtlc
             context.payment_handler << command
-          end)
-        end), (on ForwardFulfill.(~any, ~Local, ~UpdateAddHtlc) do |fulfill, origin, htlc|
+          end
+        end), (on ForwardFulfill.(~any, ~Local, UpdateAddHtlc) do |fulfill, origin|
+          htlc = message[:htlc]
           payment_hash = Bitcoin.sha256(fulfill[:payment_preimage].htb).bth
           context.broadcast << PaymentSucceeded[
             htlc.amount_msat, payment_hash, fulfill[:payment_preimage], []
@@ -83,12 +86,14 @@ module Lightning
           payment_hash = Bitcoin.sha256(fulfill[:payment_preimage].htb).bth
           context.broadcast << PaymentRelayed[origin[:amount_msat_in], origin[:amount_msat_out], payment_hash]
           # preimage_db.add_preimage(origin[:original_channel_id],origin[:original_htlc_id], fulfill[:payment_preimage])
-        end), (on ForwardFail.(~any, ~Local, ~UpdateAddHtlc) do |fail, origin, htlc|
+        end), (on ForwardFail.(~any, ~Local, UpdateAddHtlc) do |fail, origin|
+          htlc = message[:htlc]
           context.broadcast << PaymentFailed[htlc[:payment_hash], []]
         end), (on ForwardFail.(~any, ~Relayed, any) do |fail, origin|
           command = CommandFailHtlc[origin[:original_htlc_id], fail[:reason], true]
           context.register << Register::Forward[origin[:original_channel_id], command]
-        end), (on ForwardFailMalformed.(~any, ~Local, ~UpdateAddHtlc) do |fail, origin, htlc|
+        end), (on ForwardFailMalformed.(~any, ~Local, UpdateAddHtlc) do |fail, origin|
+          htlc = message[:htlc]
           context.broadcast << PaymentFailed[htlc[:payment_hash], []]
         end), (on ForwardFailMalformed.(~any, ~Relayed, any) do |fail, origin|
           command = CommandFailMalformedHtlc[origin[:original_htlc_id], fail[:sha256_of_onion], fail[:failure_code], true]
@@ -116,7 +121,7 @@ module Lightning
           channel_update = @channel_updates[hop_data.per_hop.short_channel_id]
           if !channel_update
             CommandFailHtlc[add.id, UnknownNextPeer[true]]
-          elsif channel_update.channel_flags & 64 == 64
+          elsif channel_update.channel_flags.to_i(16) & 64 == 64
             reason =  ChannelDisabled[channel_update.channel_flags.to_s(16), channel_update.to_payload.bth]
             CommandFailHtlc[add.id, reason, true]
           elsif add.amount_msat < channel_update.htlc_minimum_msat

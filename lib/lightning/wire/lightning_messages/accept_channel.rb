@@ -3,31 +3,14 @@
 module Lightning
   module Wire
     module LightningMessages
-      module AcceptChannel
-        def self.load(payload)
-          _, rest = payload.unpack('na*')
-          unpack(rest)[0]
-        end
+      class AcceptChannel < Lightning::Wire::LightningMessages::Generated::AcceptChannel
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        TYPE = 33
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::ACCEPT_CHANNEL
-        end
-
-        def self.builder
-          @builder ||= Lightning::Utils::Serializer.new.hex(32).uint64.x(4).uint32.uint16.x(2).public_key.x(6)
-        end
-
-        def self.unpack(payload)
-          args = builder.to_a(payload)
-          [new(*(args[0])), args[1]]
-        end
-
-        def pack
-          [AcceptChannel.to_type].pack('n') + AcceptChannel.builder.to_binary(*to_a)
-        end
-
-        def to_payload
-          pack
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
 
         def validate!(open)

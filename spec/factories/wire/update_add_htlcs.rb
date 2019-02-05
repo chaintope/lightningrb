@@ -3,7 +3,7 @@
 FactoryBot.define do
   r = Bitcoin.sha256("\x42" * 32)
   h = Bitcoin.sha256(r).bth
-  factory(:update_add_htlc, class: 'FactoryBotWrapper') do
+  factory(:update_add_htlc, class: 'Lightning::Wire::LightningMessages::UpdateAddHtlc') do
     channel_id { "00" * 32 }
     id { 0 }
     amount_msat { 5_000_000 }
@@ -53,12 +53,6 @@ FactoryBot.define do
       '322d3de06060fd5e819635232a2cf4f0731da13b8546d1d6d4f8d75b9fce6c23' \
       '41a71b0ea6f780df54bfdb0dd5cd9855179f602f917265f21f9190c70217774a' \
       '6fbaaa7d63ad64199f4664813b955cff954949076dcf'
-    end
-
-    initialize_with do
-      new(Lightning::Wire::LightningMessages::UpdateAddHtlc[
-        channel_id, id, amount_msat, payment_hash, cltv_expiry, onion_routing_packet
-      ])
     end
   end
 end

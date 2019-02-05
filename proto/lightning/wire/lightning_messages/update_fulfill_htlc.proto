@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message UpdateFulfillHtlc {
+  uint32 type = 1 [(bits) = 16];
+  string channel_id = 2 [(hex) = true, (length) = 32];
+  uint64 id = 3;
+  string payment_preimage = 4 [(hex) = true, (length) = 32];
+}

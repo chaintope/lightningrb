@@ -1,52 +1,23 @@
 # frozen_string_literal: true
 
+require 'lightning/wire/lightning_messages/open_channel.pb'
+
 module Lightning
   module Wire
     module LightningMessages
-      module OpenChannel
+      class OpenChannel < Lightning::Wire::LightningMessages::Generated::OpenChannel
         include Lightning::Exceptions
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        TYPE = 32
+
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
+        end
 
         MAX_FUNDING_SATOSHIS = 2**24 - 1
         MIN_FUNDING_SATOSHIS = 100_000 # TODO: NodeParams?
-
-        def self.load(payload)
-          _, rest = payload.unpack('na*')
-          new(*rest.unpack('H64H64q>6Nn2H66H66H66H66H66H66c'))
-        end
-
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::OPEN_CHANNEL
-        end
-
-        def to_payload
-          payload = +''
-          payload << [OpenChannel.to_type].pack('n')
-          payload << self[:chain_hash].htb
-          payload << self[:temporary_channel_id].htb
-          payload << [
-            self[:funding_satoshis],
-            self[:push_msat],
-            self[:dust_limit_satoshis],
-            self[:max_htlc_value_in_flight_msat],
-            self[:channel_reserve_satoshis],
-            self[:htlc_minimum_msat],
-            self[:feerate_per_kw],
-            self[:to_self_delay],
-            self[:max_accepted_htlcs],
-          ].pack('q>6Nn2')
-          payload << self[:funding_pubkey].htb
-          payload << self[:revocation_basepoint].htb
-          payload << self[:payment_basepoint].htb
-          payload << self[:delayed_payment_basepoint].htb
-          payload << self[:htlc_basepoint].htb
-          payload << self[:first_per_commitment_point].htb
-          payload << [self[:channel_flags]].pack('c')
-
-          # option_upfront_shutdown_script
-          # payload << [self[:shutdown_len]].pack('n')
-          # payload << self[:shutdown_scriptpubkey]
-          payload
-        end
 
         def validate!
           raise AmountTooLarge.new(self[:funding_satoshis], MAX_FUNDING_SATOSHIS) if self[:funding_satoshis] > MAX_FUNDING_SATOSHIS
