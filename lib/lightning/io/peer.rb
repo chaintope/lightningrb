@@ -102,7 +102,7 @@ module Lightning
             log(Logger::WARN, '/peer@initializing', "unhandled message: #{message}")
             [self, data]
           end)
-        endlib/lightning/channel/channel_context.rb
+        end
       end
 
       class PeerStateConnected < PeerState
