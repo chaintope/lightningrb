@@ -20,6 +20,7 @@ end
 
 def create_test_spv
   spv = double('spv')
+  spv.stub(:generate_new_address).and_return('bc1qc7slrfxkknqcq2jevvvkdgvrt8080852dfjewde450xdlk4ugp7szw5tk9')
   spv
 end
 

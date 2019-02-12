@@ -60,9 +60,7 @@ module Lightning
       end
 
       def to_h(data)
-        if data.is_a? None
-          {}
-        elsif  data.is_a? Lightning::Channel::Messages::HasCommitments
+        if data.is_a? Lightning::Channel::Messages::HasCommitments
           commitments = data[:commitments]
           {
             temporary_channel_id: data.temporary_channel_id,
@@ -71,6 +69,8 @@ module Lightning
             to_local_msat: commitments[:local_commit][:spec][:to_local_msat],
             to_remote_msat: commitments[:local_commit][:spec][:to_remote_msat]
           }
+        else
+          {}
         end
       end
     end

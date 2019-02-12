@@ -773,14 +773,18 @@ module Lightning
           if maybe == 0
             deferred = Algebrick::None
           else
-            deferred, rest = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
+            deferred = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
+            len = deferred.to_payload.bytesize
+            rest = rest[len..-1]
           end
           last_sent_type, rest = rest.unpack('na*')
           if last_sent_type == Lightning::Wire::LightningMessages::FundingCreated.to_type
-            last_sent, rest = Lightning::Wire::LightningMessages::FundingCreated.load(rest)
+            last_sent = Lightning::Wire::LightningMessages::FundingCreated.load(rest)
           else
-            last_sent, rest = Lightning::Wire::LightningMessages::FundingSigned.load(rest)
+            last_sent = Lightning::Wire::LightningMessages::FundingSigned.load(rest)
           end
+          len = last_sent.to_payload.bytesize
+          rest = rest[len..-1]
           [new(temporary_channel_id, commitments, deferred, last_sent), rest]
         end
 
@@ -885,13 +889,15 @@ module Lightning
           if len == 0
             local_shutdown = Algebrick::None
           else
-            local_shutdown, rest = Lightning::Wire::LightningMessages::Shutdown.load(rest)
+            local_shutdown = Lightning::Wire::LightningMessages::Shutdown.load(rest)
+            rest = rest[0..-1]
           end
           len, rest = rest.unpack('na*')
           if len == 0
             remote_shutdown = Algebrick::None
           else
-            remote_shutdown, rest = Lightning::Wire::LightningMessages::Shutdown.load(rest)
+            remote_shutdown = Lightning::Wire::LightningMessages::Shutdown.load(rest)
+            rest = rest[0..-1]
           end
           [new(temporary_channel_id, commitments, short_channel_id, buried, channel_announcement, channel_update, local_shutdown, remote_shutdown), rest]
         end

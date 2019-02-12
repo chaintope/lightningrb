@@ -26,6 +26,8 @@ module Lightning
         match message, (on :channels do
           log(Logger::DEBUG, "#{@status}, channels: #{@data[:channels]}")
           return @data[:channels].values.map {|channel| channel.ask!(:data) }
+        end), (on :status do
+          return @status.class.name
         end), (on any do
         end)
         @status, @data = @status.next(message, @data)
