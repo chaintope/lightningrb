@@ -7,7 +7,7 @@ module Lightning
       include Lightning::Wire::LightningMessages
 
       def on_message(message)
-        log(Logger::DEBUG, "Forwarder:#{self} message: #{message}, destination: #{@destination}")
+        log(Logger::DEBUG, "Forwarder:#{self} message: #{message.inspect}, destination: #{@destination}")
         case message
         when Lightning::Wire::LightningMessages
           @destination << message if @destination

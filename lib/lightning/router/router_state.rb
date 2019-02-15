@@ -45,38 +45,40 @@ module Lightning
           desc = Announcements.to_channel_desc(channel)
           [self, data]
         when ChannelAnnouncement
-          if data[:channels].key?(message[:short_channel_id])
+          if data[:channels].key?(message.short_channel_id)
             # ignore
+            log(Logger::WARN, 'router_state', "channel annoucement is ignored #{message.inspect}")
             [self, data]
           elsif !message.valid_signature?
             # TODO: router.parent << :error
-            log(Logger::DEBUG, 'router_state', "signature invalid #{message.to_payload.bth}")
+            log(Logger::ERROR, 'router_state', "signature invalid #{message.inspect}")
             [self, data]
           else
-            [self, data.copy(channels: data[:channels].merge(message[:short_channel_id] => message))]
+            [self, data.copy(channels: data[:channels].merge(message.short_channel_id => message))]
           end
         when NodeAnnouncement
-          if data[:nodes].key?(message[:node_id]) && message.older_than?(data[:nodes][message[:node_id]])
+          if data[:nodes].key?(message.node_id) && message.older_than?(data[:nodes][message.node_id])
+            log(Logger::WARN, 'router_state', "node annoucement is ignored #{message.inspect}")
             [self, data]
           elsif !message.valid_signature?
             # TODO: router.parent << :error
-            log(Logger::DEBUG, 'router_state', "signature invalid #{message.to_payload.bth}")
+            log(Logger::ERROR, 'router_state', "signature invalid #{message.inspect}")
             [self, data]
-          elsif data[:nodes].key?(message[:node_id])
+          elsif data[:nodes].key?(message.node_id)
             # TODO: NodeUpdate event
             context.node_db.update(message)
-            [self, data.copy(nodes: data[:nodes].merge(message[:node_id] => message))]
-          elsif data[:channels].values.any? { |channel| related?(channel, message[:node_id]) }
+            [self, data.copy(nodes: data[:nodes].merge(message.node_id => message))]
+          elsif data[:channels].values.any? { |channel| related?(channel, message.node_id) }
             # TODO: NodeDiscovered event
             context.node_db.create(message)
-            [self, data.copy(nodes: data[:nodes].merge(message[:node_id] => message))]
+            [self, data.copy(nodes: data[:nodes].merge(message.node_id => message))]
           else
-            context.node_db.destroy_by(node_id: message[:node_id])
+            context.node_db.destroy_by(node_id: message.node_id)
             [self, data]
           end
         when ChannelUpdate
-          if data[:channels].key?(message[:short_channel_id])
-            channel = data[:channels][message[:short_channel_id]]
+          if data[:channels].key?(message.short_channel_id)
+            channel = data[:channels][message.short_channel_id]
             desc = Announcements.to_channel_desc(channel)
             node_id =
               if message[:channel_flags].to_i(16) & (2**0) == 0
@@ -97,7 +99,7 @@ module Lightning
               # context.channel_db.update_channel_update(message)
               log(Logger::INFO, :router_state, '================================================================================')
               log(Logger::INFO, :router_state, '')
-              log(Logger::INFO, :router_state, "Channel Updated #{message}")
+              log(Logger::INFO, :router_state, "Channel Updated #{message.inspect}")
               log(Logger::INFO, :router_state, '')
               log(Logger::INFO, :router_state, '================================================================================')
               [self, data.copy(updates: data[:updates].merge(desc => message))]
@@ -106,7 +108,7 @@ module Lightning
               # context.channel_db.add_channel_update(message)
               log(Logger::INFO, :router_state, '================================================================================')
               log(Logger::INFO, :router_state, '')
-              log(Logger::INFO, :router_state, "Channel Registered #{message}")
+              log(Logger::INFO, :router_state, "Channel Registered #{message.inspect}")
               log(Logger::INFO, :router_state, '')
               log(Logger::INFO, :router_state, '================================================================================')
               [self, data.copy(updates: data[:updates].merge(desc => message))]

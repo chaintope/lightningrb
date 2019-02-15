@@ -10,6 +10,7 @@ module Lightning
         include Lightning::Wire::Serialization
         extend Lightning::Wire::Serialization
         include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::HasTemporaryChannelId
         TYPE = 32
 
         def initialize(fields = {})

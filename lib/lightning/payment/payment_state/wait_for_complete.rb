@@ -5,13 +5,13 @@ module Lightning
     class PaymentState
       class WaitForComplete < PaymentState
         def next(message, data)
-          match message, (on ~UpdateFulfillHtlc do |fulfill|
-            # TODO: public PaymentSent event
+          case message
+          when UpdateFulfillHtlc
             stop
-          end), (on ~UpdateFailHtlc do |fail|
-            error_packet = Sphinx.parse_error(fail[:reason].bth, data[:shared_secrets].htb)
+          when UpdateFailHtlc
+            error_packet = Sphinx.parse_error(message[:reason].bth, data[:shared_secrets].htb)
             stop
-          end)
+          end
         end
 
         def stop

@@ -9,3 +9,5 @@ require 'extensions/field/message_field'
 require 'extensions/field/string_field'
 require 'extensions/field/uint32_field'
 require 'extensions/field/uint64_field'
+
+require 'extensions/concurrent/actor/reference.rb'

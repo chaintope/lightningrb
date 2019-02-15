@@ -7,6 +7,8 @@ module Lightning
         include Lightning::Wire::Serialization
         extend Lightning::Wire::Serialization
         include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::HasChannelId
+        include Lightning::Wire::LightningMessages::UpdateMessage
         TYPE = 131
 
         def initialize(fields = {})

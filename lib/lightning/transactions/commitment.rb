@@ -110,6 +110,9 @@ module Lightning
           local_delayed_payment_pubkey,
           to_self_delay: to_local_delay
         )
+        log(Logger::DEBUG, 'commitments', "make_commitment_tx spec=#{spec}")
+        log(Logger::DEBUG, 'commitments', "make_commitment_tx fee=#{fee}")
+        log(Logger::DEBUG, 'commitments', "make_commitment_tx local_dust_limit_satoshis=#{local_dust_limit_satoshis}")
         log(Logger::DEBUG, 'commitments', "make_commitment_tx revocation_pubkey=#{local_revocation_pubkey}")
         log(Logger::DEBUG, 'commitments', "make_commitment_tx delayed_payment_pubkey=#{local_delayed_payment_pubkey}")
         log(Logger::DEBUG, 'commitments', "make_commitment_tx to_self_delay=#{to_local_delay}")
@@ -412,18 +415,18 @@ module Lightning
 
       def self.receive_add(commitments, add, spv)
         log(Logger::DEBUG, 'commitments', "receive_add")
-        raise UnexpectedHtlcId unless commitments[:remote_next_htlc_id] == add[:id]
-        raise InvalidPaymentHash.new(commitments, add) unless add[:payment_hash]&.size == 64
+        raise UnexpectedHtlcId unless commitments[:remote_next_htlc_id] == add.id
+        raise InvalidPaymentHash.new(commitments, add) unless add.payment_hash&.size == 64
 
         block_count = spv.blockchain_info['headers']
-        raise ExpiryTooSmall.new(commitments, add) if add[:cltv_expiry] < block_count + 3
-        raise ExpiryTooLarge.new(commitments, add) if add[:cltv_expiry] >= 500_000_000
-        if add[:amount_msat] < commitments[:local_param][:htlc_minimum_msat]
+        raise ExpiryTooSmall.new(commitments, add) if add.cltv_expiry < block_count + 3
+        raise ExpiryTooLarge.new(commitments, add) if add.cltv_expiry >= 500_000_000
+        if add.amount_msat < commitments[:local_param][:htlc_minimum_msat]
           raise HtlcValueTooSmall.new(commitments, add)
         end
 
         # for Bitcoin blockchain only
-        raise HtlcValueTooLarge.new(commitments, add) if add[:amount_msat] > 0x00000000FFFFFFFF
+        raise HtlcValueTooLarge.new(commitments, add) if add.amount_msat > 0x00000000FFFFFFFF
 
         commitments1 = add_remote_proposal(commitments, add, remote_next_htlc_id: commitments[:remote_next_htlc_id] + 1)
         reduced = CommitmentSpec.reduce(
@@ -460,15 +463,12 @@ module Lightning
         raise UnknownHtlcId.new(commitments, command.id) unless htlc
         exist =
           commitments[:local_changes][:proposed].any? do |proposed|
-            match proposed, (on ~UpdateFulfillHtlc do |u|
-              htlc.id == u.id
-            end), (on ~UpdateFailHtlc do |u|
-              htlc.id == u.id
-            end), (on ~UpdateFailMalformedHtlc do |u|
-              htlc.id == u.id
-            end), (on any do
+            case proposed
+            when UpdateFulfillHtlc, UpdateFailHtlc, UpdateFailMalformedHtlc
+              htlc.id == proposed.id
+            else
               false
-            end)
+            end
           end
         raise UnknownHtlcId.new(commitments, command.id) if exist
         payment_hash = Bitcoin.sha256(command.r.htb).bth
@@ -500,15 +500,12 @@ module Lightning
         raise UnknownHtlcId.new(commitments, command.id) unless htlc
         exist =
           commitments[:local_changes][:proposed].any? do |proposed|
-            match proposed, (on ~UpdateFulfillHtlc do |u|
-              htlc.id == u.id
-            end), (on ~UpdateFailHtlc do |u|
-              htlc.id == u.id
-            end), (on ~UpdateFailMalformedHtlc do |u|
-              htlc.id == u.id
-            end), (on any do
+            case proposed
+            when UpdateFulfillHtlc, UpdateFailHtlc, UpdateFailMalformedHtlc
+              htlc.id == proposed.id
+            else
               false
-            end)
+            end
           end
         raise UnknownHtlcId.new(commitments, command.id) if exist
         packet = Lightning::Onion::Sphinx.parse(node_secret, htlc.onion_routing_packet.htb)
@@ -542,15 +539,12 @@ module Lightning
         raise UnknownHtlcId.new(commitments, command.id) unless htlc
         exist =
           commitments[:local_changes][:proposed].any? do |h|
-            match h, (on UpdateFulfillHtlc do |u|
-              htlc.id == u.id
-            end), (on ~UpdateFailHtlc do |u|
-              htlc.id == u.id
-            end), (on ~UpdateFailMalformedHtlc do |u|
-              htlc.id == u.id
-            end), (on any do
+            case proposed
+            when UpdateFulfillHtlc, UpdateFailHtlc, UpdateFailMalformedHtlc
+              htlc.id == proposed.id
+            else
               false
-            end)
+            end
           end
 
         raise UnknownHtlcId.new(commitments, command.id) if exist
@@ -700,10 +694,11 @@ module Lightning
               local_commit_tx.utxo,
               commitments[:local_param].funding_priv_key.pubkey,
               commitments[:remote_param].funding_pubkey,
-              Lightning::Wire::Signature.new(value: sig),
-              commit[:signature]
+              sig,
+              commit[:signature].value
             )
           rescue => e
+
             puts e
             raise InvalidCommitmentSignature.new(commitments[:channel_id], local_commit_tx.tx)
           end

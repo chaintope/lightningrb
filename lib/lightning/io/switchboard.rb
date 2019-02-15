@@ -42,7 +42,7 @@ module Lightning
           if peer
             peer << open_channel
           else
-            parent << Error['no connection to peer']
+            parent << Error.new(data: 'no connection to peer')
           end
         end), (on ~Authenticated.(any, any, ~any) do |auth, remote_node_id|
           peer = create_or_get_peer(peers, remote_node_id)

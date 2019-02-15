@@ -34,6 +34,22 @@ module Lightning
         classes.include?(self.class)
       end
 
+      def to_s
+        inspect
+      end
+
+      module HasTemporaryChannelId
+      end
+
+      module HasChannelId
+      end
+
+      module UpdateMessage
+      end
+
+      module RoutingMessage
+      end
+
       class LightningMessage < Lightning::Wire::LightningMessages::Generated::LightningMessage
         def self.load(payload)
           type = payload.unpack('n').first

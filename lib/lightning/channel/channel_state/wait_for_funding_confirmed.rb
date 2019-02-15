@@ -5,14 +5,18 @@ module Lightning
     class ChannelState
       class WaitForFundingConfirmed < ChannelState
         def next(message, data)
-          match message, (on ~FundingLocked do |msg|
+          case message
+          when FundingLocked
             task = Concurrent::TimerTask.new(execution_interval: 5) do
-              channel.reference << msg
+              channel.reference << message
               task.shutdown
             end
             task.execute
             [self, data]
-          end), (on WatchEventConfirmed.(~any, ~any, ~any) do |event_type, block_height, tx_index|
+          when WatchEventConfirmed
+            event_type = message[:event_type]
+            block_height = message[:block_height]
+            tx_index = message[:tx_index]
             return [self, data] unless event_type == 'confirmed'
             commitments = data[:commitments]
             next_per_commitment_point = Lightning::Crypto::Key.per_commitment_point(commitments[:local_param].sha_seed, 1)
@@ -29,7 +33,7 @@ module Lightning
               ]),
               sending: funding_locked
             )
-          end)
+          end
         end
       end
     end

@@ -28,7 +28,7 @@ module Lightning
             local_sig_of_remote_tx = Transactions.sign(remote_commit_tx.tx, remote_commit_tx.utxo, local_param.funding_priv_key)
             funding_created = FundingCreated.new(
               temporary_channel_id: temporary_channel_id,
-              funding_tx: funding_tx.txid,
+              funding_txid: funding_tx.txid,
               funding_tx_output_index: funding_tx_output_index,
               signature: Lightning::Wire::Signature.new(value: local_sig_of_remote_tx)
             )

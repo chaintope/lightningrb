@@ -791,7 +791,7 @@ module Lightning
             rest = rest[len..-1]
           end
           last_sent_type, rest = rest.unpack('na*')
-          if last_sent_type == Lightning::Wire::LightningMessages::FundingCreated.to_type
+          if last_sent_type == Lightning::Wire::LightningMessages::FundingCreated::TYPE
             last_sent = Lightning::Wire::LightningMessages::FundingCreated.load(rest)
           else
             last_sent = Lightning::Wire::LightningMessages::FundingSigned.load(rest)
@@ -812,7 +812,7 @@ module Lightning
             payload << [1].pack('C')
             payload << self[:deferred].value.to_payload
           end
-          payload << [self[:last_sent].type.to_type].pack('n')
+          payload << [self[:last_sent].type].pack('n')
           payload << self[:last_sent].to_payload
           payload.string
         end

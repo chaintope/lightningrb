@@ -7,6 +7,7 @@ module Lightning
         include Lightning::Wire::Serialization
         extend Lightning::Wire::Serialization
         include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::RoutingMessage
         TYPE = 256
 
         def initialize(fields = {})
@@ -37,27 +38,6 @@ module Lightning
           stream = StringIO.new
           Protobuf::Encoder.encode(witness, stream)
           Bitcoin.double_sha256(stream.string)
-        end
-
-        def self.witness(features,
-          chain_hash,
-          short_channel_id,
-          node_id_1,
-          node_id_2,
-          bitcoin_key_1,
-          bitcoin_key_2
-        )
-          new(
-            '', '', '', '',
-            features.bytesize,
-            features,
-            chain_hash,
-            short_channel_id,
-            node_id_1,
-            node_id_2,
-            bitcoin_key_1,
-            bitcoin_key_2
-          ).witness
         end
       end
 

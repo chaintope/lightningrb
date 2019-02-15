@@ -5,205 +5,130 @@ module Lightning
     class ChannelState
       class Normal < ChannelState
         def next(message, data)
-          # case message
-          # when CommandAddHtlc
-          #   return handle_command_error("error", data) if data.shutting_down?
-          #
-          # when UpdateAddHtlc
-          #
-          # when CommandFulfillHtlc
-          #
-          # when UpdateFulfillHtlc
-          #
-          # when CommandFailHtlc
-          #
-          # when UpdateFailHtlc
-          #
-          # when CommandFailMalformedHtlc
-          #
-          # when UpdateFailMalformedHtlc
-          #
-          # when CommandUpdateFee
-          #
-          # when UpdateFee
-          #
-          # when CommandSignature
-          #
-          # when CommitmentSigned
-          #
-          # when RevokeAndAck
-          #
-          # when CommandAck
-          #
-          # when CommandClose
-          #
-          # when Shutdown
-          #
-          # when WatchEventConfirmed
-          #
-          # end
-
-          match message, (on ~CommandAddHtlc do |c|
+          case message
+          when CommandAddHtlc
             return handle_command_error("error", data) if data.shutting_down?
-            match Commitment.send_add(data[:commitments], c, origin(c), context.spv),
-                  (on Array.(~Commitments, ~any) do |commitments1, msg|
-                    channel << CommandSignature if c[:commit]
-                    return goto(self, data: data.copy(commitments: commitments1), sending: msg)
-                  end), (on ~any do |error|
-                    handle_command_error(error, data)
-                  end)
-          end), (on UpdateAddHtlc do
-            match Commitment.receive_add(data[:commitments], message, context.spv),
-                  (on ~Commitments do |commitments1|
-                    return goto(self, data: data.copy(commitments: commitments1))
-                  end), (on ~any do |error|
-                    handle_local_error(error, data)
-                  end)
-          end), (on ~CommandFulfillHtlc do |c|
-            match Commitment.send_fulfill(data[:commitments], c),
-                  (on Array.(~Commitments, ~any) do |commitments1, msg|
-                    channel << CommandSignature if c[:commit]
-                    return goto(self, data: data.copy(commitments: commitments1), sending: msg)
-                  end), (on ~any do |error|
-                    handle_command_error(error, data)
-                  end)
-          end), (on UpdateFulfillHtlc do
-            match Commitment.receive_fulfill(data[:commitments], message),
-                  (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
-                    context.relayer << Lightning::Payment::Relayer::ForwardFulfill[message, origin, htlc]
-                    return goto(self, data: data.copy(commitments: commitments1))
-                  end), (on Array do
-                    [self, data]
-                  end), (on ~any do |error|
-                    handle_local_error(error, data)
-                  end)
-          end), (on ~CommandFailHtlc do |c|
-            match Commitment.send_fail(data[:commitments], c, context.node_params.private_key),
-                  (on Array.(~Commitments, ~any) do |commitments1, msg|
-                    channel << CommandSignature if c[:commit]
-                    return goto(self, data: data.copy(commitments: commitments1), sending: msg)
-                  end), (on ~any do |error|
-                    handle_command_error(error, data)
-                  end)
-          end), (on UpdateFailHtlc do
-            match Commitment.receive_fail(data[:commitments], message),
-                  (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
-                    context.relayer << Lightning::Payment::Relayer::ForwardFail[message, origin, htlc]
-                    return goto(self, data: data.copy(commitments: commitments1))
-                  end), (on Array do
-                    [self, data]
-                  end), (on ~any do |error|
-                    handle_local_error(error, data)
-                  end)
-          end), (on ~CommandFailMalformedHtlc do |c|
-            match Commitment.send_fail_malformed(data[:commitments], c),
-                  (on Array.(~Commitments, ~any) do |commitments1, msg|
-                    channel << CommandSignature if c[:commit]
-                    return goto(self, data: data.copy(commitments: commitments1), sending: msg)
-                  end), (on ~any do |error|
-                    handle_command_error(error, data)
-                  end)
-          end), (on UpdateFailMalformedHtlc do
-            match Commitment.receive_fail_malformed(data[:commitments], message),
-                  (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
-                    context.relayer << Lightning::Payment::Relayer::ForwardFailMalformed[message, origin, htlc]
-                    return goto(self, data: data.copy(commitments: commitments1))
-                  end), (on Array do
-                    [self, data]
-                  end), (on ~any do |error|
-                    handle_local_error(error, data)
-                  end)
-          end), (on ~CommandUpdateFee do |c|
-            match Commitment.send_fee(data[:commitments], c),
-                  (on Array.(~Commitments, ~any) do |commitments1, msg|
-                    channel << CommandSignature if c[:commit]
-                    return goto(self, data: data.copy(commitments: commitments1), sending: msg)
-                  end), (on ~any do |error|
-                    handle_command_error(error, data)
-                  end)
-          end), (on UpdateFee do
-            match Commitment.receive_fee(data[:commitments], message),
-                  (on Array.(~Commitments, ~any, ~any) do |commitments1, origin, htlc|
-                    return goto(self, data: data.copy(commitments: commitments1))
-                  end), (on Array do
-                    [self, data]
-                  end), (on ~any do |error|
-                    handle_local_error(error, data)
-                  end)
-          end), (on ~CommandSignature do |c|
-            match data[:commitments][:remote_next_commit_info],
-                  (on ~WaitingForRevocation do |wait|
-                    wait1 = WaitingForRevocation[
-                      wait[:next_remote_commit],
-                      wait[:sent],
-                      wait[:sent_after_local_commit_index],
-                      true
-                    ]
-                    commitments1 = data[:commitments].copy(remote_next_commit_info: wait1)
-                    return goto(self, data: data.copy(commitments: commitments1))
-                  end), (on ~any do |info|
-                    unless Commitment.local_has_changes?(data[:commitments])
-                      return [self, data]
-                    end
-                    match Commitment.send_commit(data[:commitments]),
-                          (on Array.(~Commitments, ~any) do |commitments1, msg|
-                            commitments1[:local_changes][:signed].each do |change|
-                              match change, (on ~UpdateFulfillHtlc do |update|
-                                context.relayer << CommandAck[update.channel_id, update.id]
-                              end), (on any do
-                              end)
-                            end
-                            return goto(self, data: store(data.copy(commitments: commitments1)), sending: msg)
-                          end), (on ~any do |error|
-                            handle_command_error(error, data)
-                          end)
-                  end)
-          end), (on CommitmentSigned do
-            match Commitment.receive_commit(data[:commitments], message),
-                  (on Array.(~Commitments, ~any) do |commitments1, revocation|
-                    if Commitment.local_has_changes?(commitments1)
-                      channel << CommandSignature
-                    end
-                    context.broadcast << ChannelSignatureReceived[channel, commitments1]
-                    return goto(self, data: store(data.copy(commitments: commitments1)), sending: revocation)
-                  end), (on ~any do |error|
-                    handle_local_error(error, data)
-                  end)
-          end), (on RevokeAndAck do
-            match Commitment.receive_revocation(data[:commitments], message),
-                  (on ~Commitments do |commitments1|
-                    data[:commitments][:remote_changes][:signed].each do |change|
-                      context.relayer << Lightning::Payment::Relayer::ForwardAdd[change] if change.is_a?(UpdateAddHtlc)
-                    end
-                    # TODO:
-                    return goto(self, data: store(data.copy(commitments: commitments1)))
-                  end), (on ~any do |error|
-                    handle_local_error(error, data)
-                  end)
-          end), (on ~CommandAck do |c|
-<<<<<<< HEAD
-=======
+            new_commitments, new_message = Commitment.send_add(data[:commitments], message, origin(message), context.spv)
+            return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            channel << CommandSignature if message[:commit]
+            return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
+          when UpdateAddHtlc
+            new_commitments = Commitment.receive_add(data[:commitments], message, context.spv)
+            return handle_local_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            return goto(self, data: data.copy(commitments: new_commitments))
+          when CommandFulfillHtlc
+            new_commitments, new_message = Commitment.send_fulfill(data[:commitments], message)
+            return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            channel << CommandSignature if message[:commit]
+            return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
+          when UpdateFulfillHtlc
+            new_commitments, origin, htlc = Commitment.receive_fulfill(data[:commitments], message)
+            case new_commitments
+            when Commitments
+              context.relayer << Lightning::Payment::Relayer::ForwardFulfill[message, origin, htlc]
+              return goto(self, data: data.copy(commitments: new_commitments))
+            else
+              [self, data]
+            end
+          when CommandFailHtlc
+            new_commitments, new_message = Commitment.send_fail(data[:commitments], message, context.node_params.private_key)
+            return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            channel << CommandSignature if message[:commit]
+            return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
+          when UpdateFailHtlc
+            new_commitments, origin, htlc = Commitment.receive_fail(data[:commitments], message)
+            case new_commitments
+            when Commitments
+              context.relayer << Lightning::Payment::Relayer::ForwardFail[message, origin, htlc]
+              return goto(self, data: data.copy(commitments: new_commitments))
+            else
+              [self, data]
+            end
+          when CommandFailMalformedHtlc
+            new_commitments, new_message = Commitment.send_fail_malformed(data[:commitments], message)
+            return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            channel << CommandSignature if message[:commit]
+            return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
+          when UpdateFailMalformedHtlc
+            new_commitments, origin, htlc = Commitment.receive_fail_malformed(data[:commitments], message)
+            case new_commitments
+            when Commitments
+              context.relayer << Lightning::Payment::Relayer::ForwardFailMalformed[message, origin, htlc]
+              return goto(self, data: data.copy(commitments: new_commitments))
+            else
+              [self, data]
+            end
+          when CommandUpdateFee
+            new_commitments, new_message = Commitment.send_fee(data[:commitments], message)
+            return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            channel << CommandSignature if message[:commit]
+            return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
+          when UpdateFee
+            new_commitments, origin, htlc = Commitment.receive_fee(data[:commitments], message)
+            case new_commitments
+            when Commitments
+              return goto(self, data: data.copy(commitments: new_commitments))
+            else
+              [self, data]
+            end
+          when CommandSignature
+            case data[:commitments][:remote_next_commit_info]
+            when WaitingForRevocation
+              wait = data[:commitments][:remote_next_commit_info]
+              wait1 = WaitingForRevocation[
+                wait[:next_remote_commit],
+                wait[:sent],
+                wait[:sent_after_local_commit_index],
+                true
+              ]
+              new_commitments = data[:commitments].copy(remote_next_commit_info: wait1)
+              return goto(self, data: data.copy(commitments: new_commitments))
+            else
+              return [self, data] unless Commitment.local_has_changes?(data[:commitments])
+              new_commitments, new_message = Commitment.send_commit(data[:commitments])
+              return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
+              new_commitments[:local_changes][:signed].each do |change|
+                context.relayer << CommandAck[change.channel_id, change.id] if change.is_a?(UpdateFulfillHtlc)
+              end
+              return goto(self, data: store(data.copy(commitments: new_commitments)), sending: new_message)
+            end
+          when CommitmentSigned
+            new_commitments, new_message = Commitment.receive_commit(data[:commitments], message)
+            return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            channel << CommandSignature if Commitment.local_has_changes?(new_commitments)
+            context.broadcast << ChannelSignatureReceived[channel, new_commitments]
+            return goto(self, data: store(data.copy(commitments: new_commitments)), sending: new_message)
+          when RevokeAndAck
+            new_commitments = Commitment.receive_revocation(data[:commitments], message)
+            return handle_local_error(new_commitments, data) unless new_commitments.is_a? Commitments
+            data[:commitments][:remote_changes][:signed].each do |change|
+              context.relayer << Lightning::Payment::Relayer::ForwardAdd[change] if change.is_a?(UpdateAddHtlc)
+            end
+            # TODO:
+            return goto(self, data: store(data.copy(commitments: new_commitments)))
+          when CommandAck
 
->>>>>>> Generate classes from protobuf schema file
-          end), (on ~CommandClose do |c|
-            local_script_pubkey =
-              c[:script_pubkey]&.value || data[:commitments][:local_param][:default_final_script_pubkey]
+          when CommandClose
+            local_script_pubkey = message[:script_pubkey]&.value || data[:commitments][:local_param][:default_final_script_pubkey]
             if data[:local_shutdown] && !data[:local_shutdown].is_a?(None)
               return handle_command_error(ClosingAlreadyInProgress.new(data[:commitments]), data)
             end
+
             if Commitment.local_has_unsigned_outgoing_htlcs?(data[:commitments])
               return handle_command_error(CannotCloseWithUnsignedOutgoingHtlcs.new(data[:commitments]), data)
             end
+
             unless Lightning::Transactions::Closing.valid_final_script_pubkey?(local_script_pubkey)
               return handle_command_error(InvalidFinalScript.new(data[:commitments]), data)
             end
+
             shutdown = Shutdown.new(channel_id: data.channel_id, scriptpubkey: local_script_pubkey)
             return goto(
               self,
               data: store(data.copy(local_shutdown: Some[Shutdown][shutdown])),
               sending: shutdown
             )
-          end), (on Shutdown do
+          when Shutdown
             unless Lightning::Transactions::Closing.valid_final_script_pubkey?(message.scriptpubkey)
               return handle_local_error(InvalidFinalScript.new(data[:commitments]), data)
             end
@@ -213,10 +138,10 @@ module Lightning
             if Commitment.local_has_unsigned_outgoing_htlcs?(data[:commitments])
               match data[:commitments].remote_next_commit_info,
                     (on ~WaitingForRevocation do |wait|
-                      commitments1 = data[:commitments].tap do |commitments|
+                      new_commitments = data[:commitments].tap do |commitments|
                         commitments.remote_next_commit_info = wait.tap { |w| w.re_sign_asap = true }
                       end
-                      return goto(self, data: data.copy(commitments: commitments1, remote_shutdown: message))
+                      return goto(self, data: data.copy(commitments: new_commitments, remote_shutdown: message))
                     end), (on ~String do |info|
                       channel << CommandSignature
                       return goto(self, data: data.copy(remote_shutdown: msg))
@@ -260,12 +185,12 @@ module Lightning
                 )
               end
             end
-          end), (on ~WatchEventConfirmed do |msg|
-            log(Logger::DEBUG, 'WatchEventConfirmed', "#{msg[:event_type]},#{data[:channel_announcement]}, #{msg[:event_type] == 'deeply_confirmed'}, #{data[:channel_announcement].is_a? None}")
-            return [self, data] unless msg[:event_type] == 'deeply_confirmed'
+          when WatchEventConfirmed
+            return [self, data] unless message[:event_type] == 'deeply_confirmed'
             return [self, data] unless data[:channel_announcement].is_a? None
+
             output_index = data[:commitments][:commit_input].out_point.index
-            short_channel_id = Channel.to_short_id(msg[:block_height], msg[:tx_index], output_index)
+            short_channel_id = Channel.to_short_id(message[:block_height], message[:tx_index], output_index)
             channel_update =
               if short_channel_id == data[:short_channel_id]
                 data[:channel_update]
@@ -294,7 +219,7 @@ module Lightning
               data: data.copy(short_channel_id: short_channel_id, buried: 1, channel_update: channel_update),
               sending: local_announcement_signatures
             )
-          end), (on AnnouncementSignatures do
+          when AnnouncementSignatures
             if data[:buried] == 1
               local_announcement_signatures = Lightning::Router::Announcements.make_announcement_signatures(
                 context.node_params,
@@ -328,7 +253,7 @@ module Lightning
               task.execute
               [self, data]
             end
-          end)
+          end
         end
 
         def handle_command_error(cause, data)

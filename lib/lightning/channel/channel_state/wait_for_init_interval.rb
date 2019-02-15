@@ -19,7 +19,7 @@ module Lightning
               max_htlc_value_in_flight_msat: local_param[:max_htlc_value_in_flight_msat],
               channel_reserve_satoshis: local_param[:channel_reserve_satoshis],
               htlc_minimum_msat: local_param[:htlc_minimum_msat],
-              initial_feerate_per_kw: init[:initial_feerate_per_kw],
+              feerate_per_kw: init[:initial_feerate_per_kw],
               to_self_delay: local_param[:to_self_delay],
               max_accepted_htlcs: local_param[:max_accepted_htlcs],
               funding_pubkey: local_param[:funding_priv_key].pubkey,

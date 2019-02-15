@@ -29,7 +29,7 @@ module Lightning
               context.node_params.fee_proportional_millionths
             )
             goto(Normal.new(channel, context), data: data.copy(channel_update: channel_update))
-          end)
+          end
         end
       end
     end

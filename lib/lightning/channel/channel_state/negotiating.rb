@@ -16,7 +16,7 @@ module Lightning
               local_script,
               remote_script,
               message.fee_satoshis,
-              message.signature
+              message.signature.value
             )
             if message.fee_satoshis == data[:closing_tx_proposed].last.local_closing_signed.fee_satoshis
               handle_mutual_close(tx, data)
