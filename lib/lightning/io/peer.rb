@@ -172,6 +172,8 @@ module Lightning
             channels[channel_id] = channel
           end), (on Array.(~RoutingMessage, ~ConnectedData) do |msg, _data|
             context.router << msg
+          end), (on Array.(~Lightning::Router::Messages::Rebroadcast, ~ConnectedData) do |msg, data|
+            transport << msg[:message]
           end)  , (on any do
             log(Logger::WARN, '/peer@connected', "unhandled message: #{message}, data:#{data}")
           end)

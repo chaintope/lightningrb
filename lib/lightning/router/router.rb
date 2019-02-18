@@ -17,6 +17,10 @@ module Lightning
 
         context.broadcast << [:subscribe, LocalChannelUpdate]
         context.broadcast << [:subscribe, LocalChannelDown]
+
+        Concurrent::TimerTask.new(execution_interval: 60, run_now: true) do
+          self.reference << Lightning::Router::Messages::Timeout
+        end.execute
       end
 
       def on_message(message)

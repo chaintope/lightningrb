@@ -294,21 +294,27 @@ module Lightning
           len, rest = payload.unpack('na*')
           proposed = []
           len.times do
-            update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            size = update.to_payload.bytesize
+            rest = rest[size..-1]
             proposed << update
           end
 
           len, rest = rest.unpack('na*')
           signed = []
           len.times do
-            update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            size = update.to_payload.bytesize
+            rest = rest[size..-1]
             signed << update
           end
 
           len, rest = rest.unpack('na*')
           acked = []
           len.times do
-            update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            size = update.to_payload.bytesize
+            rest = rest[size..-1]
             acked << update
           end
 
@@ -354,21 +360,27 @@ module Lightning
           len, rest = payload.unpack('na*')
           proposed = []
           len.times do
-            update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            size = update.to_payload.bytesize
+            rest = rest[size..-1]
             proposed << update
           end
 
           len, rest = rest.unpack('na*')
           acked = []
           len.times do
-            update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            size = update.to_payload.bytesize
+            rest = rest[size..-1]
             acked << update
           end
 
           len, rest = rest.unpack('na*')
           signed = []
           len.times do
-            update, rest = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            size = update.to_payload.bytesize
+            rest = rest[size..-1]
             signed << update
           end
 
@@ -1054,7 +1066,7 @@ module Lightning
           len, rest = rest.unpack('na*')
           remote_per_commitment_secrets_as_hex, rest = rest.unpack("H#{64 * len}a*")
           remote_per_commitment_secrets = (0..(len - 1)).map do |i|
-            remote_per_commitment_secrets_as_hex[i..(i + 64)]
+            remote_per_commitment_secrets_as_hex[(i * 64)...(i * 64 + 64)]
           end
           channel_id, rest = rest.unpack('H64a*')
           commiemtns = new(

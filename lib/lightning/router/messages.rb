@@ -15,6 +15,8 @@ module Lightning
                 updates: Hash
       end
 
+      Timeout = Algebrick.atom
+
       module Data
         def copy(nodes: self[:nodes], channels: self[:channels], updates: self[:updates])
           Data[nodes, channels, updates]

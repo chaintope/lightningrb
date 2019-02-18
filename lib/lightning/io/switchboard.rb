@@ -52,6 +52,24 @@ module Lightning
           peers.map do |node_id, peer|
             peer.ask!(:channels)
           end.flatten
+        end), (on Lightning::Router::Router::Data do
+          peers.each do |node_id, peer|
+            # nodes : key is public key(String)
+            #         value is NodeAnnouncement
+            # channels: key is short channel id (Numeric)
+            #           value is ChannelAnnouncement
+            # updates : key is ChannelDesc
+            #           value is ChannelUpdate
+            message[:nodes].each do |public_key, node_announcement|
+              peer << Lightning::Router::Messages::Rebroadcast[node_announcement]
+            end
+            message[:channels].each do |short_channel_id, channel_announcement|
+              peer << Lightning::Router::Messages::Rebroadcast[channel_announcement]
+            end
+            message[:updates].each do |channel_desc, channel_update|
+              peer << Lightning::Router::Messages::Rebroadcast[channel_update]
+            end
+          end
         end), (on any do
 
         end)

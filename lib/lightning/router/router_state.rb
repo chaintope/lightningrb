@@ -28,7 +28,11 @@ module Lightning
 
       def next(message, data)
         log(Logger::DEBUG, 'router_state', "data:#{data}")
-        match message, (on ~LocalChannelUpdate do |event|
+        match message,(on Lightning::Router::Messages::Timeout do
+          log(Logger::DEBUG, 'router_state', "router state update.")
+          context.switchboard << data
+          [self, data]
+        end), (on ~LocalChannelUpdate do |event|
           channel = data[:channels][event[:short_channel_id]]
           unless channel
             router << event[:channel_announcement].value unless event[:channel_announcement].is_a? None
