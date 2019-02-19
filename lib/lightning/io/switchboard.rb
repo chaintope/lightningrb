@@ -52,7 +52,7 @@ module Lightning
           peers.map do |node_id, peer|
             peer.ask!(:channels)
           end.flatten
-        end), (on Lightning::Router::Router::Data do
+        end), (on Lightning::Router::Messages::Data do
           peers.each do |node_id, peer|
             # nodes : key is public key(String)
             #         value is NodeAnnouncement

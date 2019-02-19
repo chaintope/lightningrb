@@ -17,6 +17,10 @@ module Lightning
 
       Timeout = Algebrick.atom
 
+      Rebroadcast = Algebrick.type do
+        fields! message: Lightning::Wire::LightningMessages::RoutingMessage
+      end
+
       module Data
         def copy(nodes: self[:nodes], channels: self[:channels], updates: self[:updates])
           Data[nodes, channels, updates]
