@@ -82,4 +82,6 @@ end
 
 LN = Lightning
 require 'em/pure_ruby'
-Concurrent.use_simple_logger Logger::DEBUG
+
+# log level is one of FATAL, DEBUG, INFO, WARN, ERROR
+Concurrent.use_simple_logger Logger::INFO

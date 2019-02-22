@@ -76,7 +76,7 @@ module Lightning
       end
 
       def create_or_get_peer(peers, remote_node_id)
-        peers[remote_node_id] || Peer.spawn(:peer, authenticator, context, remote_node_id)
+        peers[remote_node_id] || Peer.spawn("peer[#{remote_node_id}]", authenticator, context, remote_node_id)
       end
 
       def valid_connect?(connect)

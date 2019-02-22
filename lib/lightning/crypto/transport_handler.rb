@@ -125,6 +125,7 @@ module Lightning
               ciphertext = remainder[0...length + 16]
               remainder = remainder[length + 16..-1]
               payload = decrypt_internal(ciphertext)
+              log(Logger::DEBUG, '/transport', "RECEIVE_DATA #{payload.bth}")
               type = payload[0...2].unpack('n*').first
               message_type = Lightning::Wire::LightningMessages.parse_message_type(type)
               return [nil, remainder] unless message_type
@@ -134,6 +135,7 @@ module Lightning
         end
 
         def send_to(listener, message)
+          log(Logger::INFO, '/transport', "RECEIVE #{message}")
           listener << message
         end
       end
@@ -206,6 +208,7 @@ module Lightning
           end), (on ~LightningMessage do |msg|
             ciphertext = encrypt(msg.to_payload)
             log(Logger::DEBUG, '/transport', "SEND_DATA #{msg.to_payload.bth}")
+            log(Logger::INFO, '/transport', "SEND #{msg}")
             @conn&.send_data(ciphertext)
           end)
           self

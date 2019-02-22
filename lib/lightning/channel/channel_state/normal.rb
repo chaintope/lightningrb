@@ -143,7 +143,6 @@ module Lightning
                     handle_local_error(error, data)
                   end)
           end), (on ~CommandAck do |c|
-            
           end), (on ~CommandClose do |c|
             local_script_pubkey =
               c[:script_pubkey]&.value || data[:commitments][:local_param][:default_final_script_pubkey]
@@ -291,12 +290,12 @@ module Lightning
         end
 
         def handle_command_error(cause, data)
-          log(Logger::DEBUG, '/channel_state/normal', "handle_command_error:cause=#{cause}")
+          log(Logger::ERROR, '/channel_state/normal', "handle_command_error:cause=#{cause}")
           [self, data]
         end
 
         def handle_local_error(cause, data)
-          log(Logger::DEBUG, '/channel_state/normal', "handle_local_error:cause=#{cause}")
+          log(Logger::ERROR, '/channel_state/normal', "handle_local_error:cause=#{cause}")
           [self, data]
         end
 

@@ -79,6 +79,7 @@ module Lightning
           log(Logger::DEBUG, '/server', e.backtrace)
         end
         EM.defer(operation, callback, error_callback)
+        log(Logger::INFO, '/client', "receive_data #{data.bth}")
       end
 
       def unbind(reason = nil)

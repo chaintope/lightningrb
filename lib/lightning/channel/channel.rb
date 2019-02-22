@@ -18,30 +18,38 @@ module Lightning
         when :data
           return to_h(@data)
         end
-        log_commitments(@data) if @data.is_a? Lightning::Channel::Messages::HasCommitments
         next_state, next_data = @state.next(message, @data)
         @state.on_transition(self, @state, @data, next_state, next_data)
         @state = next_state
         @data = next_data
+      rescue => e
+        log(Logger::ERROR, "channel failed")
+        log(Logger::ERROR, e.message)
+        log(Logger::ERROR, e.backtrace)
+        reference << :terminate! unless reference.ask!(:terminated?)
+      ensure
         log_commitments(@data) if @data.is_a? Lightning::Channel::Messages::HasCommitments
       end
 
       def log_commitments(data)
         commitments = data[:commitments]
-        log(Logger::DEBUG, "LocalCommit")
-        log(Logger::DEBUG, "    to_local_msat:#{commitments[:local_commit][:spec][:to_local_msat]}")
-        log(Logger::DEBUG, "    to_remote_msat:#{commitments[:local_commit][:spec][:to_remote_msat]}")
-        log(Logger::DEBUG, "RemoteCommit")
-        log(Logger::DEBUG, "    to_local_msat:#{commitments[:remote_commit][:spec][:to_local_msat]}")
-        log(Logger::DEBUG, "    to_remote_msat:#{commitments[:remote_commit][:spec][:to_remote_msat]}")
-        log(Logger::DEBUG, "LocalChanges")
-        log(Logger::DEBUG, "    proposed:#{commitments[:local_changes][:proposed].size}")
-        log(Logger::DEBUG, "    signed:  #{commitments[:local_changes][:signed].size}")
-        log(Logger::DEBUG, "    acked:   #{commitments[:local_changes][:acked].size}")
-        log(Logger::DEBUG, "RemoteChanges")
-        log(Logger::DEBUG, "    proposed:#{commitments[:remote_changes][:proposed].size}")
-        log(Logger::DEBUG, "    signed:  #{commitments[:remote_changes][:signed].size}")
-        log(Logger::DEBUG, "    acked:   #{commitments[:remote_changes][:acked].size}")
+        log(Logger::INFO, "channel_id:     #{data.channel_id}")
+        log(Logger::INFO, "local_node_id:  #{commitments[:local_param][:node_id]}")
+        log(Logger::INFO, "remote_node_id: #{commitments[:remote_param][:node_id]}")
+        log(Logger::INFO, "LocalCommit")
+        log(Logger::INFO, "    to_local_msat:  #{commitments[:local_commit][:spec][:to_local_msat]}")
+        log(Logger::INFO, "    to_remote_msat: #{commitments[:local_commit][:spec][:to_remote_msat]}")
+        log(Logger::INFO, "RemoteCommit")
+        log(Logger::INFO, "    to_local_msat:  #{commitments[:remote_commit][:spec][:to_local_msat]}")
+        log(Logger::INFO, "    to_remote_msat: #{commitments[:remote_commit][:spec][:to_remote_msat]}")
+        log(Logger::INFO, "LocalChanges")
+        log(Logger::INFO, "    proposed:#{commitments[:local_changes][:proposed].size}")
+        log(Logger::INFO, "    signed:  #{commitments[:local_changes][:signed].size}")
+        log(Logger::INFO, "    acked:   #{commitments[:local_changes][:acked].size}")
+        log(Logger::INFO, "RemoteChanges")
+        log(Logger::INFO, "    proposed:#{commitments[:remote_changes][:proposed].size}")
+        log(Logger::INFO, "    signed:  #{commitments[:remote_changes][:signed].size}")
+        log(Logger::INFO, "    acked:   #{commitments[:remote_changes][:acked].size}")
       end
 
       def self.to_channel_id(funding_txid, funding_tx_output_index)

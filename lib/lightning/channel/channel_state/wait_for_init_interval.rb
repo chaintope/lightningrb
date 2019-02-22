@@ -48,7 +48,7 @@ module Lightning
             [self, data]
           end), (on ~InputRestored do |msg|
             data = msg[:data]
-            log(Logger::ERROR, :channel, "channel restoring ... #{data[:commitments][:channel_id]}")
+            log(Logger::INFO, :channel, "channel restoring ... #{data[:commitments][:channel_id]}")
 
             case data
             when DataNormal

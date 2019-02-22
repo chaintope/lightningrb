@@ -125,8 +125,8 @@ module Lightning
           end
           [self, data]
         rescue Lightning::Exceptions::RouteNotFound => e
-          log(Logger::DEBUG, 'router_state', 'Route to the final node is not found. Retry after a while')
-          log(Logger::DEBUG, 'router_state', e.message)
+          log(Logger::ERROR, 'router_state', 'Route to the final node is not found. Retry after a while')
+          log(Logger::ERROR, 'router_state', e.message)
           [self, data]
         end)
       end
