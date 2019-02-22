@@ -829,7 +829,9 @@ module Lightning
           temporary_channel_id, rest = rest.unpack('H64a*')
           commitments, rest = Commitments.load(rest)
           short_channel_id, rest = rest.unpack('q>a*')
-          last_sent, rest = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
+          last_sent = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
+          len = last_sent.to_payload.bytesize
+          rest = rest[len..-1]
           [new(temporary_channel_id, commitments, short_channel_id, last_sent), rest]
         end
 
