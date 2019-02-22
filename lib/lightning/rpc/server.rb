@@ -43,7 +43,7 @@ module Lightning
         when 'open'
           node_id = params[0]
           funding_satoshis = params[1]
-          push_msat = params[2] || 0
+          push_msat = params[2] || funding_satoshis * context.node_params.reserve_to_funding_ratio * 1000
           channel_flags = params[3] || 0x01
           context.switchboard << Lightning::IO::PeerEvents::OpenChannel[node_id, funding_satoshis, push_msat, channel_flags, {}]
           Async::HTTP::Response[200, {}, []]
