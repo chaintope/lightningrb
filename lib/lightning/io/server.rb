@@ -46,17 +46,8 @@ module Lightning
       end
 
       def receive_data(data)
-        log(Logger::DEBUG, '/server', "receive_data #{data.bth}")
-        operation = proc do
-          transport << Received[data, self]
-        end
-        callback = proc { |result| }
-        error_callback = proc do |e|
-          log(Logger::DEBUG, '/server', "error #{e.message}")
-          log(Logger::DEBUG, '/server', e.backtrace)
-        end
-        EM.defer(operation, callback, error_callback)
         log(Logger::INFO, '/server', "receive_data #{data.bth}")
+        transport << Received[data, self]
       end
 
       def unbind(reason = nil)

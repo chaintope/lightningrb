@@ -138,6 +138,15 @@ module Lightning
           log(Logger::INFO, '/transport', "RECEIVE #{message}")
           listener << message
         end
+
+        def decrypt_and_send(buffer, listener)
+          begin
+            lightning_message, remainder = decrypt(buffer) unless buffer&.empty?
+            send_to(listener, lightning_message) if lightning_message
+            buffer = remainder || +''
+          end while lightning_message && !buffer.empty?
+          buffer
+        end
       end
 
       class TransportHandlerStateHandshake < TransportHandlerState
@@ -184,9 +193,7 @@ module Lightning
             @buffer += data
             self
           end), (on Listener.(~any, ~any) do |listener, conn|
-            lightning_message, remainder = decrypt(@buffer) unless @buffer.empty?
-            send_to(listener, lightning_message) if lightning_message
-            @buffer = remainder || +''
+            @buffer = decrypt_and_send(@buffer, listener)
             TransportHandlerStateWaitingForCiphertext.new(@actor, @static_key, @connection, buffer: @buffer, listener: listener, conn: conn)
           end)
         end
@@ -202,9 +209,7 @@ module Lightning
         def next(message)
           match message, (on Received.(~any, any) do |data|
             @buffer += data
-            lightning_message, remainder = decrypt(@buffer)
-            send_to(@listener, lightning_message) if lightning_message
-            @buffer = remainder || +''
+            @buffer = decrypt_and_send(@buffer, @listener)
           end), (on ~LightningMessage do |msg|
             ciphertext = encrypt(msg.to_payload)
             log(Logger::DEBUG, '/transport', "SEND_DATA #{msg.to_payload.bth}")
