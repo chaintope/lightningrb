@@ -5,6 +5,31 @@ require 'spec_helper'
 describe Lightning::IO::Peer do
   let(:peer) { build(:peer) }
 
+
+  describe 'initialize_stored_channels' do
+    subject { described_class.new(authenticator, context, remote_node_id) }
+
+    let(:authenticator) { spawn_dummy_actor(name: :authenticator) }
+    let(:context) { build(:context) }
+    let(:remote_node_id) { '00' * 33 }
+
+    let(:this_remote_param) { build(:remote_param, node_id: '00' * 33).get }
+    let(:other_remote_param) { build(:remote_param, node_id: '11' * 33).get }
+
+    let(:this_peer) { build(:data_normal, commitments: build(:commitment, channel_id: '22' * 32, remote_param: this_remote_param).get).get }
+    let(:other_peer) { build(:data_normal, commitments: build(:commitment, channel_id: '33' * 32, remote_param: other_remote_param).get).get }
+
+    before do
+      context.channel_db.insert_or_update(this_peer)
+      context.channel_db.insert_or_update(other_peer)
+    end
+
+    it do
+      expect(subject.data.channels.size).to eq 1
+      expect(subject.data.channels.keys.first).to eq '22' * 32
+    end
+  end
+
   describe 'on_message' do
     context 'state is Disconnect' do
       describe 'with Connect' do

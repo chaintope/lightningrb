@@ -6,10 +6,21 @@ module Lightning
       include Algebrick
       include Lightning::IO::PeerEvents
 
+      attr_accessor :status, :data
+
       def initialize(authenticator, context, remote_node_id)
         @status = PeerStateDisconnected.new(self, authenticator, context, remote_node_id)
+        channels = initialize_stored_channels(context, remote_node_id)
+        @data = DisconnectedData[Algebrick::None, channels]
+      end
+
+      def initialize_stored_channels(context, remote_node_id)
         channels = context.channel_db.all.map { |channel_id, data| Lightning::Channel::Messages::HasCommitments.load(data.htb).first }
-        # channels = channels.group_by { |c| c[:commitments][:remote_param][:node_id] }
+
+        channels = channels.select do |channel|
+          channel[:commitments][:remote_param][:node_id] == remote_node_id
+        end
+
         channels = channels.map do |channel_data|
           forwarder = Lightning::Channel::Forwarder.spawn(:forwarder)
           channel_context = Lightning::Channel::ChannelContext.new(context, forwarder, remote_node_id)
@@ -17,8 +28,6 @@ module Lightning
           channel << Lightning::Channel::Messages::InputRestored[channel_data]
           [channel_data[:commitments][:channel_id], channel]
         end.to_h
-
-        @data = DisconnectedData[Algebrick::None, channels]
       end
 
       def on_message(message)
