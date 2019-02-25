@@ -78,7 +78,7 @@ module Lightning
           Async::HTTP::Response[400, {}, ["Unsupported method. #{request['method']}"]]
         end
       rescue StandardError => e
-        Async::HTTP::Response[400, {}, ["Bad Request #{e} \n #{e.backtrace}"]]
+        Async::HTTP::Response[400, {}, ["Bad Request #{e.message} \n #{e.backtrace}"]]
       end
     end
   end
