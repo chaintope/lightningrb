@@ -22,7 +22,7 @@ module Lightning
           base_point_secret.to_i(16) +
           Bitcoin.sha256(per_commitment_point.htb + basepoint.pubkey.htb).bth.to_i(16)
 
-        secret_key.to_s(16).rjust(32, '0')
+        secret_key.to_s(16).rjust(64, '0')
       end
 
       def self.per_commitment_point(seed, index)
