@@ -8,8 +8,12 @@ module Lightning
       include Lightning::Onion
       include Algebrick
 
-      def node_fee(base_msat, proportional, msat)
-        base_msat + (proportional * msat) / 1000000
+      # 07-routing-gossip.md#HTLC Fees
+      # The origin node:
+      # - SHOULD accept HTLCs that pay a fee equal to or greater than:
+      #   - fee_base_msat + ( amount_to_forward * fee_proportional_millionths / 1000000 )
+      def node_fee(fee_base_msat, fee_proportional_millionths, amount_to_forward)
+        fee_base_msat + (amount_to_forward * proportional) / 1000000
       end
 
       def build_command(amount_msat, expiry, payment_hash, hops = [])
