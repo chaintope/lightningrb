@@ -13,7 +13,7 @@ module Lightning
       # - SHOULD accept HTLCs that pay a fee equal to or greater than:
       #   - fee_base_msat + ( amount_to_forward * fee_proportional_millionths / 1000000 )
       def node_fee(fee_base_msat, fee_proportional_millionths, amount_to_forward)
-        fee_base_msat + (amount_to_forward * proportional) / 1000000
+        fee_base_msat + (amount_to_forward * fee_proportional_millionths) / 1000000
       end
 
       def build_command(amount_msat, expiry, payment_hash, hops = [])
