@@ -20,7 +20,7 @@ describe Lightning::Channel::ChannelState::WaitForOpenChannel do
   let(:wallet) { double(:wallet) }
 
   describe 'with OpenChannel' do
-    let(:message) { build(:open_channel).get }
+    let(:message) { build(:open_channel) }
 
     it 'transition to WaitForFundingCreated' do
       expect(action[0]).to be_a Lightning::Channel::ChannelState::WaitForFundingCreated

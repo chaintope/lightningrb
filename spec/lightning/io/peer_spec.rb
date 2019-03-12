@@ -59,7 +59,7 @@ describe Lightning::IO::Peer do
       end
 
       describe 'with Init' do
-        let(:init) { build(:init).get }
+        let(:init) { build(:init) }
         it do
           peer << init
           peer.ask(:await).wait
@@ -70,7 +70,7 @@ describe Lightning::IO::Peer do
 
     context 'state is Connected' do
       let(:transport) { spawn_dummy_actor(name: :transport) }
-      let(:init)  { build(:init).get }
+      let(:init)  { build(:init) }
       before do
         peer << Lightning::IO::AuthenticateMessages::Authenticated[{}, transport, '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7']
         peer.ask(:await).wait
@@ -89,7 +89,7 @@ describe Lightning::IO::Peer do
       describe 'with Ping' do
         it 'respond with Pong' do
           expect(transport).to receive(:<<).with(Lightning::Wire::LightningMessages::Pong)
-          peer << Lightning::Wire::LightningMessages::Ping[100, 10, '01010101010101010101']
+          peer << Lightning::Wire::LightningMessages::Ping.new(num_pong_bytes: 100, ignored: '01010101010101010101')
           peer.ask(:await).wait
         end
       end
@@ -113,7 +113,7 @@ describe Lightning::IO::Peer do
           peer.ask(:await).wait
         end
 
-        let(:accept) { build(:accept_channel).get }
+        let(:accept) { build(:accept_channel) }
 
         it { expect { subject }.not_to raise_error }
       end
@@ -124,7 +124,7 @@ describe Lightning::IO::Peer do
           peer.ask(:await).wait
         end
 
-        let(:update_add_htlc) { build(:update_add_htlc).get }
+        let(:update_add_htlc) { build(:update_add_htlc) }
 
         it { expect { subject }.not_to raise_error }
       end

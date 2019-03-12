@@ -51,9 +51,11 @@ module Lightning
         local_closing_sig = Transactions.sign(
           tx, commitments[:commit_input], commitments[:local_param].funding_priv_key
         )
-        closing_signed = Lightning::Wire::LightningMessages::ClosingSigned[
-          commitments[:channel_id], closing_fee, local_closing_sig
-        ]
+        closing_signed = Lightning::Wire::LightningMessages::ClosingSigned.new(
+          channel_id: commitments[:channel_id],
+          fee_satoshis: closing_fee,
+          signature: Lightning::Wire::Signature.new(value: local_closing_sig)
+        )
         new(tx, closing_signed)
       end
 
@@ -62,6 +64,7 @@ module Lightning
         make_closing_tx(commitments, local_script_pubkey, remote_script_pubkey, fee)
       end
 
+      # @param [String] remote_closing_signature
       def self.valid_signature?(
         commitments,
         local_script_pubkey,
@@ -84,7 +87,7 @@ module Lightning
           closing.tx, commitments[:commit_input],
           commitments[:local_param].funding_priv_key.pubkey,
           commitments[:remote_param].funding_pubkey,
-          closing.closing_signed.signature,
+          closing.closing_signed.signature.value,
           remote_closing_signature
         )
         Transactions.spendable?(signed_closing_tx)

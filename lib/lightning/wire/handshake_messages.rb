@@ -8,7 +8,7 @@ module Lightning
                   Act = type { fields! data: String, conn: Object },
                   Received = type { fields! data: String, conn: Object },
                   HandshakeCompleted = type { fields! conn: Object, transport: Concurrent::Actor::Reference, static_key: String, remote_key: String },
-                  Listener = type { fields! listner: Object, conn: Object },
+                  Listener = type { fields! listener: Object, conn: Object },
                   Send = type { fields! ciphertext: String },
                   Terminated =  type { fields! transport: Concurrent::Actor::Reference, static_key: String }
       end

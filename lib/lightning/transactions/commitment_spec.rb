@@ -22,13 +22,13 @@ module Lightning
       end
 
       def to_payload
-        payload = +''
-        payload = [self[:htlcs].length].pack('n')
+        payload = StringIO.new
+        payload << [self[:htlcs].length].pack('n')
         self[:htlcs].each do |htlc|
           payload << htlc.to_payload
         end
         payload << [self[:feerate_per_kw], self[:to_local_msat], self[:to_remote_msat]].pack('q>3')
-        payload
+        payload.string
       end
 
       def self.load(payload)

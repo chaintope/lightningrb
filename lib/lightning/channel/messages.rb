@@ -103,7 +103,7 @@ module Lightning
         end
 
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << self[:node_id].htb
           payload << [self[:dust_limit_satoshis]].pack('q>')
           payload << [self[:max_htlc_value_in_flight_msat]].pack('q>')
@@ -124,7 +124,7 @@ module Lightning
           payload << self[:globalfeatures].htb
           payload << [self[:localfeatures].htb.bytesize].pack('n')
           payload << self[:localfeatures].htb
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -149,6 +149,7 @@ module Lightning
           globalfeatures, rest = rest.unpack("H#{2 * len}a*")
           len, rest = rest.unpack('na*')
           localfeatures, rest = rest.unpack("H#{2 * len}a*")
+
           param = new(
             node_id,
             dust_limit_satoshis,
@@ -196,7 +197,7 @@ module Lightning
 
       module RemoteParam
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << self[:node_id].htb
           payload << [self[:dust_limit_satoshis]].pack('q>')
           payload << [self[:max_htlc_value_in_flight_msat]].pack('q>')
@@ -213,7 +214,7 @@ module Lightning
           payload << self[:globalfeatures].htb
           payload << [self[:localfeatures].htb.bytesize].pack('n')
           payload << self[:localfeatures].htb
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -269,7 +270,7 @@ module Lightning
         end
 
         def to_payload
-          payload = +''
+          payload = StringIO.new
           len = self[:proposed].length
           payload << [len].pack('n')
           self[:proposed].map do |c|
@@ -287,7 +288,7 @@ module Lightning
           self[:acked].map do |c|
             payload << c.to_payload
           end
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -334,7 +335,7 @@ module Lightning
         end
 
         def to_payload
-          payload = +''
+          payload = StringIO.new
           len = self[:proposed].length
           payload << [len].pack('n')
           self[:proposed].map do |c|
@@ -353,7 +354,7 @@ module Lightning
             payload << c.to_payload
           end
 
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -400,11 +401,11 @@ module Lightning
 
       module TransactionWithUtxo
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << [self[:tx].to_payload.bytesize].pack('n')
           payload << self[:tx].to_payload
           payload << self[:utxo].to_payload
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -424,14 +425,14 @@ module Lightning
 
       module HtlcTxAndSigs
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << [self[:tx].to_payload.bytesize].pack('n')
           payload << self[:tx].to_payload
           payload << [self[:local_sig].htb.bytesize].pack('n')
           payload << self[:local_sig].htb
           payload << [self[:remote_sig].htb.bytesize].pack('n')
           payload << self[:remote_sig].htb
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -453,13 +454,13 @@ module Lightning
 
       module PublishableTxs
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << self[:commit_tx].to_payload
           payload << [self[:htlc_txs_and_sigs].length].pack('n')
           self[:htlc_txs_and_sigs].each do |htlc_txs_and_sig|
             payload << htlc_txs_and_sig.to_payload
           end
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -482,11 +483,11 @@ module Lightning
 
       module LocalCommit
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << [self[:index]].pack('n')
           payload << self[:spec].to_payload
           payload << self[:publishable_txs].to_payload
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -506,12 +507,12 @@ module Lightning
 
       module RemoteCommit
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << [self[:index]].pack('n')
           payload << self[:spec].to_payload
           payload << self[:txid].htb
           payload << self[:remote_per_commitment_point].htb
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -532,14 +533,14 @@ module Lightning
 
       module WaitingForRevocation
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << self[:next_remote_commit].to_payload
           sent = self[:sent].to_payload
           payload << [sent.bytesize].pack('n')
           payload << sent
           payload << [self[:sent_after_local_commit_index]].pack('N')
           payload << [self[:re_sign_asap] ? 1 : 0].pack('C')
-          payload
+          payload.string
         end
 
         def self.load(payload)
@@ -790,7 +791,7 @@ module Lightning
             rest = rest[len..-1]
           end
           last_sent_type, rest = rest.unpack('na*')
-          if last_sent_type == Lightning::Wire::LightningMessages::FundingCreated.to_type
+          if last_sent_type == Lightning::Wire::LightningMessages::FundingCreated::TYPE
             last_sent = Lightning::Wire::LightningMessages::FundingCreated.load(rest)
           else
             last_sent = Lightning::Wire::LightningMessages::FundingSigned.load(rest)
@@ -801,7 +802,7 @@ module Lightning
         end
 
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << [1].pack('C')
           payload << self[:temporary_channel_id].htb
           payload << self[:commitments].to_payload
@@ -811,9 +812,9 @@ module Lightning
             payload << [1].pack('C')
             payload << self[:deferred].value.to_payload
           end
-          payload << [self[:last_sent].type.to_type].pack('n')
+          payload << [self[:last_sent].type].pack('n')
           payload << self[:last_sent].to_payload
-          payload
+          payload.string
         end
       end
 
@@ -836,13 +837,13 @@ module Lightning
         end
 
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << [2].pack('C')
           payload << self[:temporary_channel_id].htb
           payload << self[:commitments].to_payload
           payload << [self[:short_channel_id]].pack('q>')
           payload << self[:last_sent].to_payload
-          payload
+          payload.string
         end
       end
 
@@ -917,7 +918,7 @@ module Lightning
         end
 
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << [3].pack('C')
           payload << self[:temporary_channel_id].htb
           payload << self[:commitments].to_payload
@@ -942,7 +943,7 @@ module Lightning
           else
             payload << self[:remote_shutdown].value.to_payload
           end
-          payload
+          payload.string
         end
       end
 
@@ -1091,7 +1092,7 @@ module Lightning
         end
 
         def to_payload
-          payload = +''
+          payload = StringIO.new
           payload << self[:local_param].to_payload
           payload << self[:remote_param].to_payload
           payload << [self[:channel_flags]].pack('n')
@@ -1126,7 +1127,7 @@ module Lightning
           payload << [self[:remote_per_commitment_secrets].length].pack('n')
           payload << self[:remote_per_commitment_secrets].join('').htb
           payload << self[:channel_id].htb
-          payload
+          payload.string
         end
       end
     end

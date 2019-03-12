@@ -126,22 +126,21 @@ module Lightning
               remainder = remainder[length + 16..-1]
               payload = decrypt_internal(ciphertext)
               log(Logger::DEBUG, '/transport', "RECEIVE_DATA #{payload.bth}")
-              type = payload[0...2].unpack('n*').first
-              message_type = Lightning::Wire::LightningMessages.parse_message_type(type)
-              return [nil, remainder] unless message_type
-              [message_type.load(payload), remainder]
+              message = Lightning::Wire::LightningMessages::LightningMessage.load(payload)
+              [message, remainder]
             end
           end
         end
 
         def send_to(listener, message)
-          log(Logger::INFO, '/transport', "RECEIVE #{message}")
+          log(Logger::INFO, '/transport', "RECEIVE #{message.inspect}")
           listener << message
         end
 
         def decrypt_and_send(buffer, listener)
+          return +'' if buffer.nil? || buffer.empty?
           begin
-            lightning_message, remainder = decrypt(buffer) unless buffer&.empty?
+            lightning_message, remainder = decrypt(buffer)
             send_to(listener, lightning_message) if lightning_message
             buffer = remainder || +''
           end while lightning_message && !buffer.empty?
@@ -189,13 +188,14 @@ module Lightning
 
       class TransportHandlerStateWaitingForListener < TransportHandlerState
         def next(message)
-          match message, (on Received.(~any, any) do |data|
-            @buffer += data
+          case message
+          when Received
+            @buffer += message[:data]
             self
-          end), (on Listener.(~any, ~any) do |listener, conn|
-            @buffer = decrypt_and_send(@buffer, listener)
-            TransportHandlerStateWaitingForCiphertext.new(@actor, @static_key, @connection, buffer: @buffer, listener: listener, conn: conn)
-          end)
+          when Listener
+            @buffer = decrypt_and_send(@buffer, message[:listener])
+            TransportHandlerStateWaitingForCiphertext.new(@actor, @static_key, @connection, buffer: @buffer, listener: message[:listener], conn: message[:conn])
+          end
         end
       end
 
@@ -207,15 +207,16 @@ module Lightning
         end
 
         def next(message)
-          match message, (on Received.(~any, any) do |data|
-            @buffer += data
+          case message
+          when Received
+            @buffer += message[:data]
             @buffer = decrypt_and_send(@buffer, @listener)
-          end), (on ~LightningMessage do |msg|
-            ciphertext = encrypt(msg.to_payload)
-            log(Logger::DEBUG, '/transport', "SEND_DATA #{msg.to_payload.bth}")
-            log(Logger::INFO, '/transport', "SEND #{msg}")
+          when Lightning::Wire::LightningMessages
+            ciphertext = encrypt(message.to_payload)
+            log(Logger::DEBUG, '/transport', "SEND_DATA #{message.to_payload.bth}")
+            log(Logger::INFO, '/transport', "SEND #{message.inspect}")
             @conn&.send_data(ciphertext)
-          end)
+          end
           self
         end
       end

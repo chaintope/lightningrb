@@ -20,7 +20,12 @@ module Lightning
         end), (on Array.(:subscribe?, ~any) do |type|
           @receivers[type.name]&.include?(envelope.sender)
         end), (on any do
-          @receivers[message&.type&.name]&.each { |r| r << message }
+          key = if message&.respond_to?(:to_m)
+            message.type.name
+          else
+            message.class.name
+          end
+          @receivers[key]&.each { |r| r << message }
         end)
       end
     end

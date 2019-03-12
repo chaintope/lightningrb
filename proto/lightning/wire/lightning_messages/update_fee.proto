@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message UpdateFee {
+  uint32 type = 1 [(bits) = 16];
+  string channel_id = 2 [(hex) = true, (length) = 32];
+  uint32 feerate_per_kw = 3;
+}

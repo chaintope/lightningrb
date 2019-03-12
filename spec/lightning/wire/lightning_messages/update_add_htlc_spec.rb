@@ -61,24 +61,24 @@ describe Lightning::Wire::LightningMessages::UpdateAddHtlc do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:channel_id]).to eq channel_id }
-    it { expect(subject[:id]).to eq id }
-    it { expect(subject[:amount_msat]).to eq amount_msat }
-    it { expect(subject[:payment_hash]).to eq payment_hash }
-    it { expect(subject[:cltv_expiry]).to eq cltv_expiry }
-    it { expect(subject[:onion_routing_packet]).to eq onion_routing_packet }
+    it { expect(subject.channel_id).to eq channel_id }
+    it { expect(subject.id).to eq id }
+    it { expect(subject.amount_msat).to eq amount_msat }
+    it { expect(subject.payment_hash).to eq payment_hash }
+    it { expect(subject.cltv_expiry).to eq cltv_expiry }
+    it { expect(subject.onion_routing_packet).to eq onion_routing_packet }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        channel_id,
-        id,
-        amount_msat,
-        payment_hash,
-        cltv_expiry,
-        onion_routing_packet
-      ].to_payload.bth
+      described_class.new(
+        channel_id: channel_id,
+        id: id,
+        amount_msat: amount_msat,
+        payment_hash: payment_hash,
+        cltv_expiry: cltv_expiry,
+        onion_routing_packet: onion_routing_packet
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

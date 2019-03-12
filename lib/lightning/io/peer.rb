@@ -31,7 +31,7 @@ module Lightning
       end
 
       def on_message(message)
-        log(Logger::DEBUG, "#{@status}, message: #{message}")
+        log(Logger::DEBUG, "#{@status}, message: #{message.inspect}")
         match message, (on :channels do
           log(Logger::DEBUG, "#{@status}, channels: #{@data[:channels]}")
           return @data[:channels].values.map {|channel| channel.ask!(:data) }
@@ -73,7 +73,7 @@ module Lightning
             [self, data]
           end), (on Array.(Authenticated.(~any, ~any, ~any), DisconnectedData.(any, ~any)) do |conn, transport, node_id, channels|
             transport << Listener[actor, conn]
-            transport << Init[0, '', 1, '08'.htb]
+            transport << Init.new(globalfeatures: '', localfeatures: '08')
             outgoing = conn.is_a?(Lightning::IO::ClientConnection)
             db.insert_or_update(node_id, conn.host, conn.port) if outgoing
             [
@@ -81,7 +81,7 @@ module Lightning
               InitializingData[outgoing ? URI[conn.host, conn.port] : Algebrick::None, transport, channels, Algebrick::None],
             ]
           end), (on any do
-            log(Logger::WARN, '/peer@disconnected', "unhandled message: #{message}")
+            log(Logger::WARN, '/peer@disconnected', "unhandled message: #{message.inspect}")
             [self, data]
           end)
         end
@@ -89,30 +89,30 @@ module Lightning
 
       class PeerStateInitializing < PeerState
         def next(message, data)
-          match [message, data], (on Array.(~Init, InitializingData.(~any, ~any, ~any, any)) do |remote_init, address_opt, transport, channels|
+          case message
+          when Init
             log(Logger::INFO, :peer, "================================================================================")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "PEER CONNECTED")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "================================================================================")
-            channels.each do |channel_id, channel|
-              channel << Lightning::Channel::Messages::InputReconnected[transport]
+            data[:channels].each do |channel_id, channel|
+              channel << Lightning::Channel::Messages::InputReconnected[data[:transport]]
             end
             [
-              PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: transport),
-              ConnectedData[address_opt, transport, remote_init, channels],
+              PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: data[:transport]),
+              ConnectedData[data[:address_opt], data[:transport], message, data[:channels]],
             ]
-          end), (on Array.(~ChannelReestablish, ~InitializingData) do |msg, data|
+          when ChannelReestablish
             task = Concurrent::TimerTask.new(execution_interval: 60, run_now: true) do
-              actor << msg
+              actor << message
               task.shutdown
             end
             task.execute
+          else
+            log(Logger::WARN, '/peer@initializing', "unhandled message: #{message.inspect}")
             [self, data]
-          end), (on any do
-            log(Logger::WARN, '/peer@initializing', "unhandled message: #{message}")
-            [self, data]
-          end)
+          end
         end
       end
 
@@ -127,65 +127,68 @@ module Lightning
         end
 
         def next(message, data)
-          match [message, data], (on Array.(Timeout, ConnectedData) do
+          case message
+          when Timeout
             ping_size = SecureRandom.random_number(1000)
             pong_size = SecureRandom.random_number(1000)
-            ping = Ping[num_pong_bytes: pong_size, byteslen: ping_size, ignored: "\x00" * ping_size]
+            ping = Ping.new(num_pong_bytes: pong_size, ignored: "\x00" * ping_size)
             transport << ping
-          end), (on Array.(Ping.(~any, any, any), ConnectedData) do |pong_size|
-            transport << Pong[byteslen: pong_size, ignored: "\x00" * pong_size] if pong_size.positive?
-          end), (on Array.(Pong.(~any, any), any) do |pong_size|
+          when Ping
+            pong_size = message.num_pong_bytes
+            transport << Pong.new(ignored: "\x00" * pong_size) if pong_size.positive?
+          when Pong
+            pong_size = message.ignored.bytesize
             log(Logger::DEBUG, actor.path, "received pong with #{pong_size} bytes")
-          end), (on Array.(~PeerEvents::OpenChannel, ConnectedData.(any, any, ~any, ~any)) do |open_channel, remote_init, channels|
-            channel, local_param = create_new_channel(context, true, open_channel[:funding_satoshis])
+          when Lightning::IO::PeerEvents::OpenChannel
+            channel, local_param = create_new_channel(context, true, message.funding_satoshis)
             temporary_channel_id = SecureRandom.hex(32)
             channel << Lightning::Channel::Messages::InputInitFunder[
               temporary_channel_id,
-              open_channel[:funding_satoshis],
-              open_channel[:push_msat],
+              message.funding_satoshis,
+              message.push_msat,
               context.node_params.feerates_per_kw,
               local_param,
               transport,
-              remote_init,
-              open_channel[:channel_flags]
+              data[:remote_init],
+              message.channel_flags
             ]
-            channels[temporary_channel_id] = channel
-          end), (on Array.(~Lightning::Channel::Messages::OpenChannel, ConnectedData.(any, any, ~any, ~any)) do |open_channel, remote_init, channels|
-            temporary_channel_id = open_channel[:temporary_channel_id]
-            channel = channels[temporary_channel_id]
+            data[:channels][temporary_channel_id] = channel
+          when Lightning::Wire::LightningMessages::OpenChannel
+            temporary_channel_id = message.temporary_channel_id
+            channel = data[:channels][temporary_channel_id]
             if channel
-              log(Logger::WARN, '/peer@connected', "temporary_channel_id is duplicated. #{open_channel.temporary_channel_id}")
+              log(Logger::WARN, '/peer@connected', "temporary_channel_id is duplicated. #{message.temporary_channel_id}")
             else
-              channel, local_param = create_new_channel(context, false, open_channel[:funding_satoshis])
+              channel, local_param = create_new_channel(context, false, message.funding_satoshis)
               channel << Lightning::Channel::Messages::InputInitFundee[
-                temporary_channel_id, local_param, @transport, remote_init
+                temporary_channel_id, local_param, transport, data[:remote_init]
               ]
-              channel << open_channel
-              channels[temporary_channel_id] = channel
+              channel << message
+              data[:channels][temporary_channel_id] = channel
             end
-          end), (on Array.(~HasChannelId, ConnectedData.(any, any, any, ~any)) do |msg, channels|
-            channel = channels[msg[:channel_id]]
+          when HasChannelId
+            channel = data[:channels][message.channel_id]
             if channel
-              channel << msg
+              channel << message
             else
               # TODO : raise ERROR
             end
-          end), (on Array.(~HasTemporaryChannelId, ConnectedData.(any, any, any, ~any)) do |msg, channels|
-            channel = channels[msg[:temporary_channel_id]]
+          when HasTemporaryChannelId
+            channel = data[:channels][message.temporary_channel_id]
             if channel
-              channel << msg
+              channel << message
             else
               # TODO : raise ERROR
             end
-          end), (on Array.(ChannelIdAssigned.(~any, any, ~any, ~any), ConnectedData.(any, any, any, ~any)) do |channel, temporary_channel_id, channel_id, channels|
-            channels[channel_id] = channel
-          end), (on Array.(~RoutingMessage, ~ConnectedData) do |msg, _data|
-            context.router << msg
-          end), (on Array.(~Lightning::Router::Messages::Rebroadcast, ~ConnectedData) do |msg, data|
-            transport << msg[:message]
-          end)  , (on any do
-            log(Logger::WARN, '/peer@connected', "unhandled message: #{message}, data:#{data}")
-          end)
+          when ChannelIdAssigned
+            data[:channels][message[:channel_id]] = message[:channel]
+          when RoutingMessage
+            context.router << message
+          when Lightning::Router::Messages::Rebroadcast
+            transport << message[:message]
+          else
+            log(Logger::WARN, '/peer@connected', "unhandled message: #{message.inspect}, data:#{data}")
+          end
           [self, data]
         end
 

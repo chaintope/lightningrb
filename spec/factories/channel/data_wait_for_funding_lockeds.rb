@@ -5,7 +5,7 @@ FactoryBot.define do
     temporary_channel_id { '00' * 32 }
     commitments { build(:commitment).get }
     short_channel_id { 1 }
-    last_sent { build(:funding_locked).get }
+    last_sent { build(:funding_locked) }
 
     initialize_with do
       new(Lightning::Channel::Messages::DataWaitForFundingLocked[

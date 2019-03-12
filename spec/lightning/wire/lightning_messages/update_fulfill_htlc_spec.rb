@@ -15,18 +15,18 @@ describe Lightning::Wire::LightningMessages::UpdateFulfillHtlc do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:channel_id]).to eq channel_id }
-    it { expect(subject[:id]).to eq id }
-    it { expect(subject[:payment_preimage]).to eq payment_preimage }
+    it { expect(subject.channel_id).to eq channel_id }
+    it { expect(subject.id).to eq id }
+    it { expect(subject.payment_preimage).to eq payment_preimage }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        channel_id,
-        id,
-        payment_preimage
-      ].to_payload.bth
+      described_class.new(
+        channel_id: channel_id,
+        id: id,
+        payment_preimage: payment_preimage
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

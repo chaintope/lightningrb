@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message AcceptChannel {
+  uint32 type = 1 [(bits) = 16];
+  string temporary_channel_id = 2 [(hex) = true, (length) = 32];
+  uint64 dust_limit_satoshis = 3;
+  uint64 max_htlc_value_in_flight_msat = 4;
+  uint64 channel_reserve_satoshis = 5;
+  uint64 htlc_minimum_msat = 6;
+  uint32 minimum_depth = 7;
+  uint32 to_self_delay = 8 [(bits) = 16];
+  uint32 max_accepted_htlcs = 9 [(bits) = 16];
+  string funding_pubkey = 10 [(hex) = true, (length) = 33];
+  string revocation_basepoint = 11 [(hex) = true, (length) = 33];
+  string payment_basepoint = 12 [(hex) = true, (length) = 33];
+  string delayed_payment_basepoint = 13 [(hex) = true, (length) = 33];
+  string htlc_basepoint = 14 [(hex) = true, (length) = 33];
+  string first_per_commitment_point = 15 [(hex) = true, (length) = 33];
+  string shutdown_scriptpubkey = 16 [(hex) = true];
+}

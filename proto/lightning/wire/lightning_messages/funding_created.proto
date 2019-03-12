@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message FundingCreated {
+  uint32 type = 1 [(bits) = 16];
+  string temporary_channel_id = 2 [(hex) = true, (length) = 32];
+  string funding_txid = 3 [(hex) = true, (length) = 32];
+  uint32 funding_output_index = 4 [(bits) = 16];
+  Signature signature = 5;
+}

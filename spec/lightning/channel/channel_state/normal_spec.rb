@@ -8,6 +8,7 @@ describe Lightning::Channel::ChannelState::Normal do
   let(:channel_context) { Lightning::Channel::ChannelContext.new(ln_context, forwarder, remote_node_id) }
   let(:channel) { DummyActor.spawn(:channel) }
   let(:forwarder) { DummyActor.spawn(:forwarder) }
+  let(:temporary_channel_id) { '00' * 32 }
   let(:remote_node_id) { '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7' }
   let(:spv) { create_test_spv }
 
@@ -41,7 +42,7 @@ describe Lightning::Channel::ChannelState::Normal do
         short_channel_id: 1,
         buried: 1,
         channel_announcement: None,
-        channel_update: build(:channel_update).get,
+        channel_update: build(:channel_update),
         local_shutdown: None,
         remote_shutdown: None
       ]
@@ -57,7 +58,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with UpdateAddHtlc' do
-      let(:message) { build(:update_add_htlc, id: 2).get }
+      let(:message) { build(:update_add_htlc, id: 2) }
 
       it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
       it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
@@ -74,7 +75,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with UpdateFulfillHtlc' do
-      let(:message) { build(:update_fulfill_htlc).get }
+      let(:message) { build(:update_fulfill_htlc) }
       let(:commitment) do
         build(
           :commitment, :funder, :has_local_offered_htlcs, :has_remote_received_htlcs,
@@ -98,7 +99,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with UpdateFailHtlc' do
-      let(:message) { build(:update_fail_htlc).get }
+      let(:message) { build(:update_fail_htlc) }
       let(:commitment) do
         build(
           :commitment, :funder, :has_local_offered_htlcs, :has_remote_received_htlcs,
@@ -121,7 +122,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with UpdateFailMalformedHtlc' do
-      let(:message) { build(:update_fail_malformed_htlc).get }
+      let(:message) { build(:update_fail_malformed_htlc) }
       let(:commitment) do
         build(
           :commitment, :funder, :has_local_offered_htlcs, :has_remote_received_htlcs,
@@ -144,7 +145,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with UpdateFee' do
-      let(:message) { build(:update_fee).get }
+      let(:message) { build(:update_fee) }
 
       it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
       it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
@@ -173,10 +174,9 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with CommitmentSigned' do
-      let(:message) { build(:commitment_signed, num_htlcs: num_htlcs, htlc_signature: htlc_signature).get }
-      let(:num_htlcs) { 0 }
+      let(:message) { build(:commitment_signed, htlc_signature: htlc_signature) }
       let(:htlc_signature) { [] }
-      let(:update) { build(:update_add_htlc).get }
+      let(:update) { build(:update_add_htlc) }
       let(:local_change) { build(:local_change, acked: [update]).get }
       let(:commitment) do
         build(:commitment, :funder, local_change: local_change).get
@@ -187,7 +187,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with RevokeAndAck' do
-      let(:message) { build(:revoke_and_ack).get }
+      let(:message) { build(:revoke_and_ack) }
       let(:remote_commit) do
         build(
           :remote_commit,
@@ -218,7 +218,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with Shutdown' do
-      let(:message) { build(:shutdown).get }
+      let(:message) { build(:shutdown) }
 
       context 'has no pending htlcs' do
         let(:commitment) { build(:commitment, :funder, remote_next_commit_info: '').get }
@@ -258,7 +258,7 @@ describe Lightning::Channel::ChannelState::Normal do
     end
 
     describe 'with AnnouncementSignatures' do
-      let(:message) { build(:announcement_signatures).get }
+      let(:message) { build(:announcement_signatures) }
       it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
       it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
       it { expect(subject[1][:channel_announcement]).to be_a Algebrick::Some[Lightning::Wire::LightningMessages::ChannelAnnouncement] }

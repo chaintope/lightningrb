@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message Ping {
+  uint32 type = 1 [(bits) = 16];
+  uint32 num_pong_bytes = 2 [(bits) = 16];
+  string ignored = 3 [(hex) = true];
+}

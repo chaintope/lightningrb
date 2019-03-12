@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+import "lightning/wire/lightning_messages/init.proto";
+import "lightning/wire/lightning_messages/error.proto";
+import "lightning/wire/lightning_messages/ping.proto";
+import "lightning/wire/lightning_messages/pong.proto";
+import "lightning/wire/lightning_messages/open_channel.proto";
+import "lightning/wire/lightning_messages/accept_channel.proto";
+import "lightning/wire/lightning_messages/funding_created.proto";
+import "lightning/wire/lightning_messages/funding_signed.proto";
+import "lightning/wire/lightning_messages/funding_locked.proto";
+import "lightning/wire/lightning_messages/shutdown.proto";
+import "lightning/wire/lightning_messages/closing_signed.proto";
+import "lightning/wire/lightning_messages/update_add_htlc.proto";
+import "lightning/wire/lightning_messages/update_fulfill_htlc.proto";
+import "lightning/wire/lightning_messages/update_fail_htlc.proto";
+import "lightning/wire/lightning_messages/update_fail_malformed_htlc.proto";
+import "lightning/wire/lightning_messages/commitment_signed.proto";
+import "lightning/wire/lightning_messages/revoke_and_ack.proto";
+import "lightning/wire/lightning_messages/update_fee.proto";
+import "lightning/wire/lightning_messages/channel_reestablish.proto";
+import "lightning/wire/lightning_messages/announcement_signatures.proto";
+import "lightning/wire/lightning_messages/channel_announcement.proto";
+import "lightning/wire/lightning_messages/node_announcement.proto";
+import "lightning/wire/lightning_messages/channel_update.proto";
+
+message LightningMessage {
+  oneof message {
+    Init init = 1;
+    Error error = 2;
+    Ping ping = 3;
+    Pong pong = 4;
+    OpenChannel open_channel = 5;
+    AcceptChannel accept_channel = 6;
+    FundingCreated funding_created = 7;
+    FundingSigned funding_signed = 8;
+    FundingLocked funding_locked = 9;
+    Shutdown shutdown = 10;
+    ClosingSigned closing_signed = 11;
+    UpdateAddHtlc update_add_htlc = 12;
+    UpdateFulfillHtlc update_fulfill_htlc = 13;
+    UpdateFailHtlc update_fail_htlc = 14;
+    UpdateFailMalformedHtlc update_fail_malformed_htlc = 15;
+    CommitmentSigned commitment_signed = 16;
+    RevokeAndAck revoke_and_ack = 17;
+    UpdateFee update_fee = 18;
+    ChannelReestablish channel_reestablish = 19;
+    AnnouncementSignatures announcement_signatures = 20;
+    ChannelAnnouncement channel_announcement = 21;
+    NodeAnnouncement node_announcement = 22;
+    ChannelUpdate channel_update = 23;
+  }
+}

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message ChannelUpdate {
+  uint32 type = 1 [(bits) = 16];
+  Signature signature = 2;
+  string chain_hash = 3 [(hex) = true, (length) = 32];
+  uint64 short_channel_id = 4;
+  uint32 timestamp = 5;
+  string message_flags = 6 [(hex) = true, (length) = 1];
+  string channel_flags = 7 [(hex) = true, (length) = 1];
+  uint32 cltv_expiry_delta = 8 [(bits) = 16];
+  uint64 htlc_minimum_msat = 9;
+  uint32 fee_base_msat = 10;
+  uint32 fee_proportional_millionths = 11;
+  uint64 htlc_maximum_msat = 12;
+}
+
+message ChannelUpdateWitness {
+  string chain_hash = 1 [(hex) = true, (length) = 32];
+  uint64 short_channel_id = 2;
+  uint32 timestamp = 3;
+  string message_flags = 4 [(hex) = true, (length) = 1];
+  string channel_flags = 5 [(hex) = true, (length) = 1];
+  uint32 cltv_expiry_delta = 6 [(bits) = 16];
+  uint64 htlc_minimum_msat = 7;
+  uint32 fee_base_msat = 8;
+  uint32 fee_proportional_millionths = 9;
+  uint64 htlc_maximum_msat = 10;
+}

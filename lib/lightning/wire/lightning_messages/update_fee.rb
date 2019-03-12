@@ -3,22 +3,16 @@
 module Lightning
   module Wire
     module LightningMessages
-      module UpdateFee
-        def self.load(payload)
-          _, rest = payload.unpack('na*')
-          new(*rest.unpack('H64N'))
-        end
+      class UpdateFee < Lightning::Wire::LightningMessages::Generated::UpdateFee
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::HasChannelId
+        include Lightning::Wire::LightningMessages::UpdateMessage
+        TYPE = 134
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::UPDATE_FEE
-        end
-
-        def to_payload
-          payload = +''
-          payload << [UpdateFee.to_type].pack('n')
-          payload << self[:channel_id].htb
-          payload << [self[:feerate_per_kw]].pack('N')
-          payload
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
       end
     end

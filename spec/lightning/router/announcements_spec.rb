@@ -50,12 +50,12 @@ describe Lightning::Router::Announcements do
 
     context 'local node id is lesser than remote one' do
       it { expect(subject.valid_signature?).to be_truthy }
-      it { expect(subject[:chain_hash]).to eq chain_hash }
-      it { expect(subject[:short_channel_id]).to eq short_channel_id }
-      it { expect(subject[:node_id_1]).to eq local_node_id }
-      it { expect(subject[:node_id_2]).to eq remote_node_id }
-      it { expect(subject[:bitcoin_key_1]).to eq local_funding_key }
-      it { expect(subject[:bitcoin_key_2]).to eq remote_funding_key }
+      it { expect(subject.chain_hash).to eq chain_hash }
+      it { expect(subject.short_channel_id).to eq short_channel_id }
+      it { expect(subject.node_id_1).to eq local_node_id }
+      it { expect(subject.node_id_2).to eq remote_node_id }
+      it { expect(subject.bitcoin_key_1).to eq local_funding_key }
+      it { expect(subject.bitcoin_key_2).to eq remote_funding_key }
     end
 
     context 'local node id is greater than remote one' do
@@ -63,21 +63,21 @@ describe Lightning::Router::Announcements do
       let(:remote_node_secret) { '22' * 32 }
 
       it { expect(subject.valid_signature?).to be_truthy }
-      it { expect(subject[:chain_hash]).to eq chain_hash }
-      it { expect(subject[:short_channel_id]).to eq short_channel_id }
-      it { expect(subject[:node_id_1]).to eq remote_node_id }
-      it { expect(subject[:node_id_2]).to eq local_node_id }
-      it { expect(subject[:bitcoin_key_1]).to eq remote_funding_key }
-      it { expect(subject[:bitcoin_key_2]).to eq local_funding_key }
+      it { expect(subject.chain_hash).to eq chain_hash }
+      it { expect(subject.short_channel_id).to eq short_channel_id }
+      it { expect(subject.node_id_1).to eq remote_node_id }
+      it { expect(subject.node_id_2).to eq local_node_id }
+      it { expect(subject.bitcoin_key_1).to eq remote_funding_key }
+      it { expect(subject.bitcoin_key_2).to eq local_funding_key }
     end
   end
 
   describe '.make_node_announcement' do
     let(:node_secret) { '11' * 32 }
     let(:node_id) { Bitcoin::Key.new(priv_key: node_secret).pubkey }
-    let(:node_rgb_color) { [255, 127, 0] }
-    let(:node_alias) { 'Lightning Node' }
-    let(:addresses) { [ '10.10.10.10:9735' ] }
+    let(:node_rgb_color) { (100 << 16) + (200 << 8) + 44 }
+    let(:node_alias) { "node-alias\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" }
+    let(:addresses) { '01a0a0a0a2607' }
     let(:timestamp) { 1536060934 }
 
     subject do
@@ -91,12 +91,12 @@ describe Lightning::Router::Announcements do
     end
 
     it { expect(subject.valid_signature?).to be_truthy }
-    it { expect(subject[:features]).to eq '' }
-    it { expect(subject[:timestamp]).to eq timestamp }
-    it { expect(subject[:node_id]).to eq node_id }
-    it { expect(subject[:node_rgb_color]).to eq node_rgb_color }
-    it { expect(subject[:node_alias]).to eq node_alias }
-    it { expect(subject[:addresses]).to eq addresses }
+    it { expect(subject.features).to eq '' }
+    it { expect(subject.timestamp).to eq timestamp }
+    it { expect(subject.node_id).to eq node_id }
+    it { expect(subject.node_rgb_color).to eq node_rgb_color }
+    it { expect(subject.node_alias).to eq node_alias }
+    it { expect(subject.addresses).to eq addresses }
   end
 
   describe '.make_channel_update' do
@@ -128,14 +128,14 @@ describe Lightning::Router::Announcements do
     end
 
     it { expect(subject.valid_signature?(local_node_id)).to be_truthy }
-    it { expect(subject[:chain_hash]).to eq chain_hash }
-    it { expect(subject[:short_channel_id]).to eq short_channel_id }
-    it { expect(subject[:timestamp]).to eq timestamp }
-    it { expect(subject[:message_flags]).to eq 0 }
-    it { expect(subject[:channel_flags]).to eq 1 }
-    it { expect(subject[:cltv_expiry_delta]).to eq cltv_expiry_delta }
-    it { expect(subject[:htlc_minimum_msat]).to eq htlc_minimum_msat }
-    it { expect(subject[:fee_base_msat]).to eq fee_base_msat }
-    it { expect(subject[:fee_proportional_millionths]).to eq fee_proportional_millionths }
+    it { expect(subject.chain_hash).to eq chain_hash }
+    it { expect(subject.short_channel_id).to eq short_channel_id }
+    it { expect(subject.timestamp).to eq timestamp }
+    it { expect(subject.message_flags).to eq "00" }
+    it { expect(subject.channel_flags).to eq "01" }
+    it { expect(subject.cltv_expiry_delta).to eq cltv_expiry_delta }
+    it { expect(subject.htlc_minimum_msat).to eq htlc_minimum_msat }
+    it { expect(subject.fee_base_msat).to eq fee_base_msat }
+    it { expect(subject.fee_proportional_millionths).to eq fee_proportional_millionths }
   end
 end

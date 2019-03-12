@@ -17,15 +17,15 @@ describe Lightning::Channel::ChannelState::Negotiating do
     before { spv.stub(:broadcast).and_return(nil) }
 
     context 'remote fee met local' do
-      let(:message) { build(:closing_signed).get }
+      let(:message) { build(:closing_signed) }
       let(:tx) { Bitcoin::Tx.new }
       let(:commitment) { build(:commitment, :funder).get }
       let(:data) do
         Lightning::Channel::Messages::DataNegotiating[
           commitment,
-          build(:shutdown).get,
-          build(:shutdown).get,
-          [Lightning::Channel::Messages::ClosingTxProposed[tx, build(:closing_signed).get]],
+          build(:shutdown),
+          build(:shutdown),
+          [Lightning::Channel::Messages::ClosingTxProposed[tx, build(:closing_signed)]],
           Algebrick::None
         ]
       end

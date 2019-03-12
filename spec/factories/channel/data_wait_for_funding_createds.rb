@@ -15,7 +15,7 @@ FactoryBot.define do
     initial_feerate_per_kw { 15000 }
     remote_first_per_commitment_point { build(:remote_first_per_commitment_point) }
     channel_flags { 0 }
-    last_sent { build(:accept_channel).get }
+    last_sent { build(:accept_channel) }
 
     initialize_with do
       new(Lightning::Channel::Messages::DataWaitForFundingCreated[

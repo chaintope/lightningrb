@@ -3,23 +3,16 @@
 module Lightning
   module Wire
     module LightningMessages
-      module RevokeAndAck
-        def self.load(payload)
-          _, rest = payload.unpack('na*')
-          new(*rest.unpack('H64H64H66'))
-        end
+      class RevokeAndAck < Lightning::Wire::LightningMessages::Generated::RevokeAndAck
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::HasChannelId
+        include Lightning::Wire::LightningMessages::UpdateMessage
+        TYPE = 133
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::REVOKE_AND_ACK
-        end
-
-        def to_payload
-          payload = +''
-          payload << [RevokeAndAck.to_type].pack('n')
-          payload << self[:channel_id].htb
-          payload << self[:per_commitment_secret].htb
-          payload << self[:next_per_commitment_point].htb
-          payload
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
       end
     end

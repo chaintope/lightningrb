@@ -5,7 +5,8 @@ module Lightning
     class ChannelState
       class WaitForAcceptChannel < ChannelState
         def next(message, data)
-          match message, (on ~AcceptChannel do |accept|
+          case message
+          when AcceptChannel
             input_init_funder = data[:init_funder]
             open_channel = data[:last_sent]
             local_param = input_init_funder[:local_param]
@@ -15,21 +16,21 @@ module Lightning
             funding_satoshis = input_init_funder[:funding_satoshis]
             initial_feerate_per_kw = input_init_funder[:initial_feerate_per_kw]
             push_msat = input_init_funder[:push_msat]
-            remote_first_per_commitment_point = accept[:first_per_commitment_point]
+            remote_first_per_commitment_point = message[:first_per_commitment_point]
 
             remote_param = RemoteParam[
               context.remote_node_id,
-              accept[:dust_limit_satoshis],
-              accept[:max_htlc_value_in_flight_msat],
-              accept[:channel_reserve_satoshis],
-              accept[:htlc_minimum_msat],
-              accept[:to_self_delay],
-              accept[:max_accepted_htlcs],
-              accept[:funding_pubkey],
-              accept[:revocation_basepoint],
-              accept[:payment_basepoint],
-              accept[:delayed_payment_basepoint],
-              accept[:htlc_basepoint],
+              message[:dust_limit_satoshis],
+              message[:max_htlc_value_in_flight_msat],
+              message[:channel_reserve_satoshis],
+              message[:htlc_minimum_msat],
+              message[:to_self_delay],
+              message[:max_accepted_htlcs],
+              message[:funding_pubkey],
+              message[:revocation_basepoint],
+              message[:payment_basepoint],
+              message[:delayed_payment_basepoint],
+              message[:htlc_basepoint],
               remote_init.globalfeatures,
               remote_init.localfeatures
             ]
@@ -44,7 +45,7 @@ module Lightning
             goto(
               WaitForFundingInternal.new(@channel, context),
               data: DataWaitForFundingInternal[
-                accept[:temporary_channel_id],
+                message[:temporary_channel_id],
                 local_param,
                 remote_param,
                 funding_satoshis,
@@ -54,7 +55,7 @@ module Lightning
                 open_channel
               ]
             )
-          end)
+          end
         end
       end
     end

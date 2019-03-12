@@ -8,7 +8,7 @@ FactoryBot.define do
     initial_feerate_per_kw { 15000 }
     local_param { build(:local_param).get }
     remote { spawn_dummy_actor }
-    remote_init { build(:init).get }
+    remote_init { build(:init) }
     channel_flags { 0 }
 
     initialize_with do

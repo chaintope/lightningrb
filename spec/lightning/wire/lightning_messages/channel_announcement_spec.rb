@@ -4,27 +4,34 @@ require 'spec_helper'
 
 describe Lightning::Wire::LightningMessages::ChannelAnnouncement do
   let(:node_signature_1) do
-    '30440220401116d5aab3a83ae795d7f15094934f69e7841595efd2e3ef6b1632' \
-    '52f3c656022059a91ebd36f8a4ecd44365fcde54bfa3ad0ac76b252baef6e1d9' \
-    '098fa9629d20'
+    Lightning::Wire::Signature.new(value:
+      '30440220401116d5aab3a83ae795d7f15094934f69e7841595efd2e3ef6b1632' \
+      '52f3c656022059a91ebd36f8a4ecd44365fcde54bfa3ad0ac76b252baef6e1d9' \
+      '098fa9629d20'
+    )
   end
   let(:node_signature_2) do
-    '30440220688224c115241fe5f10261127f926ea84196148631ca35af01cbdb14' \
-    '1ab175a1022046e47ba3e6eb8216690403f49a9e874eb2dd71d88339587a617d' \
-    'bc8dcab7b5c8'
+    Lightning::Wire::Signature.new(value:
+      '30440220688224c115241fe5f10261127f926ea84196148631ca35af01cbdb14' \
+      '1ab175a1022046e47ba3e6eb8216690403f49a9e874eb2dd71d88339587a617d' \
+      'bc8dcab7b5c8'
+    )
   end
   let(:bitcoin_signature_1) do
-    '3045022100f8c1ee009aebdcb9cc745b5041f347d6042978f3526d10d629a054' \
-    'b4d71a3ae9022058a642cf5bdced1716886ef1ab52f88f4e9d49a70a83a694a0' \
-    '8354e3653821d5'
+    Lightning::Wire::Signature.new(value:
+      '3045022100f8c1ee009aebdcb9cc745b5041f347d6042978f3526d10d629a054' \
+      'b4d71a3ae9022058a642cf5bdced1716886ef1ab52f88f4e9d49a70a83a694a0' \
+      '8354e3653821d5'
+    )
   end
   let(:bitcoin_signature_2) do
-    '304402204b49ba49a24db1aa6877cda8b701f5c08a849950dc775be91c4fb1a9' \
-    'b8ec72c30220311d6c98e349b1f18b8d1e84d81fa80cee64e89948d88cea075e' \
-    '08feed46abdd'
+    Lightning::Wire::Signature.new(value:
+      '304402204b49ba49a24db1aa6877cda8b701f5c08a849950dc775be91c4fb1a9' \
+      'b8ec72c30220311d6c98e349b1f18b8d1e84d81fa80cee64e89948d88cea075e' \
+      '08feed46abdd'
+    )
   end
-  let(:len) { 7 }
-  let(:features) { '09090909090909'.htb }
+  let(:features) { '09090909090909' }
   let(:chain_hash) { '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' }
   let(:short_channel_id) { 1 }
   let(:node_id_1) { '02adb02766bbc6c1fc9d2998e00f5832a2056cc9abd7b26dde33191f1c15b62982' }
@@ -51,36 +58,34 @@ describe Lightning::Wire::LightningMessages::ChannelAnnouncement do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:node_signature_1]).to eq node_signature_1 }
-    it { expect(subject[:node_signature_2]).to eq node_signature_2 }
-    it { expect(subject[:bitcoin_signature_1]).to eq bitcoin_signature_1 }
-    it { expect(subject[:bitcoin_signature_2]).to eq bitcoin_signature_2 }
-    it { expect(subject[:len]).to eq len }
-    it { expect(subject[:features]).to eq features }
-    it { expect(subject[:chain_hash]).to eq chain_hash }
-    it { expect(subject[:short_channel_id]).to eq short_channel_id }
-    it { expect(subject[:node_id_1]).to eq node_id_1 }
-    it { expect(subject[:node_id_2]).to eq node_id_2 }
-    it { expect(subject[:bitcoin_key_1]).to eq bitcoin_key_1 }
-    it { expect(subject[:bitcoin_key_2]).to eq bitcoin_key_2 }
+    it { expect(subject.node_signature_1).to eq node_signature_1 }
+    it { expect(subject.node_signature_2).to eq node_signature_2 }
+    it { expect(subject.bitcoin_signature_1).to eq bitcoin_signature_1 }
+    it { expect(subject.bitcoin_signature_2).to eq bitcoin_signature_2 }
+    it { expect(subject.features).to eq features }
+    it { expect(subject.chain_hash).to eq chain_hash }
+    it { expect(subject.short_channel_id).to eq short_channel_id }
+    it { expect(subject.node_id_1).to eq node_id_1 }
+    it { expect(subject.node_id_2).to eq node_id_2 }
+    it { expect(subject.bitcoin_key_1).to eq bitcoin_key_1 }
+    it { expect(subject.bitcoin_key_2).to eq bitcoin_key_2 }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        node_signature_1,
-        node_signature_2,
-        bitcoin_signature_1,
-        bitcoin_signature_2,
-        len,
-        features,
-        chain_hash,
-        short_channel_id,
-        node_id_1,
-        node_id_2,
-        bitcoin_key_1,
-        bitcoin_key_2
-      ].to_payload.bth
+      described_class.new(
+        node_signature_1: node_signature_1,
+        node_signature_2: node_signature_2,
+        bitcoin_signature_1: bitcoin_signature_1,
+        bitcoin_signature_2: bitcoin_signature_2,
+        features: features,
+        chain_hash: chain_hash,
+        short_channel_id: short_channel_id,
+        node_id_1: node_id_1,
+        node_id_2: node_id_2,
+        bitcoin_key_1: bitcoin_key_1,
+        bitcoin_key_2: bitcoin_key_2
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

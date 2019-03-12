@@ -13,12 +13,12 @@ module Lightning
       end
 
       def to_payload
-        payload = +''
+        payload = StringIO.new
         payload << [self[:direction]].pack('C')
         add = self[:add].to_payload
         payload << [add.bytesize].pack('n')
         payload << add
-        payload
+        payload.string
       end
 
       def self.load(payload)

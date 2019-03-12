@@ -10,7 +10,7 @@ FactoryBot.define do
     end
 
     trait :has_local_change do
-      proposed { [ build(:update_add_htlc).get ] }
+      proposed { [ build(:update_add_htlc) ] }
     end
   end
 end

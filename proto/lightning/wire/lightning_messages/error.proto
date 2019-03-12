@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message Error {
+  uint32 type = 1 [(bits) = 16];
+  string channel_id = 2 [(hex) = true, (length) = 32];
+  string data = 3;
+}

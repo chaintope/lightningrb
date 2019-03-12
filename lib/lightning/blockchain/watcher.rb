@@ -19,6 +19,7 @@ module Lightning
             request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash: tx_hash, confirmations: 3)
             response = stub.watch_tx_confirmed(request)
             response.each do |r|
+              log(Logger::INFO, :watcher, "RECEIVE WatchEventConfirmed event.#{r}")
               listener << Lightning::Blockchain::Messages::WatchEventConfirmed["confirmed", r.confirmed.block_height, r.confirmed.tx_index]
               break
             end
@@ -29,6 +30,7 @@ module Lightning
             request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash: tx_hash, confirmations: 6)
             response = stub.watch_tx_confirmed(request)
             response.each do |r|
+              log(Logger::INFO, :watcher, "RECEIVE WatchEventConfirmed event.#{r}")
               listener << Lightning::Blockchain::Messages::WatchEventConfirmed["deeply_confirmed", r.confirmed.block_height, r.confirmed.tx_index]
               break
             end

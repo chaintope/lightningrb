@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message UpdateFailMalformedHtlc {
+  uint32 type = 1 [(bits) = 16];
+  string channel_id = 2 [(hex) = true, (length) = 32];
+  uint64 id = 3;
+  string sha256_of_onion = 4[(hex) = true, (length) = 32];
+  uint32 failure_code = 5 [(bits) = 16];
+}

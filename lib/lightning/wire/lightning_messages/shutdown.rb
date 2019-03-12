@@ -3,24 +3,15 @@
 module Lightning
   module Wire
     module LightningMessages
-      module Shutdown
-        def self.load(payload)
-          _, channel_id, len, rest = payload.unpack('nH64na*')
-          scriptpubkey, = rest.unpack("H#{len * 2}")
-          new(channel_id, len, scriptpubkey)
-        end
+      class Shutdown < Lightning::Wire::LightningMessages::Generated::Shutdown
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::HasChannelId
+        TYPE = 38
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::SHUTDOWN
-        end
-
-        def to_payload
-          payload = +''
-          payload << [Shutdown.to_type].pack('n')
-          payload << self[:channel_id].htb
-          payload << [self[:len]].pack('n')
-          payload << self[:scriptpubkey].htb
-          payload
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
       end
     end

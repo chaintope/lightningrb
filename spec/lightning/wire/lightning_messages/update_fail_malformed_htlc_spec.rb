@@ -16,20 +16,20 @@ describe Lightning::Wire::LightningMessages::UpdateFailMalformedHtlc do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:channel_id]).to eq channel_id }
-    it { expect(subject[:id]).to eq id }
-    it { expect(subject[:sha256_of_onion]).to eq sha256_of_onion }
-    it { expect(subject[:failure_code]).to eq failure_code }
+    it { expect(subject.channel_id).to eq channel_id }
+    it { expect(subject.id).to eq id }
+    it { expect(subject.sha256_of_onion).to eq sha256_of_onion }
+    it { expect(subject.failure_code).to eq failure_code }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        channel_id,
-        id,
-        sha256_of_onion,
-        failure_code
-      ].to_payload.bth
+      described_class.new(
+        channel_id: channel_id,
+        id: id,
+        sha256_of_onion: sha256_of_onion,
+        failure_code: failure_code
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

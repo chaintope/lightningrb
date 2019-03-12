@@ -14,16 +14,16 @@ describe Lightning::Wire::LightningMessages::FundingLocked do
   describe '#load' do
     subject { described_class.load(payload.htb) }
 
-    it { expect(subject[:channel_id]).to eq channel_id }
-    it { expect(subject[:next_per_commitment_point]).to eq next_per_commitment_point }
+    it { expect(subject.channel_id).to eq channel_id }
+    it { expect(subject.next_per_commitment_point).to eq next_per_commitment_point }
   end
 
   describe '#to_payload' do
     subject do
-      described_class[
-        channel_id,
-        next_per_commitment_point,
-      ].to_payload.bth
+      described_class.new(
+        channel_id: channel_id,
+        next_per_commitment_point: next_per_commitment_point,
+      ).to_payload.bth
     end
 
     it { is_expected.to eq payload }

@@ -26,7 +26,7 @@ describe Lightning::Payment::PaymentHandler do
     describe 'with UpdateAddHtlc' do
       it do
         payment_hash = payment_handler.ask!(build(:receive_payment).get).payment_hash
-        message = build(:update_add_htlc, payment_hash: payment_hash).get
+        message = build(:update_add_htlc, payment_hash: payment_hash)
         expect do
           payment_handler << message
           payment_handler.ask(:await).wait

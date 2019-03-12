@@ -3,24 +3,15 @@
 module Lightning
   module Wire
     module LightningMessages
-      module ClosingSigned
-        def self.load(payload)
-          _, channel_id, fee_satoshis, signature = payload.unpack('nH64q>a64')
-          signature = LightningMessages.wire2der(signature)
-          new(channel_id, fee_satoshis, signature)
-        end
+      class ClosingSigned < Lightning::Wire::LightningMessages::Generated::ClosingSigned
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::HasChannelId
+        TYPE = 39
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::CLOSING_SIGNED
-        end
-
-        def to_payload
-          payload = +''
-          payload << [ClosingSigned.to_type].pack('n')
-          payload << self[:channel_id].htb
-          payload << [self[:fee_satoshis]].pack('q>')
-          payload << LightningMessages.der2wire(self[:signature].htb)
-          payload
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
       end
     end

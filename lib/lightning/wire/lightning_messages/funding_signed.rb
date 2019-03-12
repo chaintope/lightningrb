@@ -3,24 +3,15 @@
 module Lightning
   module Wire
     module LightningMessages
-      module FundingSigned
-        def self.load(payload)
-          _, rest = payload.unpack('na*')
-          channel_id, signature = rest.unpack('H64a64')
-          signature = LightningMessages.wire2der(signature)
-          new(channel_id, signature)
-        end
+      class FundingSigned < Lightning::Wire::LightningMessages::Generated::FundingSigned
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::HasChannelId
+        TYPE = 35
 
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::FUNDING_SIGNED
-        end
-
-        def to_payload
-          payload = +''
-          payload << [FundingSigned.to_type].pack('n')
-          payload << self[:channel_id].htb
-          payload << LightningMessages.der2wire(self[:signature].htb)
-          payload
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
       end
     end

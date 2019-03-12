@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message ChannelAnnouncement {
+  uint32 type = 1 [(bits) = 16];
+  Signature node_signature_1 = 2;
+  Signature node_signature_2 = 3;
+  Signature bitcoin_signature_1 = 4;
+  Signature bitcoin_signature_2 = 5;
+  string features = 6 [(hex) = true];
+  string chain_hash = 7 [(hex) = true, (length) = 32];
+  uint64 short_channel_id = 8;
+  string node_id_1 = 9 [(hex) = true, (length) = 33];
+  string node_id_2 = 10 [(hex) = true, (length) = 33];
+  string bitcoin_key_1 = 11 [(hex) = true, (length) = 33];
+  string bitcoin_key_2 = 12 [(hex) = true, (length) = 33];
+}
+
+message ChannelAnnouncementWitness {
+  string features = 1 [(hex) = true];
+  string chain_hash = 2 [(hex) = true, (length) = 32];
+  uint64 short_channel_id = 3;
+  string node_id_1 = 4 [(hex) = true, (length) = 33];
+  string node_id_2 = 5 [(hex) = true, (length) = 33];
+  string bitcoin_key_1 = 6 [(hex) = true, (length) = 33];
+  string bitcoin_key_2 = 7 [(hex) = true, (length) = 33];
+}

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message Init {
+  uint32 type = 1 [(bits) = 16];
+  string globalfeatures = 2 [(hex) = true];
+  string localfeatures = 3 [(hex) = true];
+}

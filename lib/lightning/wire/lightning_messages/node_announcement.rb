@@ -3,87 +3,103 @@
 module Lightning
   module Wire
     module LightningMessages
-      module NodeAnnouncement
-        def self.load(payload)
-          _, signature, flen, rest = payload.unpack('na64na*')
-          signature = LightningMessages.wire2der(signature)
-          features, timestamp, node_id, r, g, b, node_alias, len, rest = rest.unpack("a#{flen}NH66C3a32na*")
-          node_alias, = node_alias.unpack('Z32')
-          rest, = rest.unpack("a#{len}")
-          addresses = []
-          while rest.bytesize >= 1
-            address_descriptor, rest = rest.unpack('Ca*')
-            case address_descriptor
-            when 0
-              addresses << ''
-            when 1
-              host, port, rest = rest.unpack('Nna*')
-              addresses << "#{to_ipv4(host)}:#{port}"
-            else
-              # TODO: support for ipv6, tor v2 onion, tor v3 onion
-            end
-          end
-          new(signature, flen, features, timestamp, node_id, [r, g, b], node_alias, addresses.size, addresses)
-        end
+      class NodeAnnouncement < Lightning::Wire::LightningMessages::Generated::NodeAnnouncement
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
+        include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::RoutingMessage
+        TYPE = 257
 
-        def self.to_ipv4(i)
-          IPAddr.new(i, Socket::AF_INET).to_s
-        end
-
-        def self.to_type
-          Lightning::Wire::LightningMessageTypes::NODE_ANNOUNCEMENT
-        end
-
-        def to_payload
-          payload = +''
-          payload << [NodeAnnouncement.to_type].pack('n')
-          payload << LightningMessages.der2wire(self[:signature].htb)
-          payload << witness_data
-          payload
+        def initialize(fields = {})
+          super(fields.merge(type: TYPE))
         end
 
         def valid?
-          return false unless self[:flen] == self[:features].bytesize
           true
         end
 
         def valid_signature?
-          Bitcoin::Key.new(pubkey: self[:node_id]).verify(self[:signature].htb, witness)
+          Bitcoin::Key.new(pubkey: node_id).verify(signature.value.htb, witness)
         end
 
         def older_than?(other)
-          other[:timestamp] >= self[:timestamp]
+          other.timestamp >= timestamp
         end
 
-        def witness_data
-          payload = +''
-          payload << [self[:flen]].pack('n')
-          payload << self[:features]
-          payload << [self[:timestamp]].pack('N')
-          payload << self[:node_id].htb
-          payload << self[:node_rgb_color].pack('C3')
-          payload << [self[:node_alias]].pack('Z32')
-          # TODO: support for ipv6, tor v2 onion, tor v3 onion
-          payload << [7 * self[:addrlen]].pack('n')
-          self[:addresses].each do |address|
-            # TODO: support for ipv6, tor v2 onion, tor v3 onion
-            host, port = address.split(':')
-            payload << [1, IPAddr.new(host).to_i, port.to_i].pack('CNn')
+        def parsed_addresses
+          @parsed_addresses ||= parse_address(addresses)
+        end
+
+        def parse_address(addresses_as_string)
+          puts addresses_as_string
+          stream = StringIO.new(addresses_as_string.htb)
+          addresses = []
+          while !stream.eof?
+            type = stream.read(1).unpack("C").first
+            puts type
+            case type
+            when 0x01
+              ipv4_addr = stream.read(4).unpack("a4").first
+              ipv4_addr = IPAddr.ntop(ipv4_addr)
+              port = stream.read(2).unpack('n').first
+              address = Lightning::Wire::LightningMessages::Generated::IP4.new(
+                ipv4_addr: ipv4_addr,
+                port: port
+              )
+            when 0x02
+              ipv6_addr = stream.read(16).unpack("a16").first
+              ipv6_addr = IPAddr.ntop(ipv6_addr)
+              port = stream.read(2).unpack('n').first
+              address = Lightning::Wire::LightningMessages::Generated::IP6.new(
+                ipv6_addr: ipv6_addr,
+                port: port
+              )
+            when 0x03
+              onion_addr = stream.read(10).unpack("a10").first
+              port = stream.read(2).unpack('n').first
+              address = Lightning::Wire::LightningMessages::Generated::Tor2.new(
+                onion_addr: onion_addr,
+                port: port
+              )
+            when 0x04
+              onion_addr = stream.read(35).unpack("a35").first
+              port = stream.read(2).unpack('n').first
+              address = Lightning::Wire::LightningMessages::Generated::Tor3.new(
+                onion_addr: onion_addr,
+                port: port
+              )
+            end
+            addresses << address
           end
-          payload
+          addresses
         end
 
         def witness
-          Bitcoin.double_sha256(witness_data)
+          self.class.witness(features, timestamp, node_id, node_rgb_color, node_alias, addresses)
         end
 
-        def self.witness(features, timestamp, node_id, node_rbg_color, node_alias, addresses)
-          new('', features.bytesize, features, timestamp, node_id, node_rbg_color, node_alias, addresses.size, addresses).witness
+        def self.witness(features, timestamp, node_id, node_rgb_color, node_alias, addresses)
+          witness = NodeAnnouncementWitness.new(
+            features: features,
+            timestamp: timestamp,
+            node_id: node_id,
+            node_rgb_color: node_rgb_color,
+            node_alias: node_alias,
+            addresses: addresses
+          )
+          stream = StringIO.new
+          Protobuf::Encoder.encode(witness, stream)
+          Bitcoin.double_sha256(stream.string)
         end
 
         def to_json
           to_h.slice(:node_id, :node_rgb_color,:node_alias, :addresses).to_json
         end
+      end
+
+      class NodeAnnouncementWitness < Lightning::Wire::LightningMessages::Generated::NodeAnnouncementWitness
+        include Lightning::Wire::Serialization
+        extend Lightning::Wire::Serialization
       end
     end
   end

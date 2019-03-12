@@ -5,7 +5,8 @@ module Lightning
     class ChannelState
       class WaitForFundingCreated < ChannelState
         def next(message, data)
-          match message, (on ~FundingCreated.(any, ~any, ~any, ~any) do |msg, funding_tx_txid, funding_tx_output_index, remote_sig|
+          case message
+          when FundingCreated
             local_param = data[:local_param]
             remote_param = data[:remote_param]
             funding_satoshis = data[:funding_satoshis]
@@ -14,8 +15,11 @@ module Lightning
             initial_feerate_per_kw = data[:initial_feerate_per_kw]
             remote_first_per_commitment_point = data[:remote_first_per_commitment_point]
             channel_flags = data[:channel_flags]
+            funding_tx_txid = message.funding_txid
+            funding_tx_output_index = message.funding_output_index
+            remote_sig = message.signature
 
-            msg.validate!(temporary_channel_id)
+            message.validate!(temporary_channel_id)
 
             local_spec, local_commit_tx, remote_spec, remote_commit_tx = Transactions::Commitment.make_first_commitment_txs(
               temporary_channel_id,
@@ -37,7 +41,7 @@ module Lightning
               local_param.funding_priv_key.pubkey,
               remote_param.funding_pubkey,
               local_sig_of_local_tx,
-              remote_sig
+              remote_sig.value
             )
             unless Transactions.spendable?(signed_local_commit_tx)
               # TODO
@@ -55,11 +59,13 @@ module Lightning
             channel.parent << event
             context.broadcast << event
 
+            log(Logger::INFO, :channel, "local_sig_of_remote_tx:#{local_sig_of_remote_tx}")
+
             commit_utxo = local_commit_tx.utxo
-            funding_signed = FundingSigned[
-              channel_id,
-              local_sig_of_remote_tx
-            ]
+            funding_signed = FundingSigned.new(
+              channel_id: channel_id,
+              signature: Lightning::Wire::Signature.new(value: local_sig_of_remote_tx)
+            )
             random_key = Bitcoin::Key.generate
 
             # TODO Watch UTXO to detect it to be spent
@@ -99,7 +105,7 @@ module Lightning
               ]),
               sending: funding_signed
             )
-          end)
+          end
         end
       end
     end

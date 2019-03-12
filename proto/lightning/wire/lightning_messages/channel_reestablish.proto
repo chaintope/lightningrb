@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message ChannelReestablish {
+  uint32 type = 1 [(bits) = 16];
+  string channel_id = 2 [(hex) = true, (length) = 32];
+  uint64 next_local_commitment_number = 3;
+  uint64 next_remote_revocation_number  = 4;
+  string your_last_per_commitment_secret  = 5 [(hex) = true, (length) = 32];
+  string my_current_per_commitment_point  = 6 [(hex) = true, (length) = 33];
+}

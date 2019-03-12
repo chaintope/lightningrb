@@ -5,7 +5,8 @@ module Lightning
     class ChannelState
       class WaitForFundingSigned < ChannelState
         def next(message, data)
-          match message, (on FundingSigned.(any, ~any) do |remote_sig|
+          case message
+          when FundingSigned
             temporary_channel_id = data[:temporary_channel_id]
             channel_id = data[:channel_id]
             local_param = data[:local_param]
@@ -24,7 +25,7 @@ module Lightning
               local_param.funding_priv_key.pubkey,
               remote_param.funding_pubkey,
               local_sig_of_local_tx,
-              remote_sig
+              message.signature.value
             )
             unless Transactions.spendable?(signed_local_commit_tx)
               # TODO
@@ -70,7 +71,7 @@ module Lightning
               WaitForFundingConfirmed.new(channel, context),
               data: next_data
             )
-          end)
+          end
         end
       end
     end
