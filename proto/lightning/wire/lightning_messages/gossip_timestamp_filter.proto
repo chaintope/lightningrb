@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message GossipTimeStampFilter {
+  string chain_hash = 1 [(hex) = true, (length) = 32];
+  uint32 first_timestamp = 2;
+  uint32 timestamp_range = 3;
+}

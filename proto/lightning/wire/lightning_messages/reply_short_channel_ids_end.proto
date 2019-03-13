@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message ReplyShortChannelIdsEnd {
+  string chain_hash = 1 [(hex) = true, (length) = 32];
+  uint32 complete = 2 [(bits) = 8];
+}

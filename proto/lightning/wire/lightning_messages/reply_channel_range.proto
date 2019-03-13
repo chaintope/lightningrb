@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package lightning.wire.lightningMessages.generated;
+
+import "lightning/wire/types.proto";
+
+message ReplyChannelRange {
+  string chain_hash = 1 [(hex) = true, (length) = 32];
+  uint32 first_blocknum = 2;
+  uint32 number_of_blocks = 3;
+  uint32 complete = 4 [(bits) = 8];
+  string encoded_short_ids = 5  [(hex) = true];
+}
