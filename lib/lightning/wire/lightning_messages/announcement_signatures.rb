@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'lightning/wire/lightning_messages/announcement_signatures.pb'
+
 module Lightning
   module Wire
     module LightningMessages

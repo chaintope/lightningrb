@@ -3,6 +3,7 @@ syntax = "proto3";
 package lightning.wire.lightningMessages.generated;
 
 import "lightning/wire/types.proto";
+import "lightning/wire/signature.proto";
 
 message FundingSigned {
   uint32 type = 1 [(bits) = 16];

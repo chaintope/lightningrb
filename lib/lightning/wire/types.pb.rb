@@ -16,20 +16,6 @@ module Lightning
     ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
     ##
-    # Message Classes
-    #
-    class Signature < ::Protobuf::Message; end
-
-
-    ##
-    # Message Fields
-    #
-    class Signature
-      optional :string, :value, 1, :".lightning.wire.hex" => true
-    end
-
-
-    ##
     # Extended Message Fields
     #
     class ::Google::Protobuf::MessageOptions < ::Protobuf::Message

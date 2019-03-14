@@ -13,7 +13,3 @@ extend google.protobuf.FieldOptions {
   uint32 length = 60002;
   bool hex = 60003;
 }
-
-message Signature {
-  string value = 1 [(hex) = true];
-}

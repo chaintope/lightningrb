@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'lightning/wire/signature.pb'
+
 module Lightning
   module Wire
     class Signature

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'lightning/wire/lightning_messages/update_fulfill_htlc.pb'
+
 module Lightning
   module Wire
     module LightningMessages
