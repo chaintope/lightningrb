@@ -20,13 +20,13 @@ module Lightning
         ##
         # Message Classes
         #
-        class GossipTimeStampFilter < ::Protobuf::Message; end
+        class GossipTimestampFilter < ::Protobuf::Message; end
 
 
         ##
         # Message Fields
         #
-        class GossipTimeStampFilter
+        class GossipTimestampFilter
           optional :string, :chain_hash, 1, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
           optional :uint32, :first_timestamp, 2
           optional :uint32, :timestamp_range, 3

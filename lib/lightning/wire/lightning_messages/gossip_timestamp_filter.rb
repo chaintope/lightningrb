@@ -3,7 +3,7 @@
 module Lightning
   module Wire
     module LightningMessages
-      class GossipTimeStampFilter < Lightning::Wire::LightningMessages::Generated::GossipTimeStampFilter
+      class GossipTimestampFilter < Lightning::Wire::LightningMessages::Generated::GossipTimestampFilter
         include Lightning::Wire::Serialization
         extend Lightning::Wire::Serialization
         include Lightning::Wire::LightningMessages
