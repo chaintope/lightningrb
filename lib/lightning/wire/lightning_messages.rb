@@ -5,35 +5,6 @@ require 'lightning/wire/lightning_messages/lightning_message.pb'
 module Lightning
   module Wire
     module LightningMessages
-      def lightning?
-        classes = [
-          Init,
-          Error,
-          Ping,
-          Pong,
-          OpenChannel,
-          AcceptChannel,
-          FundingCreated,
-          FundingSigned,
-          FundingLocked,
-          Shutdown,
-          ClosingSigned,
-          UpdateAddHtlc,
-          UpdateFulfillHtlc,
-          UpdateFailHtlc,
-          UpdateFailMalformedHtlc,
-          CommitmentSigned,
-          RevokeAndAck,
-          UpdateFee,
-          ChannelReestablish,
-          AnnouncementSignatures,
-          ChannelAnnouncement,
-          NodeAnnouncement,
-          ChannelUpdate,
-        ]
-        classes.include?(self.class)
-      end
-
       def to_s
         inspect
       end
@@ -77,6 +48,11 @@ module Lightning
             ChannelAnnouncement,
             NodeAnnouncement,
             ChannelUpdate,
+            GossipTimestampFilter,
+            QueryChannelRange,
+            QueryShortChannelIds,
+            ReplyChannelRange,
+            ReplyShortChannelIdsEnd
           ].select{|clazz| clazz.const_get('TYPE') == type}.first
           return nil unless clazz
           clazz.load(payload)
@@ -109,6 +85,12 @@ module Lightning
       require 'lightning/wire/lightning_messages/channel_announcement'
       require 'lightning/wire/lightning_messages/node_announcement'
       require 'lightning/wire/lightning_messages/channel_update'
+
+      require 'lightning/wire/lightning_messages/gossip_timestamp_filter'
+      require 'lightning/wire/lightning_messages/query_channel_range'
+      require 'lightning/wire/lightning_messages/query_short_channel_ids'
+      require 'lightning/wire/lightning_messages/reply_channel_range'
+      require 'lightning/wire/lightning_messages/reply_short_channel_ids_end'
     end
   end
 end
