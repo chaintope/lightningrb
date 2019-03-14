@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package lightning.channel.generated;
+
+import "lightning/wire/types.proto";
+
+message ShortChannelId {
+  uint32 block_height = 1 [(lightning.wire.bits) = 24];
+  uint32 tx_index = 2 [(lightning.wire.bits) = 24];
+  uint32 output_index = 3 [(lightning.wire.bits) = 16];
+}

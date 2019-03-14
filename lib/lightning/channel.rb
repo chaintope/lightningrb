@@ -10,5 +10,6 @@ module Lightning
     autoload :Helpers, 'lightning/channel/helpers'
     autoload :Messages, 'lightning/channel/messages'
     autoload :Register, 'lightning/channel/register'
+    autoload :ShortChannelId, 'lightning/channel/short_channel_id'
   end
 end
