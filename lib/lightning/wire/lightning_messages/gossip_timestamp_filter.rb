@@ -13,6 +13,10 @@ module Lightning
         def initialize(fields = {})
           super(fields.merge(type: TYPE))
         end
+
+        def match?(gossip_message)
+          first_timestamp <= gossip_message.timestamp && gossip_message.timestamp < (first_timestamp + timestamp_range)
+        end
       end
     end
   end
