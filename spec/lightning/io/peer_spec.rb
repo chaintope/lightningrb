@@ -65,6 +65,20 @@ describe Lightning::IO::Peer do
           peer.ask(:await).wait
           expect(peer.ask!(:status)).to eq 'Lightning::IO::Peer::PeerStateConnected'
         end
+
+        context 'when features are not supported' do
+          subject do
+            peer << init
+            peer.ask(:await).wait
+          end
+
+          let(:init) { build(:init, localfeatures: '0141') }
+
+          it do
+            expect(peer.parent).to receive(:<<).with(Lightning::IO::PeerEvents::Disconnect)
+            subject
+          end
+        end
       end
     end
 

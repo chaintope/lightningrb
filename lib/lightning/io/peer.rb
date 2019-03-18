@@ -91,6 +91,9 @@ module Lightning
         def next(message, data)
           case message
           when Init
+            feature = Lightning::Feature.new(message.localfeatures)
+            return invalid_feature_error(message, data) unless feature.valid?
+
             log(Logger::INFO, :peer, "================================================================================")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "PEER CONNECTED")
@@ -99,6 +102,7 @@ module Lightning
             data[:channels].each do |channel_id, channel|
               channel << Lightning::Channel::Messages::InputReconnected[data[:transport]]
             end
+
             [
               PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: data[:transport]),
               ConnectedData[data[:address_opt], data[:transport], message, data[:channels]],
@@ -113,6 +117,13 @@ module Lightning
             log(Logger::WARN, '/peer@initializing', "unhandled message: #{message.inspect}")
             [self, data]
           end
+        end
+
+        def invalid_feature_error(init, data)
+          log(Logger::WARN, "received unknown even feature bits #{init.inspect}")
+          actor.parent << Lightning::IO::PeerEvents::Disconnect[remote_node_id]
+          actor << :terminate!
+          [self, data]
         end
       end
 

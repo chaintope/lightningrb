@@ -8,7 +8,9 @@ module Lightning
       Events = Algebrick.type do
         Timeout = atom
         Reconnect = atom
-        Disconnect = atom
+        Disconnect = type do
+          fields! remote_node_id: String
+        end
         OpenChannel = type do
           fields! remote_node_id: String,
                   funding_satoshis: Numeric,

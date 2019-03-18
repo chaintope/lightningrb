@@ -52,6 +52,8 @@ module Lightning
           peers.map do |node_id, peer|
             peer.ask!(:channels)
           end.flatten
+        end), (on :peers do
+          peers
         end), (on Lightning::Router::Messages::Data do
           peers.each do |node_id, peer|
             # nodes : key is public key(String)
@@ -70,6 +72,9 @@ module Lightning
               peer << Lightning::Router::Messages::Rebroadcast[channel_update]
             end
           end
+        end), (on Disconnect do
+          remote_node_id = message[:remote_node_id]
+          peers.delete(remote_node_id)
         end), (on any do
 
         end)
