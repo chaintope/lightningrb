@@ -132,6 +132,14 @@ module Lightning
             log(Logger::DEBUG, 'router_state', e.message)
             [self, data]
           end
+        when Lightning::Router::Messages::RequestGossipQuery
+          transport = message.conn
+          transport << Queries.make_gossip_timestamp_filter(context.node_params)
+
+          [self, data]
+        when Lightning::Router::Messages::InitialSync
+          # TODO: Implement
+          [self, data]
         end
       end
 

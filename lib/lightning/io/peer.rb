@@ -93,6 +93,11 @@ module Lightning
           when Init
             feature = Lightning::Feature.new(message.localfeatures)
             return invalid_feature_error(message, data) unless feature.valid?
+            if feature.gossip_queries?
+              context.router << Lightning::Router::Messages::RequestGossipQuery.new(conn: data.conn)
+            elsif feature.initial_routing_sync?
+              context.router << Lightning::Router::Messages::InitialSync.new(conn: data.conn)
+            end
 
             log(Logger::INFO, :peer, "================================================================================")
             log(Logger::INFO, :peer, "")
@@ -193,10 +198,20 @@ module Lightning
             end
           when ChannelIdAssigned
             data[:channels][message[:channel_id]] = message[:channel]
+          when Lightning::Wire::LightningMessages::GossipTimestampFilter
+            data = data.copy(gossip_timestamp_filter: message)
           when RoutingMessage
             context.router << message
           when Lightning::Router::Messages::Rebroadcast
-            transport << message[:message]
+            filtered = case message[:message]
+            when ChannelUpdate, NodeAnnouncement
+              # SHOULD send all gossip messages whose timestamp is greater or equal to first_timestamp,
+              # and less than first_timestamp plus timestamp_range.
+              if data[:gossip_timestamp_filter] && !data[:gossip_timestamp_filter].match?(message[:message])
+                true
+              end
+            end
+            transport << message[:message] unless filtered
           else
             log(Logger::WARN, '/peer@connected', "unhandled message: #{message.inspect}, data:#{data}")
           end

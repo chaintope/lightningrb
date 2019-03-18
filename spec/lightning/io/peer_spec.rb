@@ -155,6 +155,36 @@ describe Lightning::IO::Peer do
           expect { subject }.to change { peer.ask!(:channels).size }.by(1)
         end
       end
+
+      describe 'with Rebroadcast' do
+        subject do
+          peer << Lightning::Wire::LightningMessages::GossipTimestampFilter.new(
+            chain_hash: '00' * 32,
+            first_timestamp: 1_552_905_069,
+            timestamp_range: 1 << 31
+          )
+          peer.ask(:await).wait
+          peer << Lightning::Router::Messages::Rebroadcast[message: message]
+          peer.ask(:await).wait
+        end
+
+        context 'gossip_timestamp_filter is set' do
+          let(:message) { build(:channel_update, timestamp: 1_552_905_069) }
+
+          it do
+            expect(transport).to receive(:<<).with(Lightning::Wire::LightningMessages::ChannelUpdate)
+            subject
+          end
+
+          context 'timestamp is expired' do
+            let(:message) { build(:channel_update, timestamp: 1_552_905_068) }
+            it do
+              expect(transport).not_to receive(:<<).with(Lightning::Wire::LightningMessages::ChannelUpdate)
+              subject
+            end
+          end
+        end
+      end
     end
   end
 end

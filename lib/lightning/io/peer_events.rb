@@ -53,9 +53,18 @@ module Lightning
           fields! address_opt: type { variants Algebrick::None, URI },
                   transport: Concurrent::Actor::Reference,
                   remote_init: Init,
-                  channels: Hash
+                  channels: Hash,
+                  gossip_timestamp_filter: GossipTimestampFilter
         end
         variants DisconnectedData, InitializingData, ConnectedData
+      end
+
+      module ConnectedData
+        def copy(gossip_timestamp_filter: self[:gossip_timestamp_filter])
+          ConnectedData[
+            self[:address_opt], self[:transport], self[:remote_init], self[:channels], gossip_timestamp_filter
+          ]
+        end
       end
     end
   end

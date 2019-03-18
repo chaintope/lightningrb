@@ -50,6 +50,20 @@ module Lightning
                 ignore_nodes: Array,
                 ignore_channels: Array
       end
+
+      class RequestGossipQuery
+        attr_reader :conn
+        def initialize(conn: nil)
+          @conn = conn
+        end
+      end
+
+      class InitialSync
+        attr_reader :conn
+        def initialize(conn: nil)
+          @conn = conn
+        end
+      end
     end
   end
 end
