@@ -147,11 +147,11 @@ module Lightning
           when Timeout
             ping_size = SecureRandom.random_number(1000)
             pong_size = SecureRandom.random_number(1000)
-            ping = Ping.new(num_pong_bytes: pong_size, ignored: "\x00" * ping_size)
+            ping = Ping.new(num_pong_bytes: pong_size, ignored: "00" * ping_size)
             transport << ping
           when Ping
             pong_size = message.num_pong_bytes
-            transport << Pong.new(ignored: "\x00" * pong_size) if pong_size.positive?
+            transport << Pong.new(ignored: "00" * pong_size) if pong_size.positive?
           when Pong
             pong_size = message.ignored.bytesize
             log(Logger::DEBUG, actor.path, "received pong with #{pong_size} bytes")
