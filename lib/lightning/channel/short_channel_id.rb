@@ -25,6 +25,10 @@ module Lightning
         ((block_height & 0xFFFFFF) << 40) | ((tx_index & 0xFFFFFF) << 16) | (output_index & 0xFFFF)
       end
 
+      def in?(first_blocknum, number_of_blocks)
+        first_blocknum <= block_height && block_height <= first_blocknum + number_of_blocks - 1
+      end
+
       def inspect
         human_readable
       end

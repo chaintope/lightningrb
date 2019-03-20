@@ -68,6 +68,9 @@ module Lightning
 
       # @param short_channel_ids Array of Lightning::Channel::ShortChannelId
       def self.make_reply_channel_range(query_channel_range, short_channel_ids, encode_type = ENCODE_TYPE_UNCOMPRESSED)
+        short_channel_ids = short_channel_ids.select do |short_channel_id|
+          short_channel_id.in?(query_channel_range.first_blocknum, query_channel_range.number_of_blocks)
+        end
         first_block = short_channel_ids.first.block_height
         last_block = short_channel_ids.last.block_height
         encoded = encode_short_channel_ids(encode_type, short_channel_ids)

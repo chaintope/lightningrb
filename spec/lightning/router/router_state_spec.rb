@@ -29,6 +29,7 @@ describe Lightning::Router::RouterState do
       it { expect(subject[1]).to be_a Lightning::Router::Messages::Data }
       it do
         expect(transport).to receive(:<<).with(Lightning::Wire::LightningMessages::GossipTimestampFilter)
+        expect(transport).to receive(:<<).with(Lightning::Wire::LightningMessages::QueryChannelRange)
         subject
       end
     end

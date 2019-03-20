@@ -58,6 +58,14 @@ module Lightning
         end
       end
 
+      class QueryMessage
+        attr_reader :conn
+        def initialize(conn, query)
+          @conn = conn
+          @query = query
+        end
+      end
+
       class InitialSync
         attr_reader :conn
         def initialize(conn: nil)

@@ -135,7 +135,15 @@ module Lightning
         when Lightning::Router::Messages::RequestGossipQuery
           transport = message.conn
           transport << Queries.make_gossip_timestamp_filter(context.node_params)
-
+          transport << Queries.make_query_channel_range(context.node_params)
+          [self, data]
+        when Lightning::Router::Messages::QueryMessage
+          query = message.query
+          transport = message.conn
+          short_channel_ids = data[:channels].keys.sort.map do |short_channel_id |
+            Lightning::Channel::ShortChannelId.parse(short_channel_id)
+          end
+          transport << Queries.make_reply_channel_range(query_channel_range, short_channel_ids)
           [self, data]
         when Lightning::Router::Messages::InitialSync
           # TODO: Implement

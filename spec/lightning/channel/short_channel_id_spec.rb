@@ -27,4 +27,13 @@ describe Lightning::Channel::ShortChannelId do
     it { expect(described_class.parse(0xffffffffffff0000)).to eq [0xffffff, 0xffffff, 0x0000] }
     it { expect(described_class.parse(0xffffffffffffffff)).to eq [0xffffff, 0xffffff, 0xffff] }
   end
+
+  describe '#in?' do
+    subject { described_class.new(block_height: 508000, tx_index: 2, output_index: 7) }
+
+    it { expect(subject.in?(508000, 10)).to be_truthy }
+    it { expect(subject.in?(508001, 10)).to be_falsy }
+    it { expect(subject.in?(507990, 10)).to be_falsy }
+    it { expect(subject.in?(507991, 10)).to be_truthy }
+  end
 end

@@ -200,6 +200,8 @@ module Lightning
             data[:channels][message[:channel_id]] = message[:channel]
           when Lightning::Wire::LightningMessages::GossipTimestampFilter
             data = data.copy(gossip_timestamp_filter: message)
+          when Lightning::Wire::LightningMessages::QueryChannelRange
+            context.router << Lightning::Router::Messages::QueryMessage.new(transport, message)
           when RoutingMessage
             context.router << message
           when Lightning::Router::Messages::Rebroadcast

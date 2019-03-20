@@ -5,7 +5,6 @@ require 'spec_helper'
 describe Lightning::IO::Peer do
   let(:peer) { build(:peer) }
 
-
   describe 'initialize_stored_channels' do
     subject { described_class.new(authenticator, context, remote_node_id) }
 
@@ -153,6 +152,25 @@ describe Lightning::IO::Peer do
 
         it 'add channel' do
           expect { subject }.to change { peer.ask!(:channels).size }.by(1)
+        end
+      end
+
+      describe 'with QueryChannelRange' do
+        subject do
+          peer << Lightning::Wire::LightningMessages::QueryChannelRange.new(
+            chain_hash: '00' * 32,
+            first_blocknum: 100,
+            number_of_blocks: 200
+          )
+          peer.ask(:await).wait
+        end
+
+        let(:peer) { build(:peer, context: context) }
+        let(:context) { build(:context) }
+
+        it do
+          expect(context.router).to receive(:<<).with(Lightning::Router::Messages::QueryMessage)
+          subject
         end
       end
 
