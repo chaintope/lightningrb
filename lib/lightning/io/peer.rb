@@ -73,7 +73,10 @@ module Lightning
             [self, data]
           end), (on Array.(Authenticated.(~any, ~any, ~any), DisconnectedData.(any, ~any)) do |conn, transport, node_id, channels|
             transport << Listener[actor, conn]
-            transport << Init.new(globalfeatures: '', localfeatures: '08')
+            transport << Init.new(
+              globalfeatures: context.node_params.globalfeatures,
+              localfeatures: context.node_params.localfeatures
+            )
             outgoing = conn.is_a?(Lightning::IO::ClientConnection)
             db.insert_or_update(node_id, conn.host, conn.port) if outgoing
             [
