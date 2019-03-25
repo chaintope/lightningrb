@@ -97,9 +97,9 @@ module Lightning
             feature = Lightning::Feature.new(message.localfeatures)
             return invalid_feature_error(message, data) unless feature.valid?
             if feature.gossip_queries?
-              context.router << Lightning::Router::Messages::RequestGossipQuery.new(data.conn, remote_node_id)
+              context.router << Lightning::Router::Messages::RequestGossipQuery.new(data.transport, remote_node_id)
             elsif feature.initial_routing_sync?
-              context.router << Lightning::Router::Messages::InitialSync.new(conn: data.conn)
+              context.router << Lightning::Router::Messages::InitialSync.new(data.transport)
             end
 
             log(Logger::INFO, :peer, "================================================================================")
