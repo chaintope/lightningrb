@@ -29,7 +29,7 @@ module Lightning
 
       module Data
         def copy(nodes: self[:nodes], channels: self[:channels], updates: self[:updates])
-          Data[nodes, channels, updates]
+          Data[nodes, channels, updates, self[:query_channel_ranges], self[:query_short_channel_ids]]
         end
       end
 
