@@ -5,6 +5,7 @@ package lightning.wire.lightningMessages.generated;
 import "lightning/wire/types.proto";
 
 message QueryShortChannelIds {
-  string chain_hash = 1 [(hex) = true, (length) = 32];
-  string encoded_short_ids = 5  [(hex) = true];
+  uint32 type = 1 [(bits) = 16];
+  string chain_hash = 2 [(hex) = true, (length) = 32];
+  string encoded_short_ids = 3  [(hex) = true];
 }

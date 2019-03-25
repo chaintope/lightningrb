@@ -27,8 +27,9 @@ module Lightning
         # Message Fields
         #
         class ReplyShortChannelIdsEnd
-          optional :string, :chain_hash, 1, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
-          optional :uint32, :complete, 2, :".lightning.wire.bits" => 8
+          optional :uint32, :type, 1, :".lightning.wire.bits" => 16
+          optional :string, :chain_hash, 2, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
+          optional :uint32, :complete, 3, :".lightning.wire.bits" => 8
         end
 
       end

@@ -5,7 +5,8 @@ package lightning.wire.lightningMessages.generated;
 import "lightning/wire/types.proto";
 
 message QueryChannelRange {
-  string chain_hash = 1 [(hex) = true, (length) = 32];
-  uint32 first_blocknum = 2;
-  uint32 number_of_blocks = 3;
+  uint32 type = 1 [(bits) = 16];
+  string chain_hash = 2 [(hex) = true, (length) = 32];
+  uint32 first_blocknum = 3;
+  uint32 number_of_blocks = 4;
 }

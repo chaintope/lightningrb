@@ -5,6 +5,7 @@ package lightning.wire.lightningMessages.generated;
 import "lightning/wire/types.proto";
 
 message ReplyShortChannelIdsEnd {
-  string chain_hash = 1 [(hex) = true, (length) = 32];
-  uint32 complete = 2 [(bits) = 8];
+  uint32 type = 1 [(bits) = 16];
+  string chain_hash = 2 [(hex) = true, (length) = 32];
+  uint32 complete = 3 [(bits) = 8];
 }

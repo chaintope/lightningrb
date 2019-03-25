@@ -27,9 +27,10 @@ module Lightning
         # Message Fields
         #
         class QueryChannelRange
-          optional :string, :chain_hash, 1, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
-          optional :uint32, :first_blocknum, 2
-          optional :uint32, :number_of_blocks, 3
+          optional :uint32, :type, 1, :".lightning.wire.bits" => 16
+          optional :string, :chain_hash, 2, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
+          optional :uint32, :first_blocknum, 3
+          optional :uint32, :number_of_blocks, 4
         end
 
       end

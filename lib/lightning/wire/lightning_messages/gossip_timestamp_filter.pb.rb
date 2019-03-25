@@ -27,9 +27,10 @@ module Lightning
         # Message Fields
         #
         class GossipTimestampFilter
-          optional :string, :chain_hash, 1, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
-          optional :uint32, :first_timestamp, 2
-          optional :uint32, :timestamp_range, 3
+          optional :uint32, :type, 1, :".lightning.wire.bits" => 16
+          optional :string, :chain_hash, 2, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
+          optional :uint32, :first_timestamp, 3
+          optional :uint32, :timestamp_range, 4
         end
 
       end

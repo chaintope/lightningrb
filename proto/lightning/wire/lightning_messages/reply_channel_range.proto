@@ -5,9 +5,10 @@ package lightning.wire.lightningMessages.generated;
 import "lightning/wire/types.proto";
 
 message ReplyChannelRange {
-  string chain_hash = 1 [(hex) = true, (length) = 32];
-  uint32 first_blocknum = 2;
-  uint32 number_of_blocks = 3;
-  uint32 complete = 4 [(bits) = 8];
-  string encoded_short_ids = 5  [(hex) = true];
+  uint32 type = 1 [(bits) = 16];
+  string chain_hash = 2 [(hex) = true, (length) = 32];
+  uint32 first_blocknum = 3;
+  uint32 number_of_blocks = 4;
+  uint32 complete = 5 [(bits) = 8];
+  string encoded_short_ids = 6  [(hex) = true];
 }

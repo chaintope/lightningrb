@@ -27,8 +27,9 @@ module Lightning
         # Message Fields
         #
         class QueryShortChannelIds
-          optional :string, :chain_hash, 1, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
-          optional :string, :encoded_short_ids, 5, :".lightning.wire.hex" => true
+          optional :uint32, :type, 1, :".lightning.wire.bits" => 16
+          optional :string, :chain_hash, 2, :".lightning.wire.length" => 32, :".lightning.wire.hex" => true
+          optional :string, :encoded_short_ids, 3, :".lightning.wire.hex" => true
         end
 
       end
