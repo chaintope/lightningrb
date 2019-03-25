@@ -9,6 +9,6 @@ message AnnouncementSignatures {
   uint32 type = 1 [(bits) = 16];
   string channel_id = 2 [(hex) = true, (length) = 32];
   uint64 short_channel_id = 3;
-  Signature node_signature = 4;
-  Signature bitcoin_signature = 5;
+  lightning.wire.Signature node_signature = 4;
+  lightning.wire.Signature bitcoin_signature = 5;
 }

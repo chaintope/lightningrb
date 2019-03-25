@@ -8,6 +8,6 @@ import "lightning/wire/signature.proto";
 message FundingSigned {
   uint32 type = 1 [(bits) = 16];
   string channel_id = 2 [(hex) = true, (length) = 32];
-  Signature signature = 3;
+  lightning.wire.Signature signature = 3;
 }
 

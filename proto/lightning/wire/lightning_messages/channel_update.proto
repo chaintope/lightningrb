@@ -7,7 +7,7 @@ import "lightning/wire/signature.proto";
 
 message ChannelUpdate {
   uint32 type = 1 [(bits) = 16];
-  Signature signature = 2;
+  lightning.wire.Signature signature = 2;
   string chain_hash = 3 [(hex) = true, (length) = 32];
   uint64 short_channel_id = 4;
   uint32 timestamp = 5;

@@ -7,7 +7,7 @@ import "lightning/wire/signature.proto";
 
 message NodeAnnouncement {
   uint32 type = 1 [(bits) = 16];
-  Signature signature = 2;
+  lightning.wire.Signature signature = 2;
   string features = 3 [(hex) = true];
   uint32 timestamp = 4;
   string node_id = 5 [(hex) = true, (length) = 33];

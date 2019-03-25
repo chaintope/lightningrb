@@ -10,5 +10,5 @@ message FundingCreated {
   string temporary_channel_id = 2 [(hex) = true, (length) = 32];
   string funding_txid = 3 [(hex) = true, (length) = 32];
   uint32 funding_output_index = 4 [(bits) = 16];
-  Signature signature = 5;
+  lightning.wire.Signature signature = 5;
 }

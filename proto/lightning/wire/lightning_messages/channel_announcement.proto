@@ -7,10 +7,10 @@ import "lightning/wire/signature.proto";
 
 message ChannelAnnouncement {
   uint32 type = 1 [(bits) = 16];
-  Signature node_signature_1 = 2;
-  Signature node_signature_2 = 3;
-  Signature bitcoin_signature_1 = 4;
-  Signature bitcoin_signature_2 = 5;
+  lightning.wire.Signature node_signature_1 = 2;
+  lightning.wire.Signature node_signature_2 = 3;
+  lightning.wire.Signature bitcoin_signature_1 = 4;
+  lightning.wire.Signature bitcoin_signature_2 = 5;
   string features = 6 [(hex) = true];
   string chain_hash = 7 [(hex) = true, (length) = 32];
   uint64 short_channel_id = 8;

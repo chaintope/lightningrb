@@ -9,5 +9,5 @@ message ClosingSigned {
   uint32 type = 1 [(bits) = 16];
   string channel_id = 2 [(hex) = true, (length) = 32];
   uint64 fee_satoshis = 3;
-  Signature signature = 4;
+  lightning.wire.Signature signature = 4;
 }

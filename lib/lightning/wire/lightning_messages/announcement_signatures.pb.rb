@@ -10,6 +10,7 @@ require 'protobuf'
 # Imports
 #
 require 'lightning/wire/types.pb'
+require 'lightning/wire/signature.pb'
 
 module Lightning
   module Wire
