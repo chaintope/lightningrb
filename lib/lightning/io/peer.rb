@@ -94,7 +94,7 @@ module Lightning
             feature = Lightning::Feature.new(message.localfeatures)
             return invalid_feature_error(message, data) unless feature.valid?
             if feature.gossip_queries?
-              context.router << Lightning::Router::Messages::RequestGossipQuery.new(conn: data.conn)
+              context.router << Lightning::Router::Messages::RequestGossipQuery.new(data.conn, remote_node_id)
             elsif feature.initial_routing_sync?
               context.router << Lightning::Router::Messages::InitialSync.new(conn: data.conn)
             end
@@ -200,8 +200,8 @@ module Lightning
             data[:channels][message[:channel_id]] = message[:channel]
           when Lightning::Wire::LightningMessages::GossipTimestampFilter
             data = data.copy(gossip_timestamp_filter: message)
-          when Lightning::Wire::LightningMessages::QueryChannelRange
-            context.router << Lightning::Router::Messages::QueryMessage.new(transport, message)
+          when Lightning::Wire::LightningMessages::GossipQuery
+            context.router << Lightning::Router::Messages::QueryMessage.new(transport, remote_node_id, message)
           when RoutingMessage
             context.router << message
           when Lightning::Router::Messages::Rebroadcast

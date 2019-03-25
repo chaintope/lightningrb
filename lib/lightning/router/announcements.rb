@@ -191,14 +191,15 @@ module Lightning
           Lightning::Wire::Signature.new(value: node_key.sign(witness).bth)
         end
 
+        # @param [ChannelAnnouncement] channel
         def to_channel_desc(channel)
           node_id_1, node_id_2 =
-            if node1?(channel[:node_id_1], channel[:node_id_2])
-              [channel[:node_id_1], channel[:node_id_2]]
+            if node1?(channel.node_id_1, channel.node_id_2)
+              [channel.node_id_1, channel.node_id_2]
             else
-              [channel[:node_id_2], channel[:node_id_1]]
+              [channel.node_id_2, channel.node_id_1]
             end
-          Lightning::Router::Messages::ChannelDesc[channel[:short_channel_id], node_id_1, node_id_2]
+          Lightning::Router::Messages::ChannelDesc[channel.short_channel_id, node_id_1, node_id_2]
         end
 
         private

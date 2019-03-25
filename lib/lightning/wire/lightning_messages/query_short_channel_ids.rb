@@ -9,6 +9,7 @@ module Lightning
         include Lightning::Wire::Serialization
         extend Lightning::Wire::Serialization
         include Lightning::Wire::LightningMessages
+        include Lightning::Wire::LightningMessages::GossipQuery
         include Lightning::Wire::LightningMessages::RoutingMessage
         TYPE = 261
 

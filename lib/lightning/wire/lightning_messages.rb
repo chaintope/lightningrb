@@ -21,6 +21,9 @@ module Lightning
       module RoutingMessage
       end
 
+      module GossipQuery
+      end
+
       class LightningMessage < Lightning::Wire::LightningMessages::Generated::LightningMessage
         def self.load(payload)
           type = payload.unpack('n').first

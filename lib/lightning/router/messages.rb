@@ -9,10 +9,16 @@ module Lightning
       #           value is ChannelAnnouncement
       # updates : key is ChannelDesc
       #           value is ChannelUpdate
+      # query_channel_ranges: key is node_id
+      #                       value is true/false
+      # query_short_channel_ids: key is node_id
+      #                          value is true/false
       Data = Algebrick.type do
         fields! nodes: Hash,
                 channels: Hash,
-                updates: Hash
+                updates: Hash,
+                query_channel_ranges: Hash,
+                query_short_channel_ids: Hash
       end
 
       Timeout = Algebrick.atom
@@ -52,17 +58,19 @@ module Lightning
       end
 
       class RequestGossipQuery
-        attr_reader :conn
-        def initialize(conn: nil)
+        attr_reader :conn, :remote_node_id
+        def initialize(conn, remote_node_id)
           @conn = conn
+          @remote_node_id = remote_node_id
         end
       end
 
       class QueryMessage
-        attr_reader :conn
-        def initialize(conn, query)
+        attr_reader :conn, :remote_node_id, :message
+        def initialize(conn, remote_node_id, message)
           @conn = conn
-          @query = query
+          @remote_node_id = remote_node_id
+          @message = message
         end
       end
 

@@ -13,7 +13,7 @@ module Lightning
         nodes = Hash[context.node_db.all.map { |node| [node.node_id, node] }]
         @state = Lightning::Router::RouterState::Normal.new(self, context)
 
-        @data = Lightning::Router::Messages::Data[nodes, {}, {}]
+        @data = Lightning::Router::Messages::Data[nodes, {}, {}, {}, {}]
 
         context.broadcast << [:subscribe, LocalChannelUpdate]
         context.broadcast << [:subscribe, LocalChannelDown]

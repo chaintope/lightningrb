@@ -39,7 +39,7 @@ module Lightning
       @delay_blocks = 144
       @max_accepted_htlcs = 10
       @globalfeatures = "\x00"
-      @localfeatures = "\x00"
+      @localfeatures = "\x80"
       @feerates_per_kw = 46_080
       @chain_hash = '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f'
       @min_depth_blocks = 1

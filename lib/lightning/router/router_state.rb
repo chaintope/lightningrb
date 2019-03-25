@@ -134,16 +134,51 @@ module Lightning
           end
         when Lightning::Router::Messages::RequestGossipQuery
           transport = message.conn
+          remote_node_id = message.remote_node_id
           transport << Queries.make_gossip_timestamp_filter(context.node_params)
-          transport << Queries.make_query_channel_range(context.node_params)
+          unless data[:query_channel_ranges][remote_node_id]
+            transport << Queries.make_query_channel_range(context.node_params)
+            data[:query_channel_ranges][remote_node_id] = true
+          end
           [self, data]
         when Lightning::Router::Messages::QueryMessage
-          query = message.query
+          query = message.message
           transport = message.conn
-          short_channel_ids = data[:channels].keys.sort.map do |short_channel_id |
-            Lightning::Channel::ShortChannelId.parse(short_channel_id)
+          remote_node_id = message.remote_node_id
+          case query
+          when Lightning::Wire::LightningMessages::QueryChannelRange
+            short_channel_ids = data[:channels].keys.sort.map do |short_channel_id |
+              Lightning::Channel::ShortChannelId.parse(short_channel_id)
+            end.select do |short_channel_id|
+              short_channel_id.in?(query.first_blocknum, query.number_of_blocks)
+            end
+            # Lightning message is limited in 65535 bytes
+            short_channel_ids.each_slice(8000) do |short_channel_ids|
+              transport << Queries.make_reply_channel_range(query, short_channel_ids)
+            end
+          when Lightning::Wire::LightningMessages::QueryShortChannelIds
+            short_channel_ids = Queries.decode_short_channel_ids(query.encoded_short_ids)
+            short_channel_ids.map do |short_channel_id|
+              data[:channels][short_channel_id.to_i]
+            end.compact.each do |channel|
+              transport << channel
+              desc = Announcements.to_channel_desc(channel)
+              data[:updates][desc]&.tap { |update| transport << update }
+            end
+            transport << Queries.make_reply_short_channel_ids_end(query)
+          when Lightning::Wire::LightningMessages::ReplyChannelRange
+            data[:query_channel_ranges][remote_node_id] = false
+            short_channel_ids = Queries.decode_short_channel_ids(query.encoded_short_ids)
+            required = short_channel_ids - data[:channels].keys.map do |id|
+              Lightning::Channel::ShortChannelId.parse(id)
+            end
+            unless data[:query_short_channel_ids][remote_node_id]
+              transport << Queries.make_query_short_channel_ids(context.node_params, required)
+              data[:query_short_channel_ids][remote_node_id] = true
+            end
+          when Lightning::Wire::LightningMessages::ReplyShortChannelIdsEnd
+            data[:query_short_channel_ids][remote_node_id] = false
           end
-          transport << Queries.make_reply_channel_range(query_channel_range, short_channel_ids)
           [self, data]
         when Lightning::Router::Messages::InitialSync
           # TODO: Implement

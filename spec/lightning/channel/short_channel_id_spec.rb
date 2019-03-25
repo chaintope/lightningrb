@@ -19,13 +19,13 @@ describe Lightning::Channel::ShortChannelId do
   end
 
   describe '.parse' do
-    it { expect(described_class.parse(0)).to eq [0, 0, 0] }
-    it { expect(described_class.parse(0x0000a41000001b0003)).to eq [42_000, 27, 3] }
-    it { expect(described_class.parse(0x13347400003f0000)).to eq [1_258_612, 63, 0] }
-    it { expect(described_class.parse(0xffffff000000ffff)).to eq [0xffffff, 0x000000, 0xffff] }
-    it { expect(described_class.parse(0x000000ffffffffff)).to eq [0x000000, 0xffffff, 0xffff] }
-    it { expect(described_class.parse(0xffffffffffff0000)).to eq [0xffffff, 0xffffff, 0x0000] }
-    it { expect(described_class.parse(0xffffffffffffffff)).to eq [0xffffff, 0xffffff, 0xffff] }
+    it { expect(described_class.parse(0).inspect).to eq "0x0x0" }
+    it { expect(described_class.parse(0x0000a41000001b0003).inspect).to eq "42000x27x3"}
+    it { expect(described_class.parse(0x13347400003f0000).inspect).to eq "1258612x63x0"}
+    it { expect(described_class.parse(0xffffff000000ffff).inspect).to eq "16777215x0x65535" }
+    it { expect(described_class.parse(0x000000ffffffffff).inspect).to eq "0x16777215x65535" }
+    it { expect(described_class.parse(0xffffffffffff0000).inspect).to eq "16777215x16777215x0" }
+    it { expect(described_class.parse(0xffffffffffffffff).inspect).to eq "16777215x16777215x65535" }
   end
 
   describe '#in?' do

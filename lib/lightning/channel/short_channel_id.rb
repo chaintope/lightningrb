@@ -13,12 +13,15 @@ module Lightning
       end
 
       def self.decode_from(payload)
-        block_height, tx_index, output_index = parse(payload.read(8).unpack('q>').first)
-        new(block_height: block_height, tx_index: tx_index, output_index: output_index)
+        parse(payload.read(8).unpack('q>').first)
       end
 
       def self.parse(short_channel_id)
-        [(short_channel_id >> 40) & 0xFFFFFF, (short_channel_id >> 16) & 0xFFFFFF, short_channel_id & 0xFFFF]
+        new(
+          block_height: (short_channel_id >> 40) & 0xFFFFFF,
+          tx_index: (short_channel_id >> 16) & 0xFFFFFF,
+          output_index: short_channel_id & 0xFFFF
+        )
       end
 
       def to_i
