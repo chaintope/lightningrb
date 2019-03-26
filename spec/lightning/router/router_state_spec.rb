@@ -18,9 +18,56 @@ describe Lightning::Router::RouterState do
 
     context 'with NodeAnnouncement message' do
       let(:message) { build(:node_announcement) }
+      let(:remote_node_id) { build(:key, :remote_funding_pubkey).pubkey }
 
       it { expect(subject[0]).to be_a Lightning::Router::RouterState::Normal }
       it { expect(subject[1]).to be_a Lightning::Router::Messages::Data }
+
+      context 'upon receiving a new node_announcement with an updated timestamp' do
+        let(:nodes) { { remote_node_id => build(:node_announcement, timestamp: 100_000_000) } }
+        let(:message) { build(:node_announcement, timestamp: 100_000_001) }
+
+        it 'SHOULD update its local view of the network\'s topology accordingly.' do
+          expect(subject[1][:nodes][remote_node_id].timestamp).to eq 100_000_001
+        end
+      end
+
+      context 'otherwise' do
+        let(:nodes) { { remote_node_id => build(:node_announcement, timestamp: 100_000_000) } }
+        let(:message) { build(:node_announcement, timestamp: 99_999_999) }
+
+        it 'do not update its local view of the network\'s topology.' do
+          expect(subject[1][:nodes][remote_node_id].timestamp).to eq 100_000_000
+        end
+      end
+    end
+
+    context 'with ChannelUpdate' do
+      let(:message) { build(:channel_update, short_channel_id: 1) }
+      let(:channel) { build(:channel_announcement, short_channel_id: 1) }
+      let(:desc) { Lightning::Router::Announcements.to_channel_desc(channel) }
+      let(:channels) { { channel.short_channel_id => channel } }
+
+      it { expect(subject[0]).to be_a Lightning::Router::RouterState::Normal }
+      it { expect(subject[1]).to be_a Lightning::Router::Messages::Data }
+
+      context 'upon receiving a new channel_update with an updated timestamp' do
+        let(:updates) { { desc => build(:channel_update, timestamp: 100_000_000) } }
+        let(:message) { build(:channel_update, timestamp: 100_000_001) }
+
+        it 'SHOULD update its local view of the network\'s topology accordingly.' do
+          expect(subject[1][:updates][desc].timestamp).to eq 100_000_001
+        end
+      end
+
+      context 'otherwise' do
+        let(:updates) { { desc => build(:channel_update, timestamp: 100_000_000) } }
+        let(:message) { build(:channel_update, timestamp: 99_999_999) }
+
+        it 'do not update its local view of the network\'s topology.' do
+          expect(subject[1][:updates][desc].timestamp).to eq 100_000_000
+        end
+      end
     end
 
     context 'with RequestGossipQuery' do

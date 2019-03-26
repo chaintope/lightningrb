@@ -54,6 +54,7 @@ module Lightning
             log(Logger::ERROR, 'router_state', "signature invalid #{message.inspect}")
             [self, data]
           else
+            context.channel_db.insert_or_update_channel_announcement(message)
             [self, data.copy(channels: data[:channels].merge(message.short_channel_id => message))]
           end
         when NodeAnnouncement
@@ -70,7 +71,7 @@ module Lightning
             [self, data.copy(nodes: data[:nodes].merge(message.node_id => message))]
           elsif data[:channels].values.any? { |channel| related?(channel, message.node_id) }
             # TODO: NodeDiscovered event
-            context.node_db.create(message)
+            context.node_db.insert(message)
             [self, data.copy(nodes: data[:nodes].merge(message.node_id => message))]
           else
             context.node_db.destroy_by(node_id: message.node_id)
@@ -96,7 +97,7 @@ module Lightning
               [self, data]
             elsif data[:updates].key?(desc)
               # TODO: ChannelUpdateReceived
-              # context.channel_db.update_channel_update(message)
+              context.channel_db.insert_or_update_channel_update(message)
               log(Logger::INFO, :router_state, '================================================================================')
               log(Logger::INFO, :router_state, '')
               log(Logger::INFO, :router_state, "Channel Updated #{message.inspect}")
@@ -105,7 +106,7 @@ module Lightning
               [self, data.copy(updates: data[:updates].merge(desc => message))]
             else
               # TODO: ChannelUpdateReceived
-              # context.channel_db.add_channel_update(message)
+              context.channel_db.insert_or_update_channel_update(message)
               log(Logger::INFO, :router_state, '================================================================================')
               log(Logger::INFO, :router_state, '')
               log(Logger::INFO, :router_state, "Channel Registered #{message.inspect}")

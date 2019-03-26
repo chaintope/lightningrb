@@ -38,7 +38,6 @@ module Lightning
           addresses = []
           while !stream.eof?
             type = stream.read(1).unpack("C").first
-            puts type
             case type
             when 0x01
               ipv4_addr = stream.read(4).unpack("a4").first

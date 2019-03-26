@@ -12,7 +12,7 @@ module Lightning
         SQL
       end
 
-      def create(node_announcement)
+      def insert(node_announcement)
         db.execute(
           'INSERT INTO nodes (node_id, payload) VALUES (?, ?)',
           [node_announcement.node_id, node_announcement.to_payload.bth]
