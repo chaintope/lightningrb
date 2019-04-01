@@ -118,7 +118,7 @@ module Lightning
           payload << self[:htlc_key].to_s(16).rjust(64, '0').htb
           payload << [self[:default_final_script_pubkey].htb.bytesize].pack('n')
           payload << self[:default_final_script_pubkey].htb
-          payload << self[:sha_seed]
+          payload << self[:sha_seed].htb
           payload << [self[:funder]].pack('C')
           payload << [self[:globalfeatures].htb.bytesize].pack('n')
           payload << self[:globalfeatures].htb
@@ -143,7 +143,7 @@ module Lightning
           htlc_key, rest = rest.unpack('H64a*')
           len, rest = rest.unpack('na*')
           default_final_script_pubkey, rest = rest.unpack("H#{2 * len}a*")
-          sha_seed, rest = rest.unpack('a32a*')
+          sha_seed, rest = rest.unpack('H64a*')
           funder, rest = rest.unpack('Ca*')
           len, rest = rest.unpack('na*')
           globalfeatures, rest = rest.unpack("H#{2 * len}a*")

@@ -250,7 +250,7 @@ module Lightning
             generate_key(context.node_params, [index, 3]).priv.to_i(16),
             generate_key(context.node_params, [index, 4]).priv.to_i(16),
             script_pubkey,
-            Bitcoin.sha256(generate_key(context.node_params, [index, 5]).priv.htb),
+            Bitcoin.sha256(generate_key(context.node_params, [index, 5]).priv.htb).bth,
             funder ? 1 : 0,
             context.node_params.globalfeatures,
             context.node_params.localfeatures

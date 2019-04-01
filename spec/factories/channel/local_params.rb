@@ -15,7 +15,7 @@ FactoryBot.define do
     delayed_payment_key { 15 }
     htlc_key { 16 }
     default_final_script_pubkey { '001429f97a569a8013d3608bfb15392eb8082ff8d2aa' }
-    sha_seed { "\x11" * 32 }
+    sha_seed { "11" * 32 }
     funder { 1 }
     globalfeatures { build(:globalfeatures) }
     localfeatures { build(:localfeatures) }
