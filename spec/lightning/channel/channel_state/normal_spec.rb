@@ -146,6 +146,7 @@ describe Lightning::Channel::ChannelState::Normal do
 
     describe 'with UpdateFee' do
       let(:message) { build(:update_fee) }
+      let(:commitment) { build(:commitment, :fundee).get }
 
       it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
       it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }

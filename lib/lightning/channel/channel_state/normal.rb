@@ -64,7 +64,7 @@ module Lightning
             channel << CommandSignature if message[:commit]
             return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
           when UpdateFee
-            new_commitments, origin, htlc = Commitment.receive_fee(data[:commitments], message)
+            new_commitments, origin, htlc = Commitment.receive_fee(data[:commitments], message, context.node_params)
             case new_commitments
             when Commitments
               return goto(self, data: data.copy(commitments: new_commitments))

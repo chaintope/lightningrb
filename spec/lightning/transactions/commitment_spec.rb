@@ -437,4 +437,38 @@ describe Lightning::Transactions::Commitment do
       end
     end
   end
+
+  describe '.receive_fee' do
+    subject { Lightning::Transactions::Commitment.receive_fee(commitment, fee, node_params) }
+
+    let(:node_params) { build(:node_param) }
+    let(:fee) { build(:update_fee, feerate_per_kw: feerate_per_kw) }
+    let(:feerate_per_kw) { 46_080 }
+    let(:commitment) { build(:commitment, :fundee).get }
+
+    describe 'A receiving node:' do
+      context 'if the update_fee is too low for timely processing' do
+        let(:feerate_per_kw) { 252 }
+        it 'SHOULD fail the channel.' do
+          expect { subject }.to raise_error(Lightning::Exceptions::FeerateTooSmall)
+        end
+      end
+
+      context ', OR is unreasonably large:' do
+        let(:feerate_per_kw) { 100_000_001 }
+        it 'SHOULD fail the channel.' do
+          expect { subject }.to raise_error(Lightning::Exceptions::FeerateTooLarge)
+        end
+      end
+
+      context 'if the sender is not responsible for paying the Bitcoin fee:' do
+        let(:commitment) do
+          build(:commitment, :funder).get
+        end
+        it 'MUST fail the channel.' do
+          expect { subject }.to raise_error(Lightning::Exceptions::FundeeCannotSendUpdateFee)
+        end
+      end
+    end
+  end
 end

@@ -584,8 +584,17 @@ module Lightning
         [commitments1, fee]
       end
 
-      def self.receive_fee(commitments, fee)
-        raise FundeeCannotSendUpdateFee.new('fundee cannot send update fee') if commitments[:local_param][:funder] == 0
+      def self.receive_fee(commitments, fee, node_params)
+        raise FundeeCannotSendUpdateFee.new('fundee cannot send update fee') if commitments[:local_param][:funder] == 1
+
+        if fee.feerate_per_kw < node_params.minimum_feerate_per_kw
+          raise FeerateTooSmall.new("feerate_per_kw is too small: #{fee.feerate_per_kw} < #{node_params.minimum_feerate_per_kw}")
+        end
+
+        if fee.feerate_per_kw > node_params.maximum_feerate_per_kw
+          raise FeerateTooLarge.new("feerate_per_kw is unreasonably large: #{fee.feerate_per_kw} > #{node_params.maximum_feerate_per_kw}")
+        end
+
         commitments1 = add_remote_proposal(commitments, fee)
         reduced = CommitmentSpec.reduce(
           commitments1[:local_commit][:spec],

@@ -12,6 +12,8 @@ module Lightning
     autoload :ClosingAlreadyInProgress, 'lightning/exceptions/closing_already_in_progress'
     autoload :ExpiryTooLarge, 'lightning/exceptions/expiry_too_large'
     autoload :ExpiryTooSmall, 'lightning/exceptions/expiry_too_small'
+    autoload :FeerateTooLarge, 'lightning/exceptions/feerate_too_large'
+    autoload :FeerateTooSmall, 'lightning/exceptions/feerate_too_small'
     autoload :FundeeCannotSendUpdateFee, 'lightning/exceptions/fundee_cannot_send_update_fee'
     autoload :HtlcSigCountMismatch, 'lightning/exceptions/htlc_sig_count_mismatch'
     autoload :HtlcValueTooHighInFlight, 'lightning/exceptions/htlc_value_too_high_in_flight'

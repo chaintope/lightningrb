@@ -19,7 +19,9 @@ module Lightning
                   :min_depth_blocks,
                   :fee_base_msat,
                   :fee_proportional_millionths,
-                  :expiry_delta_blocks
+                  :expiry_delta_blocks,
+                  :maximum_feerate_per_kw,
+                  :minimum_feerate_per_kw
     def initialize
       seed =
         if File.exist?('seed.dat')
@@ -46,6 +48,8 @@ module Lightning
       @fee_base_msat = 1000
       @fee_proportional_millionths = 100
       @expiry_delta_blocks = 144
+      @maximum_feerate_per_kw = 100_000_000
+      @minimum_feerate_per_kw = 253
     end
   end
 end
