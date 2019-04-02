@@ -84,7 +84,7 @@ describe Lightning::Transactions::Closing do
       {},
       '',
       utxo,
-      [],
+      {},
       channel_id
     ]
   end

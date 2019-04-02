@@ -596,7 +596,7 @@ module Lightning
                 origin_channels: Hash,
                 remote_next_commit_info: type { variants WaitingForRevocation, String },
                 commit_input: Lightning::Transactions::Utxo,
-                remote_per_commitment_secrets: Array,
+                remote_per_commitment_secrets: Hash,
                 channel_id: String
       end
 
@@ -1067,9 +1067,13 @@ module Lightning
           end
           commit_input, rest = Lightning::Transactions::Utxo.load(rest)
           len, rest = rest.unpack('na*')
-          remote_per_commitment_secrets_as_hex, rest = rest.unpack("H#{64 * len}a*")
-          remote_per_commitment_secrets = (0..(len - 1)).map do |i|
-            remote_per_commitment_secrets_as_hex[(i * 64)...(i * 64 + 64)]
+          remote_per_commitment_secrets_as_hex, rest = rest.unpack("H#{(4 + 16 + 64) * len}a*")
+          remote_per_commitment_secrets = {}
+          (0..(len - 1)).map do |i|
+            key = remote_per_commitment_secrets_as_hex[(i * 64)...(i * 64 + 4)]
+            index = remote_per_commitment_secrets_as_hex[(i * 64 + 4)...(i * 64 + 20)]
+            secret = remote_per_commitment_secrets_as_hex[(i * 64 + 20)...(i * 64 + 84)]
+            remote_per_commitment_secrets[key.to_i(16)] = { index: index.to_i(16), secret: secret }
           end
           channel_id, rest = rest.unpack('H64a*')
           commiemtns = new(
@@ -1125,7 +1129,11 @@ module Lightning
           end
           payload << self[:commit_input].to_payload
           payload << [self[:remote_per_commitment_secrets].length].pack('n')
-          payload << self[:remote_per_commitment_secrets].join('').htb
+          self[:remote_per_commitment_secrets].each do |k, v|
+            payload << [k].pack('n')
+            payload << [v[:index]].pack('q>')
+            payload << v[:secret].htb
+          end
           payload << self[:channel_id].htb
           payload.string
         end

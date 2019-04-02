@@ -876,9 +876,12 @@ module Lightning
         !(commitments[:local_changes][:acked].empty? && commitments[:remote_changes][:proposed].empty?)
       end
 
-      def self.add_hash(receiver, hash, index)
-        receiver << hash
-        receiver
+      def self.add_hash(chain, hash, index)
+        ShaChain.insert_secret(
+          hash,
+          index,
+          chain
+        )
       end
     end
   end

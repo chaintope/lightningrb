@@ -85,7 +85,7 @@ module Lightning
               {},
               random_key.pubkey,
               commit_utxo,
-              [],
+              {},
               channel_id
             ]
             context.broadcast << ChannelSignatureReceived[channel, commitments]

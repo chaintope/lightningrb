@@ -435,5 +435,9 @@ describe Lightning::Crypto::ShaChain do
         it { expect(described_class.derive_old_secret(i, chain)).to eq secrets[index] }
       end
     end
+
+    describe 'cannot regenerate secret' do
+      it { expect{ described_class.derive_old_secret(2**48 - 11, chain) }.to raise_error(RuntimeError) }
+    end
   end
 end
