@@ -15,6 +15,7 @@ module Lightning
     autoload :FeerateTooLarge, 'lightning/exceptions/feerate_too_large'
     autoload :FeerateTooSmall, 'lightning/exceptions/feerate_too_small'
     autoload :FundeeCannotSendUpdateFee, 'lightning/exceptions/fundee_cannot_send_update_fee'
+    autoload :FundingTransactionAlreadySpent, 'lightning/exceptions/funding_transaction_already_spent'
     autoload :HtlcSigCountMismatch, 'lightning/exceptions/htlc_sig_count_mismatch'
     autoload :HtlcValueTooHighInFlight, 'lightning/exceptions/htlc_value_too_high_in_flight'
     autoload :HtlcValueTooLarge, 'lightning/exceptions/htlc_value_too_large'

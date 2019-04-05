@@ -22,6 +22,7 @@ module Lightning
       end
 
       Timeout = Algebrick.atom
+      GetRouteState = Algebrick.atom
 
       Rebroadcast = Algebrick.type do
         fields! message: Lightning::Wire::LightningMessages::RoutingMessage

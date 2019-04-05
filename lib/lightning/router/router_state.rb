@@ -8,7 +8,6 @@ module Lightning
       include Algebrick::Matching
       include Lightning::Wire::LightningMessages
       include Lightning::Channel::Events
-      include Lightning::Blockchain::Messages
       include Lightning::Router::Messages
 
       autoload :Normal, 'lightning/router/router_state/normal'

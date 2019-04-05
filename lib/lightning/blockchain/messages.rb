@@ -13,7 +13,11 @@ module Lightning
                 tx_index: Numeric
       end
 
-      WatchEventSpentBasic = Algebrick.atom
+      WatchUtxoSpent = Algebrick.type do
+        fields! listener: Object, # channel
+                tx_hash: String,
+                output_index: Numeric
+      end
     end
   end
 end

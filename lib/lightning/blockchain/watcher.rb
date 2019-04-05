@@ -35,6 +35,19 @@ module Lightning
               break
             end
           end
+        end), (on WatchUtxoSpent do |watch|
+          id = SecureRandom.random_number(1 << 32)
+          listener = watch.listener
+          tx_hash = watch.tx_hash
+          output_index = watch.output_index
+          request = Bitcoin::Grpc::WatchUtxoSpentRequest.new(id: id, tx_hash: tx_hash, output_index: output_index)
+          response = stub.watch_utxo_spent(request)
+          response.each do |r|
+            log(Logger::INFO, :watcher, "RECEIVE EventUtxoSpent event.#{r}")
+            # Bitcoin::Grpc::EventUtxoSpent
+            listener << r
+            break
+          end
         end)
       end
     end

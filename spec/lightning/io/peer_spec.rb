@@ -203,6 +203,30 @@ describe Lightning::IO::Peer do
           end
         end
       end
+
+      describe 'with Error' do
+        subject do
+          peer << Lightning::Wire::LightningMessages::Error.new(channel_id: channel_id, data: data)
+          peer.ask(:await).wait
+        end
+
+        before do
+          peer << open_channel
+          peer.ask(:await).wait
+        end
+
+        let(:open_channel) { Lightning::IO::PeerEvents::OpenChannel['11' * 32, 10_000_000, 10_000, 1, {}] }
+        let(:channel_id) { '11' * 32 }
+        let(:data) { '' }
+
+        describe 'The receiving node:' do
+          context 'upon receiving error:' do
+            it 'MUST fail the channel referred to by the error message, if that channel is with the sending node.' do
+
+            end
+          end
+        end
+      end
     end
   end
 end

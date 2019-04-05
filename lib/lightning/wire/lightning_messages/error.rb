@@ -14,6 +14,10 @@ module Lightning
         def initialize(fields = {})
           super(fields.merge(type: TYPE))
         end
+
+        def fail_all_channels?
+          channel_id == '0000000000000000000000000000000000000000000000000000000000000000'
+        end
       end
     end
   end

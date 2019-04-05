@@ -58,13 +58,18 @@ module Lightning
           fields! channel: Concurrent::Actor::Reference,
                   commitments: Lightning::Channel::Messages::Commitments
         end
+        ChannelClosed = type do
+          fields! channel: Concurrent::Actor::Reference,
+                  channel_id: String
+        end
         variants  ChannelCreated,
                   ChannelRestored,
                   ChannelIdAssigned,
                   ShortChannelIdAssigned,
                   LocalChannelUpdate,
                   LocalChannelDown,
-                  ChannelSignatureReceived
+                  ChannelSignatureReceived,
+                  ChannelClosed
       end
     end
   end

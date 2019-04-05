@@ -56,6 +56,12 @@ module Lightning
             end
             task.execute
             [self, data]
+          when WatchUtxoSpent
+            out_point = data[:commitments][:commit_input].out_point
+            if (out_point.hash == message[:out_point].tx_hash && out_point.index == message[:out_point].index)
+              raise FundingTransactionAlreadySpent.new
+            end
+            [self, data]
           end
         end
       end

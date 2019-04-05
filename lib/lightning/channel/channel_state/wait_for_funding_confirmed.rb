@@ -33,6 +33,16 @@ module Lightning
               ]),
               sending: funding_locked
             )
+          when WatchUtxoSpent
+            handle_utxo_spent(message, data)
+            [self, data]
+          end
+        end
+
+        def handle_utxo_spent(message, data)
+          out_point = data[:commitments][:commit_input].out_point
+          if (out_point.hash == message[:out_point].tx_hash && out_point.index == message[:out_point].index)
+
           end
         end
       end

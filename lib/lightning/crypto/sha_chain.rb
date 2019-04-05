@@ -2,6 +2,8 @@
 
 module Lightning
   module Crypto
+
+    # see https://github.com/rustyrussell/lightning-rfc-old/blob/master/early-drafts/shachain.txt
     module ShaChain
       class << self
         def generate_from_seed(seed, index)

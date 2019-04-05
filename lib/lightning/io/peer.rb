@@ -12,6 +12,8 @@ module Lightning
         @status = PeerStateDisconnected.new(self, authenticator, context, remote_node_id)
         channels = initialize_stored_channels(context, remote_node_id)
         @data = DisconnectedData[Algebrick::None, channels]
+
+        context.broadcast << [:subscribe, Lightning::Channel::Events::ChannelClosed]
       end
 
       def initialize_stored_channels(context, remote_node_id)
@@ -187,18 +189,10 @@ module Lightning
             end
           when HasChannelId
             channel = data[:channels][message.channel_id]
-            if channel
-              channel << message
-            else
-              # TODO : raise ERROR
-            end
+            channel << message if channel
           when HasTemporaryChannelId
             channel = data[:channels][message.temporary_channel_id]
-            if channel
-              channel << message
-            else
-              # TODO : raise ERROR
-            end
+            channel << message if channel
           when ChannelIdAssigned
             data[:channels][message[:channel_id]] = message[:channel]
           when Lightning::Wire::LightningMessages::GossipTimestampFilter
@@ -217,6 +211,17 @@ module Lightning
               end
             end
             transport << message[:message] unless filtered
+          when Lightning::Wire::LightningMessages::Error
+            if message.fail_all_channels?
+              data[:channels].each do |channel_id, channel|
+                channel << message
+              end
+            else
+              channel = data[:channels][message.channel_id]
+              channel << message if channel
+            end
+          when Lightning::Channel::Events::ChannelClosed
+            data[:channels].delete_if { |key, value| value == message.channel }
           else
             log(Logger::WARN, '/peer@connected', "unhandled message: #{message.inspect}, data:#{data}")
           end

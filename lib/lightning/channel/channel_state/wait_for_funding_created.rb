@@ -68,8 +68,7 @@ module Lightning
             )
             random_key = Bitcoin::Key.generate
 
-            # TODO Watch UTXO to detect it to be spent
-
+            context.blockchain << WatchUtxoSpent[channel, commit_utxo.txid.rhex, commit_utxo.index]
             context.blockchain << WatchConfirmed[channel, commit_utxo.txid.rhex, context.node_params.min_depth_blocks]
 
             commitments = Commitments[

@@ -253,6 +253,10 @@ module Lightning
               task.execute
               [self, data]
             end
+          when Lightning::Wire::LightningMessages::Error
+
+          when Bitcoin::Grpc::EventUtxoSpent
+            raise FundingTransactionAlreadySpent.new
           end
         end
 
