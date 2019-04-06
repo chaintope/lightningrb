@@ -7,6 +7,12 @@ RSpec.configure do |config|
     FactoryBot.reload
     FileUtils.rm_f('tmp/test_node_db')
     FileUtils.rm_f('tmp/test_peer_db')
+    FileUtils.rm_f('tmp/test_channel_db')
+  end
+  config.after(:all) do
+    FileUtils.rm_f('tmp/test_node_db')
+    FileUtils.rm_f('tmp/test_peer_db')
+    FileUtils.rm_f('tmp/test_channel_db')
   end
   config.before(:suite) do
     FactoryBot.find_definitions

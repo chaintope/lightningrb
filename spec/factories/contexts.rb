@@ -13,6 +13,7 @@ FactoryBot.define do
     wallet { double('wallet') }
     peer_db { Lightning::Store::PeerDb.new('tmp/test_peer_db') }
     node_db { Lightning::Store::NodeDb.new('tmp/test_node_db') }
+    channel_db { Lightning::Store::NodeDb.new('tmp/test_channel_db') }
     initialize_with { new(spv) }
   end
 end
