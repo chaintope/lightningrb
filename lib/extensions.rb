@@ -10,4 +10,6 @@ require 'extensions/field/string_field'
 require 'extensions/field/uint32_field'
 require 'extensions/field/uint64_field'
 
+require 'extensions/string'
+
 require 'extensions/concurrent/actor/reference.rb'

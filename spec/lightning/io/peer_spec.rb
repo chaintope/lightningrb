@@ -144,7 +144,11 @@ describe Lightning::IO::Peer do
 
       describe 'with ChannelIdAssigned' do
         subject do
-          peer << Lightning::Channel::Events::ChannelIdAssigned[channel, '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7', '00' * 32, '11' * 32]
+          peer << Lightning::Channel::Events::ChannelIdAssigned.build(channel,
+            remote_node_id: '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7',
+            temporary_channel_id: '00' * 32,
+            channel_id: '11' * 32
+          )
           peer.ask(:await).wait
         end
 

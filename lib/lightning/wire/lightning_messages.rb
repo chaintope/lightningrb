@@ -19,6 +19,9 @@ module Lightning
       module RoutingMessage
       end
 
+      module GossipQuery
+      end
+
       autoload :LightningMessage, 'lightning/wire/lightning_messages/lightning_message'
 
       autoload :Init, 'lightning/wire/lightning_messages/init'

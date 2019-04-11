@@ -58,7 +58,7 @@ module Lightning
             context.blockchain << WatchConfirmed[channel, commit_utxo.txid.rhex, context.node_params.min_depth_blocks]
 
             context.wallet.commit(funding_tx)
-            context.broadcast << ChannelSignatureReceived[channel, commitments]
+            context.broadcast << ChannelSignatureReceived.build(channel)
 
             log(Logger::INFO, :channel, "funding_tx is broadcasted. #{funding_tx.txid}:#{funding_tx.to_payload.bth}")
             log(Logger::INFO, :channel, "================================================================================")

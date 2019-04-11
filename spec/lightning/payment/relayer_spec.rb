@@ -14,6 +14,9 @@ describe Lightning::Payment::Relayer do
     let(:context) { build(:context, node_params: node_param, spv: spv) }
     let(:spv) { create_test_spv }
     let(:relayer) { described_class.spawn(:relayer, context) }
+    let(:channel) { spawn_dummy_actor }
+    let(:channel_announcement) { build(:channel_announcement) }
+    let(:channel_update) { build(:channel_update) }
 
     before { spv.stub(:blockchain_info).and_return({ 'headers' => 999 }) }
 
@@ -21,17 +24,37 @@ describe Lightning::Payment::Relayer do
     end
 
     describe 'LocalChannelUpdate' do
-      let(:message) { build(:local_channel_update).get }
+      let(:message) do
+        Lightning::Channel::Events::LocalChannelUpdate.build(
+          channel, channel_announcement, channel_update,
+          short_channel_id: 42,
+          remote_node_id: '11' * 33,
+          channel_id: '00' * 32
+        )
+      end
 
       it do
         subject
-        expect(relayer.ask!(:channel_updates)[42]).to eq message[:channel_update]
+        expect(relayer.ask!(:channel_updates)[42]).to eq message.channel_update
       end
     end
 
     describe 'LocalChannelDown' do
-      let(:message) { build(:local_channel_down).get }
-      let(:local_channel_update) { build(:local_channel_update).get }
+      let(:message) do
+        Lightning::Channel::Events::LocalChannelDown.build(channel,
+          short_channel_id: 42,
+          remote_node_id: '11' * 33,
+          channel_id: '00' * 32
+        )
+      end
+      let(:local_channel_update) do
+        Lightning::Channel::Events::LocalChannelUpdate.build(
+          channel, channel_announcement, channel_update,
+          short_channel_id: 42,
+          remote_node_id: '11' * 33,
+          channel_id: '00' * 32
+        )
+      end
 
       before { relayer << local_channel_update }
 
@@ -122,12 +145,11 @@ describe Lightning::Payment::Relayer do
         )
       end
       let(:local_channel_update) do
-        build(
-          :local_channel_update,
+        Lightning::Channel::Events::LocalChannelUpdate.build(
+          channel, channel_announcement, channel_update_bc,
           short_channel_id: 2,
-          remote_node_id: public_keys[2],
-          channel_update: channel_update_bc
-        ).get
+          remote_node_id: public_keys[2]
+        )
       end
 
       before { relayer << local_channel_update }

@@ -55,22 +55,33 @@ module Lightning
 
       def on_transition(channel, state, data, next_state, next_data)
         if state != next_state
-          context.broadcast << ChannelStateChanged[
-            channel.reference, channel.reference.parent, context.remote_node_id, state, next_state, next_data
-          ]
+          context.broadcast << ChannelStateChanged.build(
+            channel.reference,
+            remote_node_id: context.remote_node_id,
+            previous_state: state.class.to_s,
+            current_state: next_state.class.to_s
+          )
         end
         Concurrent::ScheduledTask.execute(10) { channel << :shutdown } if next_state.closed?
 
         if keep_channel_state?(data, next_data)
           # Do nothing
         elsif next_data.is_a? Lightning::Channel::Messages::DataNormal
-          context.broadcast << LocalChannelUpdate[
-            channel.reference, next_data.channel_id, next_data[:short_channel_id], next_data[:commitments][:remote_param][:node_id], next_data[:channel_announcement], next_data[:channel_update]
-          ]
+          channel_announcement = next_data[:channel_announcement] == Algebrick::None ? nil : next_data[:channel_announcement].value
+          channel_update = next_data[:channel_update] == Algebrick::None ? nil : next_data[:channel_update]
+          context.broadcast << LocalChannelUpdate.build(
+            channel.reference, channel_announcement, channel_update,
+            channel_id: next_data.channel_id,
+            short_channel_id: next_data[:short_channel_id],
+            remote_node_id: next_data[:commitments][:remote_param][:node_id]
+          )
         elsif data.is_a? Lightning::Channel::Messages::DataNormal
-          context.broadcast << LocalChannelDown[
-            channel.reference, data.channel_id, data[:short_channel_id], data[:commitments][:remote_param][:node_id]
-          ]
+          context.broadcast << LocalChannelDown.build(
+            channel.reference,
+            channel_id: data.channel_id,
+            short_channel_id: data[:short_channel_id],
+            remote_node_id: data[:commitments][:remote_param][:node_id]
+          )
         end
       end
 

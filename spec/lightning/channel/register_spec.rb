@@ -12,14 +12,20 @@ describe Lightning::Channel::Register do
     let(:context) { Lightning::Context.new(create_test_spv) }
     let(:register) { described_class.spawn(:register, context) }
     let(:channel) { spawn_dummy_actor }
-    let(:peer) { spawn_dummy_actor }
     let(:node_id) { '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7' }
     let(:temporary_channel_id) { '36155cae4b48d26ab48aa6ac239da93219615cb8dd846d2a2abeb455af9b3357' }
     let(:channel_id) { '8984484a580b825b9972d7adb15050b3ab624ccd731946b3eeddb92f4e7ef6ff' }
     let(:short_channel_id) { 42 }
 
     describe 'ChannelCreated' do
-      let(:message) { Lightning::Channel::Events::ChannelCreated[channel, peer, node_id, 1, temporary_channel_id] }
+      let(:message) do
+        Lightning::Channel::Events::ChannelCreated.build(
+          channel,
+          remote_node_id: node_id,
+          is_funder: 1,
+          temporary_channel_id: temporary_channel_id
+        )
+      end
 
       it 'registers to channel with temporary_channel_id' do
         subject
@@ -33,7 +39,14 @@ describe Lightning::Channel::Register do
     end
 
     describe 'ChannelIdAssigned' do
-      let(:message) { Lightning::Channel::Events::ChannelIdAssigned[channel, node_id, temporary_channel_id, channel_id] }
+      let(:message) do
+        Lightning::Channel::Events::ChannelIdAssigned.build(
+          channel,
+          remote_node_id: node_id,
+          temporary_channel_id: temporary_channel_id,
+          channel_id: channel_id
+        )
+      end
 
       it 'replaces key in channels' do
         subject
@@ -49,7 +62,11 @@ describe Lightning::Channel::Register do
     end
 
     describe 'ShortChannelIdAssigned' do
-      let(:message) { Lightning::Channel::Events::ShortChannelIdAssigned[channel, channel_id, short_channel_id] }
+      let(:message) do
+        Lightning::Channel::Events::ShortChannelIdAssigned.build(
+          channel, channel_id: channel_id, short_channel_id: short_channel_id
+        )
+      end
 
       it 'registers to short_channel_ids' do
         subject
@@ -62,8 +79,12 @@ describe Lightning::Channel::Register do
       let(:message) { Lightning::Channel::Register::Forward[channel_id, lightning_message] }
 
       before do
-        register << Lightning::Channel::Events::ChannelCreated[channel, peer, node_id, 1, temporary_channel_id]
-        register << Lightning::Channel::Events::ChannelIdAssigned[channel, node_id, temporary_channel_id, channel_id]
+        register << Lightning::Channel::Events::ChannelCreated.build(
+          channel, remote_node_id: node_id, is_funder: 1, temporary_channel_id: temporary_channel_id
+        )
+        register << Lightning::Channel::Events::ChannelIdAssigned.build(
+          channel, remote_node_id: node_id, temporary_channel_id: temporary_channel_id, channel_id: channel_id
+        )
       end
 
       it 'forward lightning_message to channel' do
@@ -77,9 +98,15 @@ describe Lightning::Channel::Register do
       let(:message) { Lightning::Channel::Register::ForwardShortId[short_channel_id, lightning_message] }
 
       before do
-        register << Lightning::Channel::Events::ChannelCreated[channel, peer, node_id, 1, temporary_channel_id]
-        register << Lightning::Channel::Events::ChannelIdAssigned[channel, node_id, temporary_channel_id, channel_id]
-        register << Lightning::Channel::Events::ShortChannelIdAssigned[channel, channel_id, short_channel_id]
+        register << Lightning::Channel::Events::ChannelCreated.build(
+          channel, remote_node_id: node_id, is_funder: 1, temporary_channel_id: temporary_channel_id
+        )
+        register << Lightning::Channel::Events::ChannelIdAssigned.build(
+          channel, remote_node_id: node_id, temporary_channel_id: temporary_channel_id, channel_id: channel_id
+        )
+        register << Lightning::Channel::Events::ShortChannelIdAssigned.build(
+          channel, channel_id: channel_id, short_channel_id: short_channel_id
+        )
       end
 
       it 'forward lightning_message to channel' do

@@ -41,10 +41,10 @@ describe Lightning::Channel::ChannelState::Normal do
         commitments: commitment,
         short_channel_id: 1,
         buried: 1,
-        channel_announcement: None,
+        channel_announcement: Algebrick::None,
         channel_update: build(:channel_update),
-        local_shutdown: None,
-        remote_shutdown: None
+        local_shutdown: Algebrick::None,
+        remote_shutdown: Algebrick::None
       ]
     end
 
@@ -212,10 +212,10 @@ describe Lightning::Channel::ChannelState::Normal do
 
     describe 'with CommandClose' do
       let(:script_pubkey) { '0014ccf1af2f2aabee14bb40fa3851ab2301de843110' }
-      let(:message) { Lightning::Channel::Messages::CommandClose[Some[String][script_pubkey]] }
+      let(:message) { Lightning::Channel::Messages::CommandClose[Algebrick::Some[String][script_pubkey]] }
 
       it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
-      it { expect(subject[1][:local_shutdown]).to be_a Some[Lightning::Wire::LightningMessages::Shutdown] }
+      it { expect(subject[1][:local_shutdown]).to be_a Algebrick::Some[Lightning::Wire::LightningMessages::Shutdown] }
     end
 
     describe 'with Shutdown' do

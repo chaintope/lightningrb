@@ -27,33 +27,34 @@ module Lightning
 
       def on_message(message)
         log(Logger::INFO, message)
-        match message, (on ~ChannelRestored do |msg|
-          @channels[msg[:channel_id]] = msg[:channel]
-          @remotes[msg[:channel_id]] = msg[:remote_node_id]
-        end), (on ~ChannelCreated do |msg|
-          @channels[msg[:temporary_channel_id]] = msg[:channel]
-          @remotes[msg[:temporary_channel_id]] = msg[:remote_node_id]
-        end), (on ~ChannelIdAssigned do |msg|
-          @channels.delete(msg[:temporary_channel_id])
-          @remotes.delete(msg[:temporary_channel_id])
-          @channels[msg[:channel_id]] = msg[:channel]
-          @remotes[msg[:channel_id]] = msg[:remote_node_id]
-        end), (on ~ShortChannelIdAssigned do |msg|
-          @short_channel_ids[msg[:short_channel_id]] = msg[:channel_id]
-        end), (on ~Forward do |msg|
-          channel = @channels[msg[:channel_id]]
-          channel << msg[:message] if channel
-        end), (on ~ForwardShortId do |msg|
-          channel_id = @short_channel_ids[msg[:short_channel_id]]
+        case message
+        when ChannelRestored
+          @channels[message.channel_id] = message.channel
+          @remotes[message.channel_id] = message.remote_node_id
+        when ChannelCreated
+          @channels[message.temporary_channel_id] = message.channel
+          @remotes[message.temporary_channel_id] = message.remote_node_id
+        when ChannelIdAssigned
+          @channels.delete(message.temporary_channel_id)
+          @remotes.delete(message.temporary_channel_id)
+          @channels[message.channel_id] = message.channel
+          @remotes[message.channel_id] = message.remote_node_id
+        when ShortChannelIdAssigned
+          @short_channel_ids[message.short_channel_id] = message.channel_id
+        when Forward
+          channel = @channels[message.channel_id]
+          channel << message.message if channel
+        when ForwardShortId
+          channel_id = @short_channel_ids[message.short_channel_id]
           channel = @channels[channel_id]
-          channel << msg[:message] if channel
-        end), (on :channels do
+          channel << message.message if channel
+        when :channels
           @channels
-        end), (on :short_channel_ids do
+        when :short_channel_ids
           @short_channel_ids
-        end), (on :remotes do
+        when :remotes
           @remotes
-        end)
+        end
       end
 
       Forward = Algebrick.type do

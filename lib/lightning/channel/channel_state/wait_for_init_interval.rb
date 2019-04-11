@@ -6,7 +6,12 @@ module Lightning
       class WaitForInitInterval < ChannelState
         def next(message, data)
           match message, (on ~InputInitFunder do |init|
-            context.broadcast << ChannelCreated[channel, channel.parent, context.remote_node_id, 1, init[:temporary_channel_id]]
+            context.broadcast << ChannelCreated.build(
+              channel,
+              remote_node_id: context.remote_node_id,
+              is_funder: 1,
+              temporary_channel_id: init[:temporary_channel_id]
+            )
             context.forwarder << init[:remote]
             local_param = init[:local_param]
             first_per_commitment_point = Lightning::Crypto::Key.per_commitment_point(local_param[:sha_seed], 0)
@@ -52,8 +57,17 @@ module Lightning
 
             case data
             when DataNormal
-              context.broadcast << ChannelRestored[channel, channel.parent, context.remote_node_id, data[:commitments][:local_param][:funder], data[:commitments][:channel_id], data]
-              context.broadcast << ShortChannelIdAssigned[channel, data[:commitments][:channel_id], data[:short_channel_id]]
+              context.broadcast << ChannelRestored.build(
+                channel,
+                remote_node_id: context.remote_node_id,
+                is_funder: data[:commitments][:local_param][:funder],
+                channel_id: data[:commitments][:channel_id]
+              )
+              context.broadcast << ShortChannelIdAssigned.build(
+                channel,
+                channel_id: data[:commitments][:channel_id],
+                short_channel_id: data[:short_channel_id]
+              )
               goto(Offline.new(channel, context), data: data)
             else
               log(Logger::ERROR, :channel, 'channel data is not supported.')

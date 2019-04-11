@@ -56,12 +56,13 @@ module Lightning
       end
 
       def on_message(message)
-        match message, (on ~ChannelStateChanged do |msg|
-        end), (on ~LocalChannelUpdate do |msg|
-          @channel_updates[msg[:short_channel_id]] = msg[:channel_update]
-        end), (on ~LocalChannelDown do |msg|
-          @channel_updates.delete(msg[:short_channel_id])
-        end), (on ~ForwardAdd do |add|
+        case message
+        when ChannelStateChanged
+        when LocalChannelUpdate
+          @channel_updates[message.short_channel_id] = message.channel_update
+        when LocalChannelDown
+          @channel_updates.delete(message.short_channel_id)
+        when ForwardAdd
           add = message[:add]
           hop_data, next_packet, secret = Sphinx.parse(context.node_params.private_key, add.onion_routing_packet.htb)
 
@@ -74,36 +75,48 @@ module Lightning
           when UpdateAddHtlc
             context.payment_handler << command
           end
-        end), (on ForwardFulfill.(~any, ~Local, UpdateAddHtlc) do |fulfill, origin|
+        when ForwardFulfill
           htlc = message[:htlc]
+          fulfill = message[:fulfill]
+          to = message[:to]
+          case to
+          when Local
           payment_hash = Bitcoin.sha256(fulfill[:payment_preimage].htb).bth
           context.broadcast << PaymentSucceeded[
             htlc.amount_msat, payment_hash, fulfill[:payment_preimage], []
           ]
-        end), (on ForwardFulfill.(~any, ~Relayed, any) do |fulfill, origin|
-          command = CommandFulfillHtlc[origin[:original_htlc_id], fulfill[:payment_preimage], true]
-          context.register << Register::Forward[origin[:original_channel_id], command]
-          payment_hash = Bitcoin.sha256(fulfill[:payment_preimage].htb).bth
-          context.broadcast << PaymentRelayed[origin[:amount_msat_in], origin[:amount_msat_out], payment_hash]
-          # preimage_db.add_preimage(origin[:original_channel_id],origin[:original_htlc_id], fulfill[:payment_preimage])
-        end), (on ForwardFail.(~any, ~Local, UpdateAddHtlc) do |fail, origin|
+          when Relayed
+            command = CommandFulfillHtlc[to[:original_htlc_id], fulfill[:payment_preimage], true]
+            context.register << Register::Forward[to[:original_channel_id], command]
+            payment_hash = Bitcoin.sha256(fulfill[:payment_preimage].htb).bth
+            context.broadcast << PaymentRelayed[to[:amount_msat_in], to[:amount_msat_out], payment_hash]
+          end
+        when ForwardFail
           htlc = message[:htlc]
-          context.broadcast << PaymentFailed[htlc[:payment_hash], []]
-        end), (on ForwardFail.(~any, ~Relayed, any) do |fail, origin|
-          command = CommandFailHtlc[origin[:original_htlc_id], fail[:reason], true]
-          context.register << Register::Forward[origin[:original_channel_id], command]
-        end), (on ForwardFailMalformed.(~any, ~Local, UpdateAddHtlc) do |fail, origin|
+          fail = message[:fail]
+          to = message[:to]
+          case to
+          when Local
+            context.broadcast << PaymentFailed[htlc[:payment_hash], []]
+          when Relayed
+            command = CommandFailHtlc[to[:original_htlc_id], fail[:reason], true]
+            context.register << Register::Forward[to[:original_channel_id], command]
+          end
+        when ForwardFailMalformed
           htlc = message[:htlc]
-          context.broadcast << PaymentFailed[htlc[:payment_hash], []]
-        end), (on ForwardFailMalformed.(~any, ~Relayed, any) do |fail, origin|
-          command = CommandFailMalformedHtlc[origin[:original_htlc_id], fail[:sha256_of_onion], fail[:failure_code], true]
-          context.register << Register::Forward[origin[:original_channel_id], command]
-        end), (on 'ok' do |msg|
-        end), (on :channel_updates do
+          fail = message[:fail]
+          to = message[:to]
+          case to
+          when Local
+            context.broadcast << PaymentFailed[htlc[:payment_hash], []]
+          when Relayed
+            command = CommandFailMalformedHtlc[to[:original_htlc_id], fail[:sha256_of_onion], fail[:failure_code], true]
+            context.register << Register::Forward[to[:original_channel_id], command]
+          end
+        when :channel_updates
           @channel_updates
-        end), (on any do
-
-        end)
+        else
+        end
       end
 
       def packet_to_command(hop_data, packet, add)

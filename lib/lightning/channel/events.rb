@@ -1,70 +1,75 @@
 # frozen_string_literal: true
 
+require 'lightning/channel/events_pb'
+
 module Lightning
   module Channel
     module Events
-      include Lightning::Utils::Algebrick
-      include Lightning::Wire::LightningMessages
-      ChannelEvents = Algebrick.type do
-        ChannelCreated = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  peer: Concurrent::Actor::Reference,
-                  remote_node_id: String,
-                  is_funder: Numeric,
-                  temporary_channel_id: String
+      class ChannelCreated
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
         end
-        ChannelRestored = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  peer: Concurrent::Actor::Reference,
-                  remote_node_id: String,
-                  is_funder: Numeric,
-                  channel_id: String,
-                  current_data: Lightning::Channel::Messages::HasCommitments
+      end
+
+      class ChannelRestored
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
         end
-        ChannelIdAssigned = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  remote_node_id: String,
-                  temporary_channel_id: String,
-                  channel_id: String
+      end
+
+      class ChannelIdAssigned
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
         end
-        ShortChannelIdAssigned = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  channel_id: String,
-                  short_channel_id: Numeric
+      end
+
+      class ShortChannelIdAssigned
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
         end
-        LocalChannelUpdate = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  channel_id: String,
-                  short_channel_id: Numeric,
-                  remote_node_id: String,
-                  channel_announcement: Algebrick::Maybe[ChannelAnnouncement],
-                  channel_update: ChannelUpdate
+      end
+
+      class LocalChannelUpdate
+        attr_accessor :channel, :channel_announcement, :channel_update
+        def self.build(channel, channel_announcement, channel_update, fields = {})
+          new(fields).tap do |e|
+            e.channel = channel
+            e.channel_announcement = channel_announcement
+            e.channel_update = channel_update
+          end
         end
-        LocalChannelDown = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  channel_id: String,
-                  short_channel_id: Numeric,
-                  remote_node_id: String
+      end
+
+      class LocalChannelDown
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
         end
-        ChannelStateChanged = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  peer: Concurrent::Actor::Reference,
-                  remote_node_id: String,
-                  previous_state: Object,
-                  current_state: Object,
-                  current_data: Object
+      end
+
+      class ChannelStateChanged
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
         end
-        ChannelSignatureReceived = type do
-          fields! channel: Concurrent::Actor::Reference,
-                  commitments: Lightning::Channel::Messages::Commitments
+      end
+
+      class ChannelSignatureReceived
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
         end
-        variants  ChannelCreated,
-                  ChannelRestored,
-                  ChannelIdAssigned,
-                  ShortChannelIdAssigned,
-                  LocalChannelUpdate,
-                  LocalChannelDown,
-                  ChannelSignatureReceived
+      end
+
+      class ChannelClosed
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
+        end
       end
     end
   end

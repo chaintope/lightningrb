@@ -50,12 +50,12 @@ module Lightning
 
             local_sig_of_remote_tx = Transactions.sign(remote_commit_tx.tx, remote_commit_tx.utxo, local_param.funding_priv_key)
             channel_id = Channel.to_channel_id(funding_tx_txid, funding_tx_output_index)
-            event = ChannelIdAssigned[
+            event = ChannelIdAssigned.build(
               channel,
-              context.remote_node_id,
-              temporary_channel_id,
-              channel_id
-            ]
+              remote_node_id: context.remote_node_id,
+              temporary_channel_id: temporary_channel_id,
+              channel_id: channel_id
+            )
             channel.parent << event
             context.broadcast << event
 
@@ -88,7 +88,7 @@ module Lightning
               {},
               channel_id
             ]
-            context.broadcast << ChannelSignatureReceived[channel, commitments]
+            context.broadcast << ChannelSignatureReceived.build(channel)
 
             log(Logger::INFO, :channel, "================================================================================")
             log(Logger::INFO, :channel, "")
