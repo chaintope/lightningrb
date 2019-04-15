@@ -25,7 +25,13 @@ describe Lightning::Payment::PaymentInitiator do
 
     describe 'with PaymentSucceeded' do
       let(:send) { build(:send_payment).get }
-      let(:message) { Lightning::Payment::Events::PaymentSucceeded[1_000_000, '00' * 32, '11' * 32 ,[]] }
+      let(:message) do
+        Lightning::Payment::Events::PaymentSucceeded.new(
+          amount_msat: 1_000_000,
+          payment_hash: '00' * 32,
+          payment_preimage: '11' * 32
+        )
+      end
 
       it do
         payment_handler << send

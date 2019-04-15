@@ -34,14 +34,14 @@ module Lightning
           context.switchboard << data if context.switchboard && data
           [self, data]
         when LocalChannelUpdate
-          channel = data[:channels][message[:short_channel_id]]
+          channel = data[:channels][message.short_channel_id]
           unless channel
-            router << message[:channel_announcement].value unless message[:channel_announcement].is_a? None
+            router << message.channel_announcement if message.channel_announcement
           end
-          router << message[:channel_update]
+          router << message.channel_update
           [self, data]
         when LocalChannelDown
-          channel = data[:channels][message[:short_channel_id]]
+          channel = data[:channels][message.short_channel_id]
           desc = Announcements.to_channel_desc(channel)
           [self, data]
         when ChannelAnnouncement

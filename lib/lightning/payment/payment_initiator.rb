@@ -15,15 +15,16 @@ module Lightning
       end
 
       def on_message(message)
-        match message, (on ~Lightning::Payment::Messages::SendPayment do |msg|
+        case message
+        when Lightning::Payment::Messages::SendPayment
           cycle = Lightning::Payment::PaymentLifecycle.spawn(:payment, node_id, context)
-          cycle << msg
-          payments[msg[:payment_hash]] = msg
-        end), (on ~Lightning::Payment::Events::PaymentSucceeded do |event|
-          payments.delete(event[:payment_hash])
-        end), (on :payments do
+          cycle << message
+          payments[message[:payment_hash]] = message
+        when Lightning::Payment::Events::PaymentSucceeded
+          payments.delete(message.payment_hash)
+        when :payments
           payments
-        end)
+        end
       end
     end
   end
