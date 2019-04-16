@@ -47,6 +47,7 @@ module Lightning
           invoice
         when UpdateAddHtlc
           preimage, = preimages[message.payment_hash]
+          return unless preimage
           command = CommandFulfillHtlc[message.id, preimage, true]
           context.register << Lightning::Channel::Register::Forward[message.channel_id, command]
           context.broadcast << Lightning::Payment::Events::PaymentReceived.new(
