@@ -193,9 +193,6 @@ module Lightning
         local_per_commitment_point,
         spec
       )
-        _local_payment_pubkey = Key.derive_public_key(
-          local_param.payment_basepoint, local_per_commitment_point
-        )
         local_delayed_payment_pubkey = Key.derive_public_key(
           local_param.delayed_payment_basepoint, local_per_commitment_point
         )
@@ -257,9 +254,6 @@ module Lightning
         )
         local_htlc_pubkey = Key.derive_public_key(
           local_param.htlc_basepoint, remote_per_commitment_point
-        )
-        _remote_payment_pubkey = Key.derive_public_key(
-          remote_param.payment_basepoint, remote_per_commitment_point
         )
         remote_delayed_payment_pubkey = Key.derive_public_key(
           remote_param.delayed_payment_basepoint, remote_per_commitment_point

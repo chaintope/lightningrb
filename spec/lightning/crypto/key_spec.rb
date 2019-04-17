@@ -21,8 +21,17 @@ describe Lightning::Crypto::Key do
     it { is_expected.to eq 'cbced912d3b21bf196a766651e436aff192362621ce317704ea2f75d87e7be0f' }
   end
 
-  describe 'revocation_public_key' do
-    subject { described_class.revocation_public_key(base_point, per_commitment_point) }
+  describe 'revocation_public_key_open_ssl' do
+    subject { described_class.revocation_public_key_open_ssl(base_point, per_commitment_point) }
+
+    let(:base_point) { '036d6caac248af96f6afa7f904f550253a0f3ef3f5aa2fe6838a95b216691468e2' }
+    let(:per_commitment_point) { '025f7117a78150fe2ef97db7cfc83bd57b2e2c0d0dd25eaf467a4a1c2a45ce1486' }
+
+    it { is_expected.to eq '02916e326636d19c33f13e8c0c3a03dd157f332f3e99c317c141dd865eb01f8ff0' }
+  end
+
+  describe 'revocation_public_key_pure' do
+    subject { described_class.revocation_public_key_pure(base_point, per_commitment_point) }
 
     let(:base_point) { '036d6caac248af96f6afa7f904f550253a0f3ef3f5aa2fe6838a95b216691468e2' }
     let(:per_commitment_point) { '025f7117a78150fe2ef97db7cfc83bd57b2e2c0d0dd25eaf467a4a1c2a45ce1486' }
