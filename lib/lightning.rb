@@ -55,22 +55,6 @@ module Lightning
     Thread.start { Rpc::Server.run(context) }
   end
 
-  def self.connect(context, public_key: '026a3648db07d42b9bc70845a54e7d6d728d084292c56ed163c678d1c296a55970')
-    Thread.start do
-      EM.run do
-        context.switchboard << Lightning::IO::PeerEvents::Connect[public_key, '10.100.101.191', 9735]
-      end
-    end
-  end
-
-  def self.open(context, public_key: '026a3648db07d42b9bc70845a54e7d6d728d084292c56ed163c678d1c296a55970')
-    Thread.start do
-      EM.run do
-        context.switchboard << Lightning::IO::PeerEvents::OpenChannel[public_key, 10_000_000, 0, 0x01, {}]
-      end
-    end
-  end
-
   def self.start
     Bitcoin.chain_params = :regtest
     spv = Lightning::Blockchain::BitcoinService.new
@@ -81,7 +65,7 @@ module Lightning
 end
 
 LN = Lightning
-require 'em/pure_ruby'
+# require 'em/pure_ruby'
 
 # log level is one of FATAL, DEBUG, INFO, WARN, ERROR
 Concurrent.use_simple_logger Logger::INFO
