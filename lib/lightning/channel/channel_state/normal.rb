@@ -96,7 +96,7 @@ module Lightning
             new_commitments, new_message = Commitment.receive_commit(data[:commitments], message)
             return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
             channel << CommandSignature if Commitment.local_has_changes?(new_commitments)
-            context.broadcast << ChannelSignatureReceived[channel, new_commitments]
+            context.broadcast << ChannelSignatureReceived.build(channel)
             return goto(self, data: store(data.copy(commitments: new_commitments)), sending: new_message)
           when RevokeAndAck
             new_commitments = Commitment.receive_revocation(data[:commitments], message)
@@ -195,7 +195,11 @@ module Lightning
               if short_channel_id == data[:short_channel_id]
                 data[:channel_update]
               else
-                context.broadcast << ShortChannelIdAssigned[channel, data.channel_id, short_channel_id]
+                context.broadcast << ShortChannelIdAssigned.build(
+                  channel,
+                  channel_id: data.channel_id,
+                  short_channel_id: short_channel_id
+                )
                 Lightning::Router::Announcements.make_channel_update(
                   context.node_params.chain_hash,
                   context.node_params.private_key,

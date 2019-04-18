@@ -34,12 +34,12 @@ module Lightning
             )
 
             channel_id = Channel.to_channel_id(funding_tx.txid, funding_tx_output_index)
-            event = ChannelIdAssigned[
+            event = ChannelIdAssigned.build(
               channel,
-              context.remote_node_id,
-              temporary_channel_id,
-              channel_id
-            ]
+              remote_node_id: context.remote_node_id,
+              temporary_channel_id: temporary_channel_id,
+              channel_id: channel_id
+            )
             channel.parent << event
             context.broadcast << event
             goto(

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package lightning.channel.events;
+
+import "lightning/wire/types.proto";
+
+message ChannelCreated {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+  uint32 is_funder = 2 [(lightning.wire.bits) = 8];
+  string temporary_channel_id = 3 [(lightning.wire.hex) = true];
+}
+
+message ChannelRestored {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+  uint32 is_funder = 2 [(lightning.wire.bits) = 8];
+  string channel_id = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}
+
+message ChannelIdAssigned {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+  string temporary_channel_id = 2 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  string channel_id = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}
+
+message ShortChannelIdAssigned {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  uint64 short_channel_id = 2;
+}
+
+message LocalChannelUpdate {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  uint64 short_channel_id = 2;
+  string remote_node_id = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+}
+
+message LocalChannelDown {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  uint64 short_channel_id = 2;
+  string remote_node_id = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+}
+
+message ChannelStateChanged {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  string remote_node_id = 2 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+  string previous_state = 3;
+  string current_state = 4;
+}
+
+message ChannelSignatureReceived {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}
+
+message ChannelClosed {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}

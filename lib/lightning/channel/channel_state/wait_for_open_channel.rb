@@ -13,7 +13,12 @@ module Lightning
 
             message.validate!
 
-            context.broadcast << ChannelCreated[channel, channel.parent, context.remote_node_id, 0, message.temporary_channel_id]
+            context.broadcast << ChannelCreated.build(
+              channel,
+              remote_node_id: context.remote_node_id,
+              is_funder: 0,
+              temporary_channel_id: message.temporary_channel_id
+            )
 
             minimum_depth = context.node_params.min_depth_blocks
             first_per_commitment_point = ::Lightning::Crypto::Key.per_commitment_point(local_param[:sha_seed], 0)

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package lightning.grpc;
+
+import "lightning/channel/events.proto";
+
+service LightningService {
+  rpc Events(stream EventsRequest) returns (stream EventsResponse);
+}
+
+enum Operation {
+  SUBSCRIBE = 0;
+  UNSUBSCRIBE = 1;
+}
+
+message EventsRequest {
+  Operation operation = 1;
+  string event_type = 2;
+}
+
+message EventsResponse {
+  oneof event {
+    lightning.channel.events.ChannelCreated channel_created = 201;
+    lightning.channel.events.ChannelRestored channel_restored = 202;
+    lightning.channel.events.ChannelIdAssigned channel_id_assigned = 203;
+    lightning.channel.events.ShortChannelIdAssigned short_channel_id_assigned = 204;
+    lightning.channel.events.LocalChannelUpdate local_channel_update = 205;
+    lightning.channel.events.LocalChannelDown local_channel_down = 206;
+    lightning.channel.events.ChannelStateChanged channel_state_changed = 208;
+    lightning.channel.events.ChannelSignatureReceived channel_signature_received = 209;
+    lightning.channel.events.ChannelClosed channel_closed = 210;
+  }
+}

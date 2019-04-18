@@ -28,6 +28,7 @@ module Lightning
   autoload :Crypto, 'lightning/crypto'
   autoload :Exceptions, 'lightning/exceptions'
   autoload :Feature, 'lightning/feature'
+  autoload :Grpc, 'lightning/grpc'
   autoload :IO, 'lightning/io'
   autoload :NodeParams, 'lightning/node_params'
   autoload :Payment, 'lightning/payment'

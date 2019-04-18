@@ -21,7 +21,11 @@ module Lightning
               context.node_params.fee_base_msat,
               context.node_params.fee_proportional_millionths
             )
-            context.broadcast << ShortChannelIdAssigned[channel, commitments[:channel_id], short_channel_id]
+            context.broadcast << ShortChannelIdAssigned.build(
+              channel,
+              channel_id: commitments[:channel_id],
+              short_channel_id: short_channel_id
+            )
 
             new_commitments = Commitments[
               commitments[:local_param],

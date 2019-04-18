@@ -200,7 +200,7 @@ module Lightning
               # TODO : raise ERROR
             end
           when ChannelIdAssigned
-            data[:channels][message[:channel_id]] = message[:channel]
+            data[:channels][message.channel_id] = message.channel
           when Lightning::Wire::LightningMessages::GossipTimestampFilter
             data = data.copy(gossip_timestamp_filter: message)
           when Lightning::Wire::LightningMessages::GossipQuery
