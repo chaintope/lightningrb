@@ -3,6 +3,7 @@ syntax = "proto3";
 package lightning.grpc;
 
 import "lightning/channel/events.proto";
+import "lightning/payment/events.proto";
 
 service LightningService {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
@@ -29,5 +30,9 @@ message EventsResponse {
     lightning.channel.events.ChannelStateChanged channel_state_changed = 208;
     lightning.channel.events.ChannelSignatureReceived channel_signature_received = 209;
     lightning.channel.events.ChannelClosed channel_closed = 210;
+    lightning.payment.events.PaymentSent payment_sent = 301;
+    lightning.payment.events.PaymentRelayed payment_relayed = 302;
+    lightning.payment.events.PaymentReceived payment_received = 303;
+    lightning.payment.events.PaymentSucceeded payment_succeeded = 304;
   }
 }

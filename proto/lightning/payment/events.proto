@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package lightning.payment.events;
+
+import "lightning/wire/types.proto";
+
+message PaymentSent {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  uint64 amount_msat = 2;
+  uint64 fees_paid = 3;
+  string payment_hash = 4 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}
+
+message PaymentRelayed {
+  string original_channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  uint64 amount_msat_in = 2;
+  uint64 amount_msat_out = 3;
+  string payment_hash = 4 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}
+
+message PaymentReceived {
+  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  uint64 amount_msat = 2;
+  string payment_hash = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}
+
+message PaymentSucceeded {
+  uint64 amount_msat = 1;
+  string payment_hash = 2 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  string payment_preimage = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}
+
+message PaymentFailed {
+  string payment_hash = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+}

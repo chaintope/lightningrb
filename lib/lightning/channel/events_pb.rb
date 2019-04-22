@@ -35,10 +35,9 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :remote_node_id, :string, 3
   end
   add_message "lightning.channel.events.ChannelStateChanged" do
-    optional :channel_id, :string, 1
-    optional :remote_node_id, :string, 2
-    optional :previous_state, :string, 3
-    optional :current_state, :string, 4
+    optional :remote_node_id, :string, 1
+    optional :previous_state, :string, 2
+    optional :current_state, :string, 3
   end
   add_message "lightning.channel.events.ChannelSignatureReceived" do
     optional :channel_id, :string, 1

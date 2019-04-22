@@ -8,7 +8,6 @@ module Lightning
       include Lightning::Channel::Events
       include Lightning::Onion
       include Lightning::Onion::FailureMessages
-      include Lightning::Payment::Events
       include Lightning::Wire::LightningMessages
       include Algebrick::Matching
 
@@ -82,14 +81,21 @@ module Lightning
           case to
           when Local
           payment_hash = Bitcoin.sha256(fulfill[:payment_preimage].htb).bth
-          context.broadcast << PaymentSucceeded[
-            htlc.amount_msat, payment_hash, fulfill[:payment_preimage], []
-          ]
+          context.broadcast << Lightning::Payment::Events::PaymentSucceeded.new(
+            amount_msat: htlc.amount_msat,
+            payment_hash: payment_hash,
+            payment_preimage: fulfill[:payment_preimage]
+          )
           when Relayed
             command = CommandFulfillHtlc[to[:original_htlc_id], fulfill[:payment_preimage], true]
             context.register << Register::Forward[to[:original_channel_id], command]
             payment_hash = Bitcoin.sha256(fulfill[:payment_preimage].htb).bth
-            context.broadcast << PaymentRelayed[to[:amount_msat_in], to[:amount_msat_out], payment_hash]
+            context.broadcast << Lightning::Payment::Events::PaymentRelayed.new(
+              original_channel_id: to[:original_channel_id],
+              amount_msat_in: to[:amount_msat_in],
+              amount_msat_out: to[:amount_msat_out],
+              payment_hash: payment_hash
+            )
           end
         when ForwardFail
           htlc = message[:htlc]
@@ -97,7 +103,7 @@ module Lightning
           to = message[:to]
           case to
           when Local
-            context.broadcast << PaymentFailed[htlc[:payment_hash], []]
+            context.broadcast << Lightning::Payment::Events::PaymentFailed.new(payment_hash: htlc[:payment_hash])
           when Relayed
             command = CommandFailHtlc[to[:original_htlc_id], fail[:reason], true]
             context.register << Register::Forward[to[:original_channel_id], command]
@@ -108,7 +114,7 @@ module Lightning
           to = message[:to]
           case to
           when Local
-            context.broadcast << PaymentFailed[htlc[:payment_hash], []]
+            context.broadcast << Lightning::Payment::Events::PaymentFailed.new(payment_hash: htlc[:payment_hash])
           when Relayed
             command = CommandFailMalformedHtlc[to[:original_htlc_id], fail[:sha256_of_onion], fail[:failure_code], true]
             context.register << Register::Forward[to[:original_channel_id], command]
@@ -144,7 +150,7 @@ module Lightning
           elsif add.cltv_expiry < block_height + 3
             CommandFailHtlc[add.id, ExpiryTooSoon[channel_update.to_payload.bth], true]
           else
-            CommandAddHtlc[hop_data.per_hop.amt_to_forward, add.payment_hash, hop_data.per_hop.outgoing_cltv_value, packet.to_payload.bth, Some[UpdateAddHtlc][add], true]
+            CommandAddHtlc[hop_data.per_hop.amt_to_forward, add.payment_hash, hop_data.per_hop.outgoing_cltv_value, packet.to_payload.bth, Algebrick::Some[UpdateAddHtlc][add], true]
           end
         end
       end

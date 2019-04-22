@@ -4,6 +4,7 @@
 require 'google/protobuf'
 
 require 'lightning/channel/events_pb'
+require 'lightning/payment/events_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.grpc.EventsRequest" do
     optional :operation, :enum, 1, "lightning.grpc.Operation"
@@ -20,6 +21,10 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :channel_state_changed, :message, 208, "lightning.channel.events.ChannelStateChanged"
       optional :channel_signature_received, :message, 209, "lightning.channel.events.ChannelSignatureReceived"
       optional :channel_closed, :message, 210, "lightning.channel.events.ChannelClosed"
+      optional :payment_sent, :message, 301, "lightning.payment.events.PaymentSent"
+      optional :payment_relayed, :message, 302, "lightning.payment.events.PaymentRelayed"
+      optional :payment_received, :message, 303, "lightning.payment.events.PaymentReceived"
+      optional :payment_succeeded, :message, 304, "lightning.payment.events.PaymentSucceeded"
     end
   end
   add_enum "lightning.grpc.Operation" do

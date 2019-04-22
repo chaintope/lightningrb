@@ -5,7 +5,6 @@ module Lightning
     class PaymentHandler < Concurrent::Actor::Context
       include Algebrick::Matching
       include Lightning::Channel::Messages
-      include Lightning::Payment::Events
       include Lightning::Payment::Messages
       include Lightning::Wire::LightningMessages
 
@@ -48,9 +47,14 @@ module Lightning
           invoice
         when UpdateAddHtlc
           preimage, = preimages[message.payment_hash]
+          return unless preimage
           command = CommandFulfillHtlc[message.id, preimage, true]
           context.register << Lightning::Channel::Register::Forward[message.channel_id, command]
-          context.broadcast << PaymentReceived[message.amount_msat, message.payment_hash, message.channel_id]
+          context.broadcast << Lightning::Payment::Events::PaymentReceived.new(
+            channel_id: message.channel_id,
+            amount_msat: message.amount_msat,
+            payment_hash: message.payment_hash
+          )
           preimages.delete(message.payment_hash)
         when :preimages
           preimages

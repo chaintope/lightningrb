@@ -29,6 +29,7 @@ class LightningDaemon < DaemonSpawn::Base
         )
       end
     end
+    Thread.start { Lightning::Grpc::Server.run(context.broadcast) }
     Lightning::Rpc::Server.run(context)
   end
 

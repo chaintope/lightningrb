@@ -11,6 +11,12 @@ module Lightning
             new_commitments, new_message = Commitment.send_add(data[:commitments], message, origin(message), context.spv)
             return handle_command_error(new_commitments, data) unless new_commitments.is_a? Commitments
             channel << CommandSignature if message[:commit]
+            context.broadcast << Lightning::Payment::Events::PaymentSent.new(
+              channel_id: data.channel_id,
+              amount_msat: message[:amount_msat],
+              fees_paid: 0,
+              payment_hash: message[:payment_hash]
+            )
             return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
           when UpdateAddHtlc
             new_commitments = Commitment.receive_add(data[:commitments], message, context.spv)

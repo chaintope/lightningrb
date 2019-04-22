@@ -40,10 +40,9 @@ message LocalChannelDown {
 }
 
 message ChannelStateChanged {
-  string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
-  string remote_node_id = 2 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
-  string previous_state = 3;
-  string current_state = 4;
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+  string previous_state = 2;
+  string current_state = 3;
 }
 
 message ChannelSignatureReceived {
