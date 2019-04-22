@@ -881,6 +881,10 @@ module Lightning
           self[:buried] == 1 ? 'open' : 'opening'
         end
 
+        def open?
+          self[:buried] == 1
+        end
+
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
           temporary_channel_id, rest = rest.unpack('H64a*')

@@ -230,7 +230,7 @@ module Lightning
               sending: local_announcement_signatures
             )
           when AnnouncementSignatures
-            if data[:buried] == 1
+            if data.open?
               local_announcement_signatures = Lightning::Router::Announcements.make_announcement_signatures(
                 context.node_params,
                 data[:commitments],

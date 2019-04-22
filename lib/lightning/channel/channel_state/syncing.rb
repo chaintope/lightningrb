@@ -7,9 +7,7 @@ module Lightning
         def next(message, data)
           case message
           when ChannelReestablish
-            if data[:buried] == 1
-              context.blockchain << WatchConfirmed[channel, data[:commitments][:commit_input].txid.rhex, context.node_params.min_depth_blocks]
-            else
+            if data.open?
               if data[:channel_announcement].is_a? Algebrick::None
                 context.forwarder << Lightning::Router::Announcements.make_announcement_signatures(
                   context.node_params ,
@@ -17,6 +15,8 @@ module Lightning
                   data[:short_channel_id]
                 )
               end
+            else
+              context.blockchain << WatchConfirmed[channel, data[:commitments][:commit_input].txid.rhex, context.node_params.min_depth_blocks]
             end
             channel_update = Lightning::Router::Announcements.make_channel_update(
               context.node_params.chain_hash,
