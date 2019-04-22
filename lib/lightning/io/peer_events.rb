@@ -40,13 +40,11 @@ module Lightning
                   port: Numeric
         end
         DisconnectedData = type do
-          fields! address_opt: type { variants Algebrick::None, URI },
-                  channels: Hash
+          fields! address_opt: type { variants Algebrick::None, URI }
         end
         InitializingData = type do
           fields! address_opt: type { variants Algebrick::None, URI },
                   transport: Concurrent::Actor::Reference,
-                  channels: Hash,
                   origin_opt: type { variants Algebrick::None, Concurrent::Actor::Reference }
         end
         ConnectedData = type do

@@ -641,11 +641,12 @@ module Lightning
       InputCloseCompleteTimeout = Algebrick.atom
       InputPublishLocalcommit = Algebrick.atom
       InputDisconnected = Algebrick.atom
-      InputRestored = Algebrick.type do
-        fields! data: HasCommitments
-      end
+      # InputRestored = Algebrick.type do
+      #   fields! data: HasCommitments
+      # end
       InputReconnected = Algebrick.type do
-        fields! remote: Concurrent::Actor::Reference
+        fields! remote: Concurrent::Actor::Reference,
+                data: HasCommitments
       end
 
       BitcoinEvent = Algebrick.atom
@@ -788,6 +789,7 @@ module Lightning
           else
             deferred = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
             len = deferred.to_payload.bytesize
+            deferred = Algebrick::Some[Lightning::Wire::LightningMessages::FundingLocked][deferred]
             rest = rest[len..-1]
           end
           last_sent_type, rest = rest.unpack('na*')

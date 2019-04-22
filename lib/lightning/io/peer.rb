@@ -10,24 +10,7 @@ module Lightning
 
       def initialize(authenticator, context, remote_node_id)
         @status = PeerStateDisconnected.new(self, authenticator, context, remote_node_id)
-        channels = initialize_stored_channels(context, remote_node_id)
-        @data = DisconnectedData[Algebrick::None, channels]
-      end
-
-      def initialize_stored_channels(context, remote_node_id)
-        channels = context.channel_db.all.map { |channel_id, data| Lightning::Channel::Messages::HasCommitments.load(data.htb).first }
-
-        channels = channels.select do |channel|
-          channel[:commitments][:remote_param][:node_id] == remote_node_id
-        end
-
-        channels = channels.map do |channel_data|
-          forwarder = Lightning::Channel::Forwarder.spawn(:forwarder)
-          channel_context = Lightning::Channel::ChannelContext.new(context, forwarder, remote_node_id)
-          channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
-          channel << Lightning::Channel::Messages::InputRestored[channel_data]
-          [channel_data[:commitments][:channel_id], channel]
-        end.to_h
+        @data = DisconnectedData[Algebrick::None]
       end
 
       def on_message(message)
@@ -46,7 +29,6 @@ module Lightning
         include Concurrent::Concern::Logging
         include Algebrick::Matching
         include Algebrick
-        include Lightning::IO::AuthenticateMessages
         include Lightning::Wire::HandshakeMessages
         include Lightning::Wire::LightningMessages
         include Lightning::IO::PeerEvents
@@ -67,10 +49,15 @@ module Lightning
 
       class PeerStateDisconnected < PeerState
         def next(message, data)
-          match [message, data], (on Array.(Connect.(~any, ~any, ~any, any), DisconnectedData) do |remote_node_id, host, port|
+          case message
+          when Connect
+            host = message[:host]
+            port = message[:port]
             Client.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
             [self, data]
-          end), (on Array.(Authenticated.(~any, ~any, ~any), DisconnectedData.(any, ~any)) do |conn, transport, node_id, channels|
+          when Lightning::IO::AuthenticateMessages::Authenticated
+            conn = message[:conn]
+            transport = message[:transport]
             transport << Listener[actor, conn]
             transport << Init.new(
               globalfeatures: context.node_params.globalfeatures,
@@ -79,12 +66,12 @@ module Lightning
             outgoing = conn.is_a?(Lightning::IO::ClientConnection)
             [
               PeerStateInitializing.new(actor, authenticator, context, remote_node_id, transport: transport),
-              InitializingData[outgoing ? URI[conn.host, conn.port] : Algebrick::None, transport, channels, Algebrick::None],
+              InitializingData[outgoing ? URI[conn.host, conn.port] : Algebrick::None, transport, Algebrick::None],
             ]
-          end), (on any do
+          else
             log(Logger::WARN, '/peer@disconnected', "unhandled message: #{message.inspect}")
             [self, data]
-          end)
+          end
         end
       end
 
@@ -105,13 +92,18 @@ module Lightning
             log(Logger::INFO, :peer, "PEER CONNECTED")
             log(Logger::INFO, :peer, "")
             log(Logger::INFO, :peer, "================================================================================")
-            data[:channels].each do |channel_id, channel|
-              channel << Lightning::Channel::Messages::InputReconnected[data[:transport]]
-            end
+            channels = initialize_stored_channels(context, remote_node_id)
+            channels = channels.map do |channel_data|
+              forwarder = Lightning::Channel::Forwarder.spawn(:forwarder)
+              channel_context = Lightning::Channel::ChannelContext.new(context, forwarder, remote_node_id)
+              channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
+              channel << Lightning::Channel::Messages::InputReconnected[data[:transport], channel_data]
+              [channel_data[:commitments][:channel_id], channel]
+            end.to_h
 
             [
               PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: data[:transport]),
-              ConnectedData[data[:address_opt], data[:transport], message, data[:channels]],
+              ConnectedData[data[:address_opt], data[:transport], message, channels],
             ]
           when ChannelReestablish
             task = Concurrent::TimerTask.new(execution_interval: 60, run_now: true) do
@@ -130,6 +122,14 @@ module Lightning
           actor.parent << Lightning::IO::PeerEvents::Disconnect[remote_node_id]
           actor << :terminate!
           [self, data]
+        end
+
+        def initialize_stored_channels(context, remote_node_id)
+          channels = context.channel_db.all.map { |channel_id, data| Lightning::Channel::Messages::HasCommitments.load(data.htb).first }
+
+          channels.select do |channel|
+            channel[:commitments][:remote_param][:node_id] == remote_node_id
+          end
         end
       end
 

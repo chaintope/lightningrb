@@ -51,7 +51,7 @@ module Lightning
           end), (on OpenChannel do
             # TODO: pending open_channel message.
             [self, data]
-          end), (on ~InputRestored do |msg|
+          end), (on ~InputReconnected do |msg|
             data = msg[:data]
             log(Logger::INFO, :channel, "channel restoring ... #{data[:commitments][:channel_id]}")
 
@@ -68,7 +68,15 @@ module Lightning
                 channel_id: data[:commitments][:channel_id],
                 short_channel_id: data[:short_channel_id]
               )
-              goto(Offline.new(channel, context), data: data)
+              context.forwarder << msg[:remote]
+              reestablish = ChannelReestablish.new(
+                channel_id: data[:commitments][:channel_id],
+                next_local_commitment_number: data[:commitments][:local_commit][:index] + 1,
+                next_remote_revocation_number: data[:commitments][:remote_commit][:index],
+                your_last_per_commitment_secret: '00' * 32,
+                my_current_per_commitment_point: '00' * 32
+              )
+              goto(Syncing.new(channel, context), data: data, sending: reestablish)
             else
               log(Logger::ERROR, :channel, 'channel data is not supported.')
               [self, data]

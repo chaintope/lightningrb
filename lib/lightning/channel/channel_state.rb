@@ -19,7 +19,6 @@ module Lightning
       autoload :Error , 'lightning/channel/channel_state/error'
       autoload :Negotiating, 'lightning/channel/channel_state/negotiating'
       autoload :Normal, 'lightning/channel/channel_state/normal'
-      autoload :Offline, 'lightning/channel/channel_state/offline'
       autoload :Shutdowning, 'lightning/channel/channel_state/shutdowning'
       autoload :Syncing, 'lightning/channel/channel_state/syncing'
       autoload :WaitForAcceptChannel, 'lightning/channel/channel_state/wait_for_accept_channel'

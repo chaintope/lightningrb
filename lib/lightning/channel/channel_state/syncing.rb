@@ -10,9 +10,7 @@ module Lightning
             if data.open?
               if data[:channel_announcement].is_a? Algebrick::None
                 context.forwarder << Lightning::Router::Announcements.make_announcement_signatures(
-                  context.node_params ,
-                  data[:commitments],
-                  data[:short_channel_id]
+                  context.node_params, data[:commitments], data[:short_channel_id]
                 )
               end
             else

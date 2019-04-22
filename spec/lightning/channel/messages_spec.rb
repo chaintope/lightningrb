@@ -83,10 +83,26 @@ describe Lightning::Channel::Messages do
 
     context 'when including origin_channels' do
       let(:original_channels) do
-        { 1 => Lightning::Payment::Relayer::Local, 2 => Lightning::Payment::Relayer::Relayed['00'*32, 1, 2, 3] }
+        { 1 => Lightning::Payment::Relayer::Local, 2 => Lightning::Payment::Relayer::Relayed['00' * 32, 1, 2, 3] }
       end
       let(:data) { build(:commitment, original_channels: original_channels).get }
     end
+  end
+
+  describe 'DataWaitForFundingConfirmed#to_payload/load' do
+    subject { Lightning::Channel::Messages::DataWaitForFundingConfirmed.load(data.to_payload) }
+
+    let(:data) { build(:data_wait_for_funding_confirmed).get }
+
+    it { expect(subject[0].to_payload.bth).to eq data.to_payload.bth }
+  end
+
+  describe 'DataWaitForFundingLocked#to_payload/load' do
+    subject { Lightning::Channel::Messages::DataWaitForFundingLocked.load(data.to_payload) }
+
+    let(:data) { build(:data_wait_for_funding_locked).get }
+
+    it { expect(subject[0].to_payload.bth).to eq data.to_payload.bth }
   end
 
   describe 'DataNormal#to_payload/load' do
