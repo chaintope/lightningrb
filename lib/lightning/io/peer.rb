@@ -54,7 +54,7 @@ module Lightning
         include Lightning::Channel::Events
         include Lightning::Channel::Messages
 
-        attr_accessor :actor, :context, :remote_node_id, :authenticator, :transport, :db
+        attr_accessor :actor, :context, :remote_node_id, :authenticator, :transport
 
         def initialize(actor, authenticator, context, remote_node_id, transport: nil)
           @actor = actor
@@ -62,7 +62,6 @@ module Lightning
           @remote_node_id = remote_node_id
           @authenticator = authenticator
           @transport = transport
-          @db = context.peer_db
         end
       end
 
@@ -78,7 +77,6 @@ module Lightning
               localfeatures: context.node_params.localfeatures
             )
             outgoing = conn.is_a?(Lightning::IO::ClientConnection)
-            db.insert_or_update(node_id, conn.host, conn.port) if outgoing
             [
               PeerStateInitializing.new(actor, authenticator, context, remote_node_id, transport: transport),
               InitializingData[outgoing ? URI[conn.host, conn.port] : Algebrick::None, transport, channels, Algebrick::None],

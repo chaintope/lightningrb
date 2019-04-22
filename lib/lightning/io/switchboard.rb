@@ -44,9 +44,14 @@ module Lightning
           else
             parent << Error.new(data: 'no connection to peer')
           end
-        end), (on ~Authenticated.(any, any, ~any) do |auth, remote_node_id|
+        end), (on ~Authenticated.(~any, any, ~any) do |auth, conn, remote_node_id|
           peer = create_or_get_peer(peers, remote_node_id)
           peer << auth
+
+          if conn.is_a?(Lightning::IO::ClientConnection)
+            context.peer_db.insert_or_update(remote_node_id, conn.host, conn.port)
+          end
+
           peers[remote_node_id] = peer
         end), (on :channels do
           peers.map do |node_id, peer|
