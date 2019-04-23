@@ -56,18 +56,21 @@ module Lightning
             log(Logger::INFO, :channel, "channel restoring ... #{data[:commitments][:channel_id]}")
 
             case data
-            when DataNormal
+            when DataNormal, DataWaitForFundingLocked, DataWaitForFundingConfirmed
               context.broadcast << ChannelRestored.build(
                 channel,
                 remote_node_id: context.remote_node_id,
                 is_funder: data[:commitments][:local_param][:funder],
                 channel_id: data[:commitments][:channel_id]
               )
-              context.broadcast << ShortChannelIdAssigned.build(
-                channel,
-                channel_id: data[:commitments][:channel_id],
-                short_channel_id: data[:short_channel_id]
-              )
+              unless data.is_a? DataWaitForFundingConfirmed
+                context.broadcast << ShortChannelIdAssigned.build(
+                  channel,
+                  channel_id: data[:commitments][:channel_id],
+                  short_channel_id: data[:short_channel_id]
+                )
+              end
+
               context.forwarder << msg[:remote]
               reestablish = ChannelReestablish.new(
                 channel_id: data[:commitments][:channel_id],

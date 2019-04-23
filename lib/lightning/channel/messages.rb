@@ -779,6 +779,10 @@ module Lightning
           'opening'
         end
 
+        def open?
+          false
+        end
+
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
           temporary_channel_id, rest = rest.unpack('H64a*')
@@ -825,6 +829,10 @@ module Lightning
 
         def status
           'opening'
+        end
+
+        def open?
+          false
         end
 
         def self.load(payload)
