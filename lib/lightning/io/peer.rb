@@ -51,14 +51,15 @@ module Lightning
         def next(message, data)
           case message
           when Connect
+            @retry = 0
             host = message[:host]
             port = message[:port]
             Client.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
             [self, data]
           when Reconnect
-            @retry ||= 1
-            return [self, data] if @retry > 5
-            task = Concurrent::TimerTask.new(execution_interval: 2**@retry) do
+            @retry ||= 0
+            return [self, data] if @retry > 8
+            task = Concurrent::TimerTask.new(execution_interval: 2**(@retry + 2)) do
               @retry += 1
               host = data[:address_opt][:host]
               port = data[:address_opt][:port]
@@ -68,6 +69,7 @@ module Lightning
             task.execute
             [self, data]
           when Lightning::IO::AuthenticateMessages::Authenticated
+            @retry = 0
             conn = message[:conn]
             transport = message[:transport]
             transport << Listener[actor, conn]
