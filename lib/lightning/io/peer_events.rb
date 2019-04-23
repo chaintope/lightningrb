@@ -8,9 +8,6 @@ module Lightning
       Events = Algebrick.type do
         Timeout = atom
         Reconnect = atom
-        Disconnect = type do
-          fields! remote_node_id: String
-        end
         OpenChannel = type do
           fields! remote_node_id: String,
                   funding_satoshis: Numeric,
@@ -24,7 +21,7 @@ module Lightning
                   port: Numeric,
                   option: Hash
         end
-        variants Timeout, Reconnect, Disconnect, OpenChannel, Connect
+        variants Timeout, Reconnect, OpenChannel, Connect
       end
 
       TemporaryChannelId = Algebrick.type { fields! id: String }

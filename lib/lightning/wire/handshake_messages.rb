@@ -10,7 +10,7 @@ module Lightning
                   HandshakeCompleted = type { fields! conn: Object, transport: Concurrent::Actor::Reference, static_key: String, remote_key: String },
                   Listener = type { fields! listener: Object, conn: Object },
                   Send = type { fields! ciphertext: String },
-                  Terminated =  type { fields! transport: Concurrent::Actor::Reference, static_key: String }
+                  Disconnected = type { fields! conn: Object }
       end
 
       module Act

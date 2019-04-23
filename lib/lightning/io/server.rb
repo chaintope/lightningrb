@@ -3,9 +3,7 @@
 module Lightning
   module IO
     class Server < Concurrent::Actor::Context
-      include Algebrick::Matching
       include Lightning::Wire::HandshakeMessages
-      include Lightning::IO::AuthenticateMessages
 
       def self.start(host, port, authenticator, static_key)
         spawn(:server, authenticator, static_key).tap do |me|
@@ -13,15 +11,20 @@ module Lightning
         end
       end
 
+      attr_reader :authenticator, :static_key, :remote_key
+
       def initialize(authenticator, static_key)
         @authenticator = authenticator
         @static_key = static_key
       end
 
       def on_message(message)
-        match message, (on Connected.(~any) do |conn|
-          @authenticator << PendingAuth[conn, @static_key, {}]
-        end)
+        case message
+        when Connected
+          authenticator << Lightning::IO::AuthenticateMessages::PendingAuth[message[:conn], static_key, {}]
+        when Disconnected
+          authenticator << Lightning::IO::AuthenticateMessages::Disconnected[message[:conn], Algebrick::None]
+        end
       end
     end
 
@@ -52,6 +55,7 @@ module Lightning
 
       def unbind(reason = nil)
         log(Logger::DEBUG, '/server', "unbind #{reason}")
+        @server << Disconnected[self]
       end
 
       def inspect

@@ -20,10 +20,9 @@ module Lightning
     end
 
     class ClientState
-      include Algebrick::Matching
       include Lightning::Wire::HandshakeMessages
-      include Lightning::Wire::LightningMessages
-      include Lightning::IO::AuthenticateMessages
+
+      attr_reader :authenticator, :static_key, :remote_key
 
       def initialize(authenticator, static_key, remote_key)
         @authenticator = authenticator
@@ -34,16 +33,26 @@ module Lightning
 
     class ClientStateDisconnect < ClientState
       def next(message)
-        match message, (on Connected.(~any) do |conn|
-          @authenticator << PendingAuth[conn, @static_key, remote_key: @remote_key]
-          ClientStateConnect.new(@authenticator, @static_key, @remote_key)
-        end)
+        case message
+        when Connected
+          authenticator << Lightning::IO::AuthenticateMessages::PendingAuth[message[:conn], static_key, remote_key: remote_key]
+          ClientStateConnect.new(authenticator, static_key, remote_key)
+        when Disconnected
+          authenticator << Lightning::IO::AuthenticateMessages::Disconnected[message[:conn], remote_key]
+          self
+        end
       end
     end
 
     class ClientStateConnect < ClientState
-      def next(_message)
-        self
+      def next(message)
+        case message
+        when Disconnected
+          authenticator << Lightning::IO::AuthenticateMessages::Disconnected[message[:conn], remote_key]
+          ClientStateDisconnect.new(authenticator, static_key, remote_key)
+        else
+          self
+        end
       end
     end
 
@@ -75,6 +84,7 @@ module Lightning
 
       def unbind(reason = nil)
         log(Logger::DEBUG, '/client', "unbind #{reason}")
+        @client << Disconnected[self]
       end
 
       def inspect

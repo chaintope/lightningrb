@@ -55,6 +55,18 @@ module Lightning
             port = message[:port]
             Client.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
             [self, data]
+          when Reconnect
+            @retry ||= 1
+            return [self, data] if @retry > 5
+            task = Concurrent::TimerTask.new(execution_interval: 2**@retry) do
+              @retry += 1
+              host = data[:address_opt][:host]
+              port = data[:address_opt][:port]
+              Client.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
+              task.shutdown
+            end
+            task.execute
+            [self, data]
           when Lightning::IO::AuthenticateMessages::Authenticated
             conn = message[:conn]
             transport = message[:transport]
@@ -111,6 +123,13 @@ module Lightning
               task.shutdown
             end
             task.execute
+            [self, data]
+          when Reconnect
+            actor << Reconnect
+            [
+              PeerStateDisconnected.new(actor, authenticator, context, remote_node_id),
+              DisconnectedData[data[:address_opt]]
+            ]
           else
             log(Logger::WARN, '/peer@initializing', "unhandled message: #{message.inspect}")
             [self, data]
@@ -119,9 +138,10 @@ module Lightning
 
         def invalid_feature_error(init, data)
           log(Logger::WARN, "received unknown even feature bits #{init.inspect}")
-          actor.parent << Lightning::IO::PeerEvents::Disconnect[remote_node_id]
-          actor << :terminate!
-          [self, data]
+          [
+            PeerStateDisconnected.new(actor, authenticator, context, remote_node_id),
+            DisconnectedData[data[:address_opt]]
+          ]
         end
 
         def initialize_stored_channels(context, remote_node_id)
@@ -215,6 +235,12 @@ module Lightning
               end
             end
             transport << message[:message] unless filtered
+          when Reconnect
+            actor << Reconnect
+            return [
+              PeerStateDisconnected.new(actor, authenticator, context, remote_node_id),
+              DisconnectedData[data[:address_opt]]
+            ]
           else
             log(Logger::WARN, '/peer@connected', "unhandled message: #{message.inspect}, data:#{data}")
           end

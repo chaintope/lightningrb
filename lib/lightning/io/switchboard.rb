@@ -77,9 +77,9 @@ module Lightning
               peer << Lightning::Router::Messages::Rebroadcast[channel_update]
             end
           end
-        end), (on Disconnect do
-          remote_node_id = message[:remote_node_id]
-          peers.delete(remote_node_id)
+        end), (on Lightning::IO::AuthenticateMessages::Disconnected do
+            remote_node_id = message[:remote_node_id] if message[:remote_node_id].is_a? String
+            peers[remote_node_id] << Reconnect if remote_node_id
         end), (on any do
 
         end)
