@@ -18,8 +18,8 @@ module Lightning
       end
 
       def load_peers
-        @peers = context.peer_db.all
-          .inject({}) do |peers, (node_id, host, port)|
+        @peers = context.peer_db.connected
+          .inject({}) do |peers, (node_id, host, port, connected)|
             peer = create_or_get_peer(peers, node_id)
             peer << Connect[node_id, host, port, {}]
             peers[node_id] = peer
@@ -28,13 +28,15 @@ module Lightning
       end
 
       def on_message(message)
-        match message, (on ~Connect.(~any, any, any, any) do |connect, remote_node_id|
+        match message, (on ~Connect.(~any, ~any, ~any, any) do |connect, remote_node_id, host, port|
           unless valid_connect?(connect)
             parent << Error['cannot open connection with oneself']
           end
 
           peer = create_or_get_peer(peers, remote_node_id)
           peer << connect
+
+          context.peer_db.insert_or_update(remote_node_id, host: host, port: port)
           peers[remote_node_id] = peer
         end), (on ~OpenChannel do |open_channel|
           remote_node_id = open_channel[:remote_node_id]
@@ -48,9 +50,7 @@ module Lightning
           peer = create_or_get_peer(peers, remote_node_id)
           peer << auth
 
-          if conn.is_a?(Lightning::IO::ClientConnection)
-            context.peer_db.insert_or_update(remote_node_id, conn.host, conn.port)
-          end
+          context.peer_db.update(remote_node_id, connected: 1)
 
           peers[remote_node_id] = peer
         end), (on :channels do
@@ -77,9 +77,13 @@ module Lightning
               peer << Lightning::Router::Messages::Rebroadcast[channel_update]
             end
           end
-        end), (on Lightning::IO::AuthenticateMessages::Disconnected do
+        end), (on Unauthenticated do
             remote_node_id = message[:remote_node_id] if message[:remote_node_id].is_a? String
-            peers[remote_node_id] << Reconnect if remote_node_id
+            if remote_node_id && peers[remote_node_id]
+              peers[remote_node_id] << Unauthenticated[remote_node_id]
+              peers[remote_node_id] << Reconnect
+              peers.delete(remote_node_id)
+            end
         end), (on any do
 
         end)

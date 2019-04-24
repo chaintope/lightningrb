@@ -7,11 +7,11 @@ module Lightning
 
       def self.start(host, port, authenticator, static_key)
         spawn(:server, authenticator, static_key).tap do |me|
-          EM.start_server(host, port, ServerConnection, me, static_key)
+          EM.start_server(host, port, ServerConnection, me, authenticator, static_key)
         end
       end
 
-      attr_reader :authenticator, :static_key, :remote_key
+      attr_reader :authenticator, :static_key
 
       def initialize(authenticator, static_key)
         @authenticator = authenticator
@@ -20,10 +20,40 @@ module Lightning
 
       def on_message(message)
         case message
-        when Connected
-          authenticator << Lightning::IO::AuthenticateMessages::PendingAuth[message[:conn], static_key, {}]
         when Disconnected
-          authenticator << Lightning::IO::AuthenticateMessages::Disconnected[message[:conn], Algebrick::None]
+          authenticator << Disconnected[message[:transport], Algebrick::None]
+        end
+      end
+    end
+
+    class ServerSession < Concurrent::Actor::Context
+      include Concurrent::Concern::Logging
+      include Lightning::Wire::HandshakeMessages
+      include Lightning::IO::AuthenticateMessages
+
+      attr_reader :authenticator
+
+      def initialize(conn, authenticator, static_key)
+        @conn = conn
+        @authenticator = authenticator
+        @static_key = static_key
+      end
+
+      def on_message(message)
+        case message
+        when :close
+          @conn&.close_connection
+        when Connected
+          authenticator << PendingAuth[self.reference, @static_key, {}]
+        when Lightning::Crypto::TransportHandler
+          @transport = message.reference
+        when Received
+          @transport << message if @transport
+        when Send
+          @conn&.send_data(message[:ciphertext])
+        when Disconnected
+          transport = @transport.nil? ? Algebrick::None : @transport
+          authenticator << Disconnected[transport, Algebrick::None]
         end
       end
     end
@@ -32,16 +62,16 @@ module Lightning
       include Concurrent::Concern::Logging
       include Lightning::Wire::HandshakeMessages
 
-      attr_accessor :transport
-
-      def initialize(server, static_key)
+      def initialize(server, authenticator, static_key)
         @server = server
         @static_key = static_key
+        @authenticator = authenticator
       end
 
       def post_init
         log(Logger::DEBUG, '/server', 'post_init')
-        @server << Connected[self]
+        @server_session = ServerSession.spawn(:server_session, self, @authenticator, @static_key)
+        @server_session << Connected[self]
       end
 
       def connection_completed
@@ -50,12 +80,12 @@ module Lightning
 
       def receive_data(data)
         log(Logger::INFO, '/server', "receive_data #{data.bth}")
-        transport << Received[data, self]
+        @server_session << Received[data] if @server_session
       end
 
       def unbind(reason = nil)
         log(Logger::DEBUG, '/server', "unbind #{reason}")
-        @server << Disconnected[self]
+        @server_session << Disconnected[Algebrick::None, Algebrick::None] if @server_session
       end
 
       def inspect

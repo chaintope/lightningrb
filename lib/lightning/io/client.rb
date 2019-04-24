@@ -10,46 +10,60 @@ module Lightning
       end
 
       def initialize(authenticator, static_key, remote_key)
-        @status = ClientStateDisconnect.new(authenticator, static_key, remote_key)
+        @status = ClientStateDisconnect.new(nil, authenticator, static_key, remote_key)
       end
 
       def on_message(message)
         log(Logger::DEBUG, "#on_message #{@status} #{message}")
-        @status = @status.next(message)
+        @status = @status.next(self.reference, message)
       end
     end
 
     class ClientState
       include Lightning::Wire::HandshakeMessages
+      include Lightning::IO::AuthenticateMessages
 
-      attr_reader :authenticator, :static_key, :remote_key
+      attr_reader :conn, :authenticator, :static_key, :remote_key
 
-      def initialize(authenticator, static_key, remote_key)
+      def initialize(conn, authenticator, static_key, remote_key)
         @authenticator = authenticator
         @static_key = static_key
         @remote_key = remote_key
+        @conn = conn
       end
     end
 
     class ClientStateDisconnect < ClientState
-      def next(message)
+      def next(actor, message)
         case message
         when Connected
-          authenticator << Lightning::IO::AuthenticateMessages::PendingAuth[message[:conn], static_key, remote_key: remote_key]
-          ClientStateConnect.new(authenticator, static_key, remote_key)
+          authenticator << PendingAuth[actor, static_key, remote_key: remote_key]
+          ClientStateConnect.new(message[:conn], authenticator, static_key, remote_key)
         when Disconnected
-          authenticator << Lightning::IO::AuthenticateMessages::Disconnected[message[:conn], remote_key]
+          authenticator << Disconnected[Algebrick::None, Algebrick::None]
           self
         end
       end
     end
 
     class ClientStateConnect < ClientState
-      def next(message)
+      def next(actor, message)
         case message
+        when :close
+          conn&.close_connection
+          self
+        when Lightning::Crypto::TransportHandler
+          @transport = message.reference
+          self
+        when Received
+          @transport << message if @transport
+          self
+        when Send
+          conn&.send_data(message[:ciphertext])
+          self
         when Disconnected
-          authenticator << Lightning::IO::AuthenticateMessages::Disconnected[message[:conn], remote_key]
-          ClientStateDisconnect.new(authenticator, static_key, remote_key)
+          authenticator << Disconnected[@transport, static_key]
+          ClientStateDisconnect.new(conn, authenticator, static_key, remote_key)
         else
           self
         end
@@ -60,7 +74,7 @@ module Lightning
       include Concurrent::Concern::Logging
       include Lightning::Wire::HandshakeMessages
 
-      attr_accessor :transport, :host, :port
+      attr_accessor :host, :port
 
       def initialize(host, port, client)
         @client = client
@@ -79,12 +93,12 @@ module Lightning
 
       def receive_data(data)
         log(Logger::INFO, '/client', "receive_data #{data.bth}")
-        transport << Received[data, self]
+        @client << Received[data]
       end
 
       def unbind(reason = nil)
         log(Logger::DEBUG, '/client', "unbind #{reason}")
-        @client << Disconnected[self]
+        @client << Disconnected[Algebrick::None, Algebrick::None]
       end
 
       def inspect

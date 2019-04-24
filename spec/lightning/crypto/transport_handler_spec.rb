@@ -5,9 +5,11 @@ require 'spec_helper'
 describe Lightning::Crypto::TransportHandler do
   # 08-transport.md#appendix-a-transport-test-vectors
   describe 'Transport Test Vectors' do
-    let(:actor) { DummyActor.spawn(:dummy) }
+    let(:session) { spawn_dummy_actor(name: :session) }
+    let(:transport) { spawn_dummy_actor(name: :transport) }
+
     let(:complete) do
-      Lightning::Wire::HandshakeMessages::HandshakeCompleted[nil, actor, static_key, remote_key]
+      Lightning::Wire::HandshakeMessages::HandshakeCompleted[session, transport, static_key, remote_key]
     end
 
     describe 'Initiator Tests' do
@@ -23,15 +25,15 @@ describe Lightning::Crypto::TransportHandler do
         initiator.set_keypair_from_public(Noise::KeyPair::REMOTE_STATIC, remote_key.htb)
         initiator
       end
-      let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerStateHandshake.new(actor, static_key, writer) }
+      let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerStateHandshake.new(transport, session, static_key, writer) }
       let(:input2) { '0002466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f276e2470b93aac583c9ef6eafca3f730ae' }
-      let(:received2) { Lightning::Wire::HandshakeMessages::Received[input2.htb, nil] }
+      let(:received2) { Lightning::Wire::HandshakeMessages::Received[input2.htb] }
       let(:act3) do
         Lightning::Wire::HandshakeMessages::Act[
           '00b9e3a702e93e3a9948c2ed6e5fd7590a6e1c3a0344cfc9d5b57357049aa223' \
           '55361aa02e55a8fc28fef5bd6d71ad0c38228dc68b1c466263b47fdf31e560e1' \
           '39ba'.htb,
-          nil
+          session
         ]
       end
 
@@ -39,8 +41,8 @@ describe Lightning::Crypto::TransportHandler do
 
       describe 'transport-initiator successful handshake' do
         it do
-          expect(actor.reference.parent).to receive(:<<).with(act3).ordered
-          expect(actor.reference.parent).to receive(:<<).with(complete).ordered
+          expect(transport.parent).to receive(:<<).with(act3).ordered
+          expect(transport.parent).to receive(:<<).with(complete).ordered
 
           writer.write_message('')
           state.next(received2)
@@ -52,7 +54,7 @@ describe Lightning::Crypto::TransportHandler do
         let(:input2) { '0002466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f276e2470b93aac583c9ef6eafca3f730' }
 
         it do
-          expect(actor.reference.parent).not_to receive(:<<)
+          expect(transport.parent).not_to receive(:<<)
           writer.write_message('')
           state.next(received2)
           expect(writer.handshake_finished).to be_falsy
@@ -98,13 +100,13 @@ describe Lightning::Crypto::TransportHandler do
         responder.set_keypair_from_private(Noise::KeyPair::EPHEMERAL, ephemeral_key.htb)
         responder
       end
-      let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerStateHandshake.new(actor, static_key, reader) }
+      let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerStateHandshake.new(transport, session, static_key, reader) }
       let(:input1) { '00036360e856310ce5d294e8be33fc807077dc56ac80d95d9cd4ddbd21325eff73f70df6086551151f58b8afe6c195782c6a' }
-      let(:received1) { Lightning::Wire::HandshakeMessages::Received[input1.htb, nil] }
+      let(:received1) { Lightning::Wire::HandshakeMessages::Received[input1.htb] }
       let(:act2) do
         Lightning::Wire::HandshakeMessages::Act[
           '0002466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f276e2470b93aac583c9ef6eafca3f730ae'.htb,
-          nil
+          session
         ]
       end
       let(:input3) do
@@ -112,13 +114,15 @@ describe Lightning::Crypto::TransportHandler do
         '55361aa02e55a8fc28fef5bd6d71ad0c38228dc68b1c466263b47fdf31e560e1' \
         '39ba'
       end
-      let(:received3) { Lightning::Wire::HandshakeMessages::Received[input3.htb, nil] }
+      let(:received3) { Lightning::Wire::HandshakeMessages::Received[input3.htb] }
+      let(:transport) { spawn_dummy_actor(name: :transport) }
 
       before { reader.start_handshake }
+
       describe 'transport-responder successful handshake' do
         it do
-          expect(actor.reference.parent).to receive(:<<).with(act2).ordered
-          expect(actor.reference.parent).to receive(:<<).with(complete).ordered
+          expect(transport.parent).to receive(:<<).with(act2).ordered
+          expect(transport.parent).to receive(:<<).with(complete).ordered
 
           state.next(received1)
           state.next(received3)
@@ -130,7 +134,7 @@ describe Lightning::Crypto::TransportHandler do
         let(:input1) { '00036360e856310ce5d294e8be33fc807077dc56ac80d95d9cd4ddbd21325eff73f70df6086551151f58b8afe6c195782c' }
 
         it do
-          expect(actor.reference.parent).not_to receive(:<<)
+          expect(transport.parent).not_to receive(:<<)
           state.next(received1)
           expect(reader.handshake_finished).to be_falsy
         end
@@ -140,7 +144,7 @@ describe Lightning::Crypto::TransportHandler do
         let(:input1) { '01036360e856310ce5d294e8be33fc807077dc56ac80d95d9cd4ddbd21325eff73f70df6086551151f58b8afe6c195782c6a' }
 
         it do
-          expect(actor.reference.parent).not_to receive(:<<)
+          expect(transport.parent).not_to receive(:<<)
           expect { state.next(received1) }.to raise_error(Lightning::Exceptions::InvalidTransportVersion)
         end
       end
@@ -149,7 +153,7 @@ describe Lightning::Crypto::TransportHandler do
         let(:input1) { '00046360e856310ce5d294e8be33fc807077dc56ac80d95d9cd4ddbd21325eff73f70df6086551151f58b8afe6c195782c6a' }
 
         it do
-          expect(actor.reference.parent).not_to receive(:<<)
+          expect(transport.parent).not_to receive(:<<)
           expect { state.next(received1) }.to raise_error(Noise::Exceptions::InvalidPublicKeyError)
         end
       end
@@ -158,7 +162,7 @@ describe Lightning::Crypto::TransportHandler do
         let(:input1) { '00036360e856310ce5d294e8be33fc807077dc56ac80d95d9cd4ddbd21325eff73f70df6086551151f58b8afe6c195782c6b' }
 
         it do
-          expect(actor.reference.parent).not_to receive(:<<)
+          expect(transport.parent).not_to receive(:<<)
           expect { state.next(received1) }.to raise_error(Noise::Exceptions::DecryptError)
         end
       end
@@ -171,7 +175,7 @@ describe Lightning::Crypto::TransportHandler do
         end
 
         it do
-          expect(actor.reference.parent).to receive(:<<).with(act2)
+          expect(transport.parent).to receive(:<<).with(act2)
           state.next(received1)
           expect { state.next(received3) }.to raise_error(Lightning::Exceptions::InvalidTransportVersion)
         end
@@ -185,8 +189,8 @@ describe Lightning::Crypto::TransportHandler do
         end
 
         it do
-          expect(actor.reference.parent).to receive(:<<).with(act2).ordered
-          expect(actor.reference.parent).not_to receive(:<<).with(complete).ordered
+          expect(transport.parent).to receive(:<<).with(act2).ordered
+          expect(transport.parent).not_to receive(:<<).with(complete).ordered
 
           state.next(received1)
           state.next(received3)
@@ -202,8 +206,8 @@ describe Lightning::Crypto::TransportHandler do
         end
 
         it do
-          expect(actor.reference.parent).to receive(:<<).with(act2).ordered
-          expect(actor.reference.parent).not_to receive(:<<).with(complete).ordered
+          expect(transport.parent).to receive(:<<).with(act2).ordered
+          expect(transport.parent).not_to receive(:<<).with(complete).ordered
 
           state.next(received1)
           expect { state.next(received3) }.to raise_error(Noise::Exceptions::DecryptError)
@@ -218,8 +222,8 @@ describe Lightning::Crypto::TransportHandler do
         end
 
         it do
-          expect(actor.reference.parent).to receive(:<<).with(act2).ordered
-          expect(actor.reference.parent).not_to receive(:<<).with(complete).ordered
+          expect(transport.parent).to receive(:<<).with(act2).ordered
+          expect(transport.parent).not_to receive(:<<).with(complete).ordered
 
           state.next(received1)
           expect { state.next(received3) }.to raise_error(Noise::Exceptions::InvalidPublicKeyError)
@@ -234,8 +238,8 @@ describe Lightning::Crypto::TransportHandler do
         end
 
         it do
-          expect(actor.reference.parent).to receive(:<<).with(act2).ordered
-          expect(actor.reference.parent).not_to receive(:<<).with(complete).ordered
+          expect(transport.parent).to receive(:<<).with(act2).ordered
+          expect(transport.parent).not_to receive(:<<).with(complete).ordered
 
           state.next(received1)
           expect { state.next(received3) }.to raise_error(Noise::Exceptions::DecryptError)
@@ -261,7 +265,10 @@ describe Lightning::Crypto::TransportHandler do
         c.protocol.cipher_state_encrypt = cipher_state_encrypt
       end
     end
-    let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerState.new(nil, static_key, connection) }
+
+    let(:session) { spawn_dummy_actor(name: :session) }
+    let(:transport) { spawn_dummy_actor(name: :transport) }
+    let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerState.new(transport, session, static_key, connection) }
 
     describe 'encrypt' do
       subject { state.encrypt('68656c6c6f'.htb).bth }

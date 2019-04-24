@@ -10,20 +10,22 @@ module Lightning
 
       attr_reader :static_key, :remote_key
 
-      def initialize(static_key, conn, remote_key: nil)
+      def initialize(static_key, session, remote_key: nil)
         @static_key = static_key
         @remote_key = remote_key
+
+        session << self
 
         @connection =
           if initiator?
             make_writer.tap(&:start_handshake).tap do |connection|
               payload = connection.write_message('')
-              reference.parent << Act[PREFIX + payload, conn]
+              self.reference.parent << Act[PREFIX + payload, session]
             end
           else
             make_reader.tap(&:start_handshake)
           end
-        @status = TransportHandlerStateHandshake.new(self, @static_key, @connection)
+        @status = TransportHandlerStateHandshake.new(self, session, @static_key, @connection)
       end
 
       def on_message(message)
@@ -72,8 +74,9 @@ module Lightning
         include Lightning::Wire::HandshakeMessages
         include Lightning::Wire::LightningMessages
 
-        def initialize(actor, static_key, connection, buffer: +'', ck: nil)
+        def initialize(actor, session, static_key, connection, buffer: +'', ck: nil)
           @actor = actor
+          @session = session
           @static_key = static_key
           @connection = connection
           @buffer = buffer
@@ -157,7 +160,7 @@ module Lightning
         end
 
         def next(message)
-          match message, (on Received.(~any, ~any) do |data, conn|
+          match message, (on Received.(~any) do |data|
             @buffer += data
             if @buffer.bytesize < expected_length(@connection)
               self
@@ -169,15 +172,15 @@ module Lightning
 
               unless @connection.handshake_finished
                 payload = @connection.write_message('')
-                @actor.reference.parent << Act[PREFIX + payload, conn]
+                @actor.reference.parent << Act[PREFIX + payload, @session]
               end
 
               @buffer = remainder
 
               if @connection.handshake_finished
                 rs = @connection.protocol.keypairs[:rs][1]
-                @actor.reference.parent << HandshakeCompleted[conn, @actor.reference, @static_key, rs.bth]
-                TransportHandlerStateWaitingForListener.new(@actor, @static_key, @connection, buffer: @buffer)
+                @actor.reference.parent << HandshakeCompleted[@session, @actor.reference, @static_key, rs.bth]
+                TransportHandlerStateWaitingForListener.new(@actor, @session, @static_key, @connection, buffer: @buffer)
               else
                 self
               end
@@ -194,15 +197,14 @@ module Lightning
             self
           when Listener
             @buffer = decrypt_and_send(@buffer, message[:listener])
-            TransportHandlerStateWaitingForCiphertext.new(@actor, @static_key, @connection, buffer: @buffer, listener: message[:listener], conn: message[:conn])
+            TransportHandlerStateWaitingForCiphertext.new(@actor, @session, @static_key, @connection, buffer: @buffer, listener: message[:listener])
           end
         end
       end
 
       class TransportHandlerStateWaitingForCiphertext < TransportHandlerState
-        def initialize(actor, static_key, connection, buffer: +'', listener: nil, conn: nil)
-          super(actor, static_key, connection, buffer: buffer)
-          @conn = conn
+        def initialize(actor, session, static_key, connection, buffer: +'', listener: nil)
+          super(actor, session, static_key, connection, buffer: buffer)
           @listener = listener
         end
 
@@ -215,7 +217,7 @@ module Lightning
             ciphertext = encrypt(message.to_payload)
             log(Logger::DEBUG, '/transport', "SEND_DATA #{message.to_payload.bth}")
             log(Logger::INFO, '/transport', "SEND #{message.inspect}")
-            @conn&.send_data(ciphertext)
+            @session << Send[ciphertext]
           end
           self
         end

@@ -41,12 +41,12 @@ module Lightning
         end
         InitializingData = type do
           fields! address_opt: type { variants Algebrick::None, URI },
-                  transport: Concurrent::Actor::Reference,
+                  session: Concurrent::Actor::Reference,
                   origin_opt: type { variants Algebrick::None, Concurrent::Actor::Reference }
         end
         ConnectedData = type do
           fields! address_opt: type { variants Algebrick::None, URI },
-                  transport: Concurrent::Actor::Reference,
+                  session: Concurrent::Actor::Reference,
                   remote_init: Init,
                   channels: Hash,
                   gossip_timestamp_filter: GossipTimestampFilter
@@ -55,6 +55,10 @@ module Lightning
       end
 
       module DisconnectedData
+        def copy(address_opt: self[:address_opt])
+          DisconnectedData[self[:address_opt]]
+        end
+
         def channels
           {}
         end
@@ -73,7 +77,7 @@ module Lightning
 
         def copy(gossip_timestamp_filter: self[:gossip_timestamp_filter])
           ConnectedData[
-            self[:address_opt], self[:transport], self[:remote_init], self[:channels], gossip_timestamp_filter
+            self[:address_opt], self[:session], self[:remote_init], self[:channels], gossip_timestamp_filter
           ]
         end
       end

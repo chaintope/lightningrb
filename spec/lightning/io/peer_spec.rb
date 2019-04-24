@@ -3,29 +3,30 @@
 require 'spec_helper'
 
 describe Lightning::IO::Peer do
-  let(:peer) { build(:peer) }
+  let(:peer) { build(:peer, context: ln_context) }
+  let(:transport) { spawn_dummy_actor(name: :transport) }
+  let(:client) { spawn_dummy_actor(name: :transport) }
+  let(:authenticated) { Lightning::IO::AuthenticateMessages::Authenticated[client, transport, '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7'] }
+  let(:ln_context) { build(:context) }
 
   describe 'initialize_stored_channels' do
-    subject { described_class.new(authenticator, context, remote_node_id) }
+    subject { Lightning::IO::Peer::PeerStateInitializing.new(authenticator, ln_context, '00' * 33).initialize_stored_channels(ln_context, '00' * 33) }
 
-    let(:authenticator) { spawn_dummy_actor(name: :authenticator) }
-    let(:context) { build(:context) }
-    let(:remote_node_id) { '00' * 33 }
-
+    let(:authenticator) { spawn_dummy_actor(name: :transport) }
     let(:this_remote_param) { build(:remote_param, node_id: '00' * 33).get }
     let(:other_remote_param) { build(:remote_param, node_id: '11' * 33).get }
 
-    let(:this_peer) { build(:data_normal, commitments: build(:commitment, channel_id: '22' * 32, remote_param: this_remote_param).get).get }
-    let(:other_peer) { build(:data_normal, commitments: build(:commitment, channel_id: '33' * 32, remote_param: other_remote_param).get).get }
+    let(:this_peer_channel) { build(:data_normal, commitments: build(:commitment, channel_id: '22' * 32, remote_param: this_remote_param).get).get }
+    let(:other_peer_channel) { build(:data_normal, commitments: build(:commitment, channel_id: '33' * 32, remote_param: other_remote_param).get).get }
 
     before do
-      context.channel_db.insert_or_update(this_peer)
-      context.channel_db.insert_or_update(other_peer)
+      ln_context.channel_db.insert_or_update(this_peer_channel)
+      ln_context.channel_db.insert_or_update(other_peer_channel)
     end
 
     it do
-      expect(subject.data.channels.size).to eq 1
-      expect(subject.data.channels.keys.first).to eq '22' * 32
+      expect(subject.size).to eq 1
+      expect(subject.first.channel_id).to eq this_peer_channel.channel_id
     end
   end
 
@@ -41,9 +42,9 @@ describe Lightning::IO::Peer do
       end
 
       describe 'with Authenticated' do
-        let(:transport) { spawn_dummy_actor(name: :transport) }
+
         it do
-          peer << Lightning::IO::AuthenticateMessages::Authenticated[{}, transport, '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7']
+          peer << authenticated
           peer.ask(:await).wait
           expect(peer.ask!(:status)).to eq 'Lightning::IO::Peer::PeerStateInitializing'
         end
@@ -52,8 +53,10 @@ describe Lightning::IO::Peer do
 
     context 'state is Initializing' do
       let(:transport) { spawn_dummy_actor(name: :transport) }
+      let(:client) { spawn_dummy_actor(name: :transport) }
+
       before do
-        peer << Lightning::IO::AuthenticateMessages::Authenticated[{}, transport, '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7']
+        peer << authenticated
         peer.ask(:await).wait
       end
 
@@ -74,7 +77,7 @@ describe Lightning::IO::Peer do
           let(:init) { build(:init, localfeatures: '0141') }
 
           it do
-            expect(peer.parent).to receive(:<<).with(Lightning::IO::PeerEvents::Disconnect)
+            expect(client).to receive(:<<).with(:close)
             subject
           end
         end
@@ -85,7 +88,7 @@ describe Lightning::IO::Peer do
       let(:transport) { spawn_dummy_actor(name: :transport) }
       let(:init)  { build(:init) }
       before do
-        peer << Lightning::IO::AuthenticateMessages::Authenticated[{}, transport, '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7']
+        peer << authenticated
         peer.ask(:await).wait
         peer << init
         peer.ask(:await).wait

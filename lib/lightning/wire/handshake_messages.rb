@@ -3,24 +3,36 @@
 module Lightning
   module Wire
     module HandshakeMessages
-      Algebrick.type do
-        variants  Connected = type { fields! conn: Object },
-                  Act = type { fields! data: String, conn: Object },
-                  Received = type { fields! data: String, conn: Object },
-                  HandshakeCompleted = type { fields! conn: Object, transport: Concurrent::Actor::Reference, static_key: String, remote_key: String },
-                  Listener = type { fields! listener: Object, conn: Object },
-                  Send = type { fields! ciphertext: String },
-                  Disconnected = type { fields! conn: Object }
+      Connected = Algebrick.type { fields! conn: Object }
+      Act = Algebrick.type { fields! data: String, session: Concurrent::Actor::Reference }
+      Received = Algebrick.type { fields! data: String }
+      HandshakeCompleted = Algebrick.type do
+        fields! session: Concurrent::Actor::Reference,
+                transport: Concurrent::Actor::Reference,
+                static_key: String,
+                remote_key: String
       end
+      Listener = Algebrick.type { fields! listener: Concurrent::Actor::Reference }
+      Send = Algebrick.type { fields! ciphertext: String }
+      Disconnected = Algebrick.type do
+        fields! transport: type { variants Algebrick::None, Concurrent::Actor::Reference },
+                remote_key: type { variants Algebrick::None, String }
+      end
+
 
       module Act
         def to_s
-          "Act:#{[data.bth, conn]}"
+          "Act:#{[data.bth, session]}"
         end
       end
       module Received
         def to_s
-          "Received:#{[data.bth, conn]}"
+          "Received:#{[data.bth]}"
+        end
+      end
+      module Send
+        def to_s
+          "Send:#{[ciphertext.bth]}"
         end
       end
     end

@@ -5,9 +5,9 @@ module Lightning
     module AuthenticateMessages
       AuthenticateMessage = Algebrick.type do
         variants  InitializingAuth = type { fields! switchboard: Switchboard },
-                  PendingAuth = type { fields! conn: Object, static_key: String, opt: Hash },
-                  Authenticated = type { fields! conn: Object, transport: Concurrent::Actor::Reference, remote_node_id: String },
-                  Disconnected = type { fields! conn: Object, remote_node_id: type { variants Algebrick::None, String } }
+                  PendingAuth = type { fields! session: Object, static_key: String, opt: Hash },
+                  Authenticated = type { fields! session: Object, transport: Concurrent::Actor::Reference, remote_node_id: String },
+                  Unauthenticated = type { fields! remote_node_id: type { variants Algebrick::None, String } }
       end
     end
 
@@ -42,30 +42,23 @@ module Lightning
         end
 
         def next(message)
-          match message, (on ~PendingAuth.(~any, ~any, ~any) do |pending, conn, static_key, opt|
-            conn.transport = Lightning::Crypto::TransportHandler.spawn(
-              :transport,
-              static_key,
-              conn,
-              opt
-            )
-
-            @authenticating[conn.transport] = pending
+          match message, (on ~PendingAuth.(~any, ~any, ~any) do |pending, session, static_key, opt|
+            transport = Lightning::Crypto::TransportHandler.spawn(:transport, static_key, session, opt)
+            @authenticating[transport] = pending
             self
-          end), (on Act.(~any, ~any) do |data, conn|
-            conn&.send_data(data)
+          end), (on Act.(~any, ~any) do |data, session|
+            session << Send[data]
             self
-          end), (on HandshakeCompleted.(~any, ~any, ~any, ~any) do |conn, transport, static_key, remote_key|
+          end), (on HandshakeCompleted.(~any, ~any, ~any, ~any) do |session, transport, static_key, remote_key|
             pending = @authenticating[transport]
             if pending
               @authenticating.delete(transport)
-              @switchboard << Authenticated[conn, transport, remote_key]
+              @switchboard << Authenticated[session, transport, remote_key]
             end
             self
-          end), (on Disconnected.(~any, any) do |conn|
-            pending = @authenticating[conn.transport]
-            @authenticating.delete(conn.transport) if pending
-            @switchboard << message
+          end), (on Disconnected.(~any, ~any) do |transport, remote_key|
+            @authenticating.delete(transport) if @authenticating[transport]
+            @switchboard << Unauthenticated[remote_key]
             self
           end)
         end

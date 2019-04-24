@@ -9,7 +9,7 @@ module Lightning
       attr_accessor :status, :data
 
       def initialize(authenticator, context, remote_node_id)
-        @status = PeerStateDisconnected.new(self, authenticator, context, remote_node_id)
+        @status = PeerStateDisconnected.new(authenticator, context, remote_node_id)
         @data = DisconnectedData[Algebrick::None]
       end
 
@@ -22,7 +22,7 @@ module Lightning
           return @status.class.name
         end), (on any do
         end)
-        @status, @data = @status.next(message, @data)
+        @status, @data = @status.next(self.reference, message, @data)
       end
 
       class PeerState
@@ -36,10 +36,9 @@ module Lightning
         include Lightning::Channel::Events
         include Lightning::Channel::Messages
 
-        attr_accessor :actor, :context, :remote_node_id, :authenticator, :transport
+        attr_accessor :context, :remote_node_id, :authenticator, :transport
 
-        def initialize(actor, authenticator, context, remote_node_id, transport: nil)
-          @actor = actor
+        def initialize(authenticator, context, remote_node_id, transport: nil)
           @context = context
           @remote_node_id = remote_node_id
           @authenticator = authenticator
@@ -48,14 +47,14 @@ module Lightning
       end
 
       class PeerStateDisconnected < PeerState
-        def next(message, data)
+        def next(actor, message, data)
           case message
           when Connect
             @retry = 0
             host = message[:host]
             port = message[:port]
             Client.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
-            [self, data]
+            [self, data.copy(address_opt: URI[host, port])]
           when Reconnect
             @retry ||= 0
             return [self, data] if @retry > 8
@@ -70,17 +69,16 @@ module Lightning
             [self, data]
           when Lightning::IO::AuthenticateMessages::Authenticated
             @retry = 0
-            conn = message[:conn]
+            session = message[:session]
             transport = message[:transport]
-            transport << Listener[actor, conn]
+            transport << Listener[actor]
             transport << Init.new(
               globalfeatures: context.node_params.globalfeatures,
               localfeatures: context.node_params.localfeatures
             )
-            outgoing = conn.is_a?(Lightning::IO::ClientConnection)
             [
-              PeerStateInitializing.new(actor, authenticator, context, remote_node_id, transport: transport),
-              InitializingData[outgoing ? URI[conn.host, conn.port] : Algebrick::None, transport, Algebrick::None],
+              PeerStateInitializing.new(authenticator, context, remote_node_id, transport: transport),
+              InitializingData[data[:address_opt], session, Algebrick::None],
             ]
           else
             log(Logger::WARN, '/peer@disconnected', "unhandled message: #{message.inspect}")
@@ -90,15 +88,15 @@ module Lightning
       end
 
       class PeerStateInitializing < PeerState
-        def next(message, data)
+        def next(actor, message, data)
           case message
           when Init
             feature = Lightning::Feature.new(message.localfeatures)
             return invalid_feature_error(message, data) unless feature.valid?
             if feature.gossip_queries?
-              context.router << Lightning::Router::Messages::RequestGossipQuery.new(data.transport, remote_node_id)
+              context.router << Lightning::Router::Messages::RequestGossipQuery.new(transport, remote_node_id)
             elsif feature.initial_routing_sync?
-              context.router << Lightning::Router::Messages::InitialSync.new(data.transport)
+              context.router << Lightning::Router::Messages::InitialSync.new(transport)
             end
 
             log(Logger::INFO, :peer, "================================================================================")
@@ -111,13 +109,20 @@ module Lightning
               forwarder = Lightning::Channel::Forwarder.spawn(:forwarder)
               channel_context = Lightning::Channel::ChannelContext.new(context, forwarder, remote_node_id)
               channel = Lightning::Channel::Channel.spawn(:channel, channel_context)
-              channel << Lightning::Channel::Messages::InputReconnected[data[:transport], channel_data]
+              channel << Lightning::Channel::Messages::InputReconnected[transport, channel_data]
               [channel_data[:commitments][:channel_id], channel]
             end.to_h
 
+            if context.node_params.ping_interval.positive?
+              task = Concurrent::TimerTask.new(execution_interval: context.node_params.ping_interval, run_now: true) do
+                actor << Timeout
+              end
+              task.execute
+            end
+
             [
-              PeerStateConnected.new(actor, authenticator, context, remote_node_id, transport: data[:transport]),
-              ConnectedData[data[:address_opt], data[:transport], message, channels],
+              PeerStateConnected.new(authenticator, context, remote_node_id, transport: transport),
+              ConnectedData[data[:address_opt], data[:session], message, channels],
             ]
           when ChannelReestablish
             task = Concurrent::TimerTask.new(execution_interval: 60, run_now: true) do
@@ -126,10 +131,9 @@ module Lightning
             end
             task.execute
             [self, data]
-          when Reconnect
-            actor << Reconnect
+          when Lightning::IO::AuthenticateMessages::Unauthenticated
             [
-              PeerStateDisconnected.new(actor, authenticator, context, remote_node_id),
+              PeerStateDisconnected.new(authenticator, context, remote_node_id),
               DisconnectedData[data[:address_opt]]
             ]
           else
@@ -140,8 +144,10 @@ module Lightning
 
         def invalid_feature_error(init, data)
           log(Logger::WARN, "received unknown even feature bits #{init.inspect}")
+          # fails connection
+          data[:session] << :close
           [
-            PeerStateDisconnected.new(actor, authenticator, context, remote_node_id),
+            PeerStateDisconnected.new(authenticator, context, remote_node_id),
             DisconnectedData[data[:address_opt]]
           ]
         end
@@ -156,16 +162,7 @@ module Lightning
       end
 
       class PeerStateConnected < PeerState
-        def initialize(actor, authenticator, context, remote_node_id, transport: nil)
-          super
-          return unless context.node_params.ping_interval.positive?
-          task = Concurrent::TimerTask.new(execution_interval: context.node_params.ping_interval, run_now: true) do
-            actor << Timeout
-          end
-          task.execute
-        end
-
-        def next(message, data)
+        def next(actor, message, data)
           case message
           when Timeout
             ping_size = SecureRandom.random_number(1000)
@@ -237,8 +234,7 @@ module Lightning
               end
             end
             transport << message[:message] unless filtered
-          when Reconnect
-            actor << Reconnect
+          when Unauthenticated
             return [
               PeerStateDisconnected.new(actor, authenticator, context, remote_node_id),
               DisconnectedData[data[:address_opt]]
