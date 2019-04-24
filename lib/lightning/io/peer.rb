@@ -16,8 +16,8 @@ module Lightning
       def on_message(message)
         log(Logger::DEBUG, "#{@status}, message: #{message.inspect}")
         match message, (on :channels do
-          log(Logger::DEBUG, "#{@status}, channels: #{@data[:channels]}")
-          return @data[:channels].values.map {|channel| channel.ask!(:data) }
+          log(Logger::DEBUG, "#{@status}, channels: #{@data.channels}")
+          return @data.channels.values.map {|channel| channel.ask!(:data) }
         end), (on :status do
           return @status.class.name
         end), (on any do

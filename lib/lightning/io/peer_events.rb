@@ -54,7 +54,23 @@ module Lightning
         variants DisconnectedData, InitializingData, ConnectedData
       end
 
+      module DisconnectedData
+        def channels
+          {}
+        end
+      end
+
+      module InitializingData
+        def channels
+          {}
+        end
+      end
+
       module ConnectedData
+        def channels
+          self[:channels]
+        end
+
         def copy(gossip_timestamp_filter: self[:gossip_timestamp_filter])
           ConnectedData[
             self[:address_opt], self[:transport], self[:remote_init], self[:channels], gossip_timestamp_filter
