@@ -44,14 +44,12 @@ module Lightning
     authenticator = IO::Authenticator.spawn(:authenticator)
     context.switchboard = IO::Switchboard.spawn(:switchboard, authenticator, context)
     Thread.start do
-      EM.run do
-        IO::Server.start(
-          host,
-          port,
-          authenticator,
-          context.node_params.private_key
-        )
-      end
+      IO::Server.start(
+        host,
+        port,
+        authenticator,
+        context.node_params.private_key
+      )
     end
     Thread.start { Rpc::Server.run(context) }
   end

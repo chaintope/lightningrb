@@ -10,6 +10,8 @@ module Lightning
     autoload :Peer, 'lightning/io/peer'
     autoload :PeerEvents, 'lightning/io/peer_events'
     autoload :Server, 'lightning/io/server'
+    autoload :ServerSession, 'lightning/io/server'
+    autoload :ServerConnection, 'lightning/io/server'
     autoload :Switchboard, 'lightning/io/switchboard'
   end
 end

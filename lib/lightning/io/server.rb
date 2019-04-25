@@ -2,27 +2,9 @@
 
 module Lightning
   module IO
-    class Server < Concurrent::Actor::Context
-      include Lightning::Wire::HandshakeMessages
-
+    class Server
       def self.start(host, port, authenticator, static_key)
-        spawn(:server, authenticator, static_key).tap do |me|
-          EM.start_server(host, port, ServerConnection, me, authenticator, static_key)
-        end
-      end
-
-      attr_reader :authenticator, :static_key
-
-      def initialize(authenticator, static_key)
-        @authenticator = authenticator
-        @static_key = static_key
-      end
-
-      def on_message(message)
-        case message
-        when Disconnected
-          authenticator << Disconnected[message[:transport], Algebrick::None]
-        end
+        EM.run { EM.start_server(host, port, ServerConnection, self, authenticator, static_key) }
       end
     end
 
