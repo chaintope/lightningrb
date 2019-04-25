@@ -10,7 +10,7 @@ describe Lightning::IO::Switchboard do
   let(:session) { spawn_dummy_actor(name: :client) }
 
   before do
-    allow(Lightning::IO::Client).to receive(:connect).and_return(nil)
+    allow(Lightning::IO::ClientSession).to receive(:connect).and_return(nil)
   end
 
   describe 'on_message' do

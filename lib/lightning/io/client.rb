@@ -2,7 +2,7 @@
 
 module Lightning
   module IO
-    class Client < Concurrent::Actor::Context
+    class ClientSession < Concurrent::Actor::Context
       def self.connect(host, port, authenticator, static_key, remote_key)
         spawn(:client, authenticator, static_key, remote_key).tap do |me|
           EM.connect(host, port, ClientConnection, host, port, me)

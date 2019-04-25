@@ -53,7 +53,7 @@ module Lightning
             @retry = 0
             host = message[:host]
             port = message[:port]
-            Client.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
+            ClientSession.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
             [self, data.copy(address_opt: URI[host, port])]
           when Reconnect
             @retry ||= 0
@@ -62,7 +62,7 @@ module Lightning
               @retry += 1
               host = data[:address_opt][:host]
               port = data[:address_opt][:port]
-              Client.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
+              ClientSession.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
               task.shutdown
             end
             task.execute

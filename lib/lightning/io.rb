@@ -5,7 +5,7 @@ module Lightning
     autoload :Authenticator, 'lightning/io/authenticator'
     autoload :AuthenticateMessages, 'lightning/io/authenticator'
     autoload :Broadcast, 'lightning/io/broadcast'
-    autoload :Client, 'lightning/io/client'
+    autoload :ClientSession, 'lightning/io/client'
     autoload :ClientConnection, 'lightning/io/client'
     autoload :Peer, 'lightning/io/peer'
     autoload :PeerEvents, 'lightning/io/peer_events'

@@ -34,7 +34,7 @@ describe Lightning::IO::Peer do
     context 'state is Disconnect' do
       describe 'with Connect' do
         it do
-          expect(Lightning::IO::Client).to receive(:connect).and_return(nil)
+          expect(Lightning::IO::ClientSession).to receive(:connect).and_return(nil)
           peer << Lightning::IO::PeerEvents::Connect['00' * 32, 'localhost', 9735]
           peer.ask(:await).wait
           expect(peer.ask!(:status)).to eq 'Lightning::IO::Peer::PeerStateDisconnected'
