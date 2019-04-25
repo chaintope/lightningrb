@@ -82,7 +82,6 @@ module Lightning
             if remote_node_id && peers[remote_node_id]
               peers[remote_node_id] << Unauthenticated[remote_node_id]
               peers[remote_node_id] << Reconnect
-              peers.delete(remote_node_id)
             end
         end), (on any do
 
