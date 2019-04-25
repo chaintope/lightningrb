@@ -62,7 +62,7 @@ module Lightning
           conn&.send_data(message[:ciphertext])
           self
         when Disconnected
-          authenticator << Disconnected[@transport, static_key]
+          authenticator << Disconnected[@transport, remote_key]
           ClientStateDisconnect.new(conn, authenticator, static_key, remote_key)
         else
           self

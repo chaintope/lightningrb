@@ -56,7 +56,7 @@ module Lightning
 
       module DisconnectedData
         def copy(address_opt: self[:address_opt])
-          DisconnectedData[self[:address_opt]]
+          DisconnectedData[address_opt]
         end
 
         def channels

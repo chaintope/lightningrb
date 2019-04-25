@@ -14,7 +14,7 @@ module Lightning
       end
 
       def on_message(message)
-        log(Logger::DEBUG, "#{@status}, message: #{message.inspect}")
+        log(Logger::DEBUG, "#{@status.class}, data:#{@data}, message: #{message.inspect}")
         match message, (on :channels do
           log(Logger::DEBUG, "#{@status}, channels: #{@data.channels}")
           return @data.channels.values.map {|channel| channel.ask!(:data) }
@@ -43,6 +43,7 @@ module Lightning
           @remote_node_id = remote_node_id
           @authenticator = authenticator
           @transport = transport
+          @retry = 0
         end
       end
 
@@ -50,25 +51,25 @@ module Lightning
         def next(actor, message, data)
           case message
           when Connect
-            @retry = 0
             host = message[:host]
             port = message[:port]
+            log(Logger::INFO, '/peer', "Connecting to #{host}:#{port}...")
             ClientSession.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
             [self, data.copy(address_opt: URI[host, port])]
           when Reconnect
-            @retry ||= 0
-            return [self, data] if @retry > 8
-            task = Concurrent::TimerTask.new(execution_interval: 2**(@retry + 2)) do
-              @retry += 1
-              host = data[:address_opt][:host]
-              port = data[:address_opt][:port]
-              ClientSession.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
-              task.shutdown
+            host = data[:address_opt][:host]
+            port = data[:address_opt][:port]
+            log(Logger::INFO, '/peer', "Reconnecting to #{host}:#{port}...(#{@retry})")
+            ClientSession.connect(host, port, authenticator, context.node_params.extended_private_key.priv, remote_node_id)
+            if @retry < 8
+              Concurrent::TimerTask.new(execution_interval: 2**(@retry + 2)) do |task|
+                @retry += 1
+                actor << Reconnect
+                task.shutdown
+              end.execute
             end
-            task.execute
             [self, data]
           when Lightning::IO::AuthenticateMessages::Authenticated
-            @retry = 0
             session = message[:session]
             transport = message[:transport]
             transport << Listener[actor]
@@ -234,9 +235,9 @@ module Lightning
               end
             end
             transport << message[:message] unless filtered
-          when Unauthenticated
+          when Lightning::IO::AuthenticateMessages::Unauthenticated
             return [
-              PeerStateDisconnected.new(actor, authenticator, context, remote_node_id),
+              PeerStateDisconnected.new(authenticator, context, remote_node_id),
               DisconnectedData[data[:address_opt]]
             ]
           else
