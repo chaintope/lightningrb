@@ -24,7 +24,7 @@ describe Lightning::IO::Switchboard do
       it { expect { subject }.to change { context.peer_db.all.size }.by(1) }
     end
 
-    context 'with Disconnect' do
+    context 'with Unauthenticated' do
       subject do
         switchboard << Lightning::IO::AuthenticateMessages::Unauthenticated['00' * 32]
         switchboard.ask(:await).wait
@@ -37,8 +37,7 @@ describe Lightning::IO::Switchboard do
         switchboard.ask(:await).wait
       end
 
-      it { expect(subject).to be_empty }
+      it { expect(subject.size).to eq 1 }
     end
   end
 end
-
