@@ -17,12 +17,9 @@ describe Lightning::Crypto::TransportHandler do
       let(:remote_key) { '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7' }
       let(:ephemeral_key) { '1212121212121212121212121212121212121212121212121212121212121212' }
       let(:writer) do
-        initiator = Noise::Connection.new('Noise_XK_secp256k1_ChaChaPoly_SHA256')
+        keypairs = { s: static_key.htb, e: ephemeral_key.htb, rs: remote_key.htb }
+        initiator = Noise::Connection::Initiator.new('Noise_XK_secp256k1_ChaChaPoly_SHA256', keypairs: keypairs)
         initiator.prologue = Lightning::Crypto::TransportHandler::PROLOGUE
-        initiator.set_as_initiator!
-        initiator.set_keypair_from_private(Noise::KeyPair::STATIC, static_key.htb)
-        initiator.set_keypair_from_private(Noise::KeyPair::EPHEMERAL, ephemeral_key.htb)
-        initiator.set_keypair_from_public(Noise::KeyPair::REMOTE_STATIC, remote_key.htb)
         initiator
       end
       let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerStateHandshake.new(transport, session, static_key, writer) }
@@ -93,11 +90,9 @@ describe Lightning::Crypto::TransportHandler do
       let(:remote_key) { '034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa' }
       let(:ephemeral_key) { '2222222222222222222222222222222222222222222222222222222222222222' }
       let(:reader) do
-        responder = Noise::Connection.new('Noise_XK_secp256k1_ChaChaPoly_SHA256')
+        keypairs = { s: static_key.htb, e: ephemeral_key.htb }
+        responder = Noise::Connection::Responder.new('Noise_XK_secp256k1_ChaChaPoly_SHA256', keypairs: keypairs)
         responder.prologue = Lightning::Crypto::TransportHandler::PROLOGUE
-        responder.set_as_responder!
-        responder.set_keypair_from_private(Noise::KeyPair::STATIC, static_key.htb)
-        responder.set_keypair_from_private(Noise::KeyPair::EPHEMERAL, ephemeral_key.htb)
         responder
       end
       let(:state) { Lightning::Crypto::TransportHandler::TransportHandlerStateHandshake.new(transport, session, static_key, reader) }
@@ -251,18 +246,31 @@ describe Lightning::Crypto::TransportHandler do
   # 08-transport.md#message-encryption-tests
   describe Lightning::Crypto::TransportHandler::TransportHandlerState do
     let(:static_key) { '1111111111111111111111111111111111111111111111111111111111111111' }
+    let(:remote_key) { '028d7500dd4c12685d1f568b4c2b5048e8534b873319f3a8daa612b469132ec7f7' }
+    let(:ephemeral_key) { '1212121212121212121212121212121212121212121212121212121212121212' }
 
     let(:ck) { '919219dbb2920afa8db80f9a51787a840bcf111ed8d588caf9ab4be716e42b01'.htb }
     let(:sk) { '969ab31b4d288cedf6218839b27a3e2140827047f2c0f01bf5c04435d43511a9'.htb }
     let(:rk) { 'bb9020b8965f4df047e07f955f3c4b88418984aadc5cdb35096b9ea8fa5c3442'.htb }
 
+    # for test
+    class Noise::Connection::Base
+      attr_writer :cipher_state_encrypt
+      def handshake_finished!
+        @handshake_finished = true
+      end
+    end
+
     let(:connection) do
-      Noise::Connection.new('Noise_XK_secp256k1_ChaChaPoly_SHA256').tap do |c|
+      keypairs = { s: static_key.htb, e: ephemeral_key.htb, rs: remote_key.htb }
+      Noise::Connection::Initiator.new('Noise_XK_secp256k1_ChaChaPoly_SHA256', keypairs: keypairs).tap do |c|
+        c.prologue = Lightning::Crypto::TransportHandler::PROLOGUE
+        c.start_handshake
         cipher_state_encrypt = Noise::State::CipherState.new(cipher: c.protocol.cipher_fn)
         cipher_state_encrypt.initialize_key(sk)
-        c.handshake_finished = true
-        c.protocol.ck = ck
-        c.protocol.cipher_state_encrypt = cipher_state_encrypt
+        c.cipher_state_encrypt = cipher_state_encrypt
+        c.handshake_state.symmetric_state.initialize_chaining_key(ck)
+        c.handshake_finished!
       end
     end
 

@@ -20,7 +20,7 @@ module Lightning
           if initiator?
             make_writer.tap(&:start_handshake).tap do |connection|
               payload = connection.write_message('')
-              self.reference.parent << Act[PREFIX + payload, session]
+              reference.parent << Act[PREFIX + payload, session]
             end
           else
             make_reader.tap(&:start_handshake)
@@ -41,21 +41,16 @@ module Lightning
       end
 
       def make_writer
-        initiator = Noise::Connection.new('Noise_XK_secp256k1_ChaChaPoly_SHA256')
+        keypairs = { s: @static_key.htb, e: create_ephemeral_private_key.htb, rs: @remote_key.htb }
+        initiator = Noise::Connection::Initiator.new('Noise_XK_secp256k1_ChaChaPoly_SHA256', keypairs: keypairs)
         initiator.prologue = PROLOGUE
-        initiator.set_as_initiator!
-        initiator.set_keypair_from_private(Noise::KeyPair::STATIC, @static_key.htb)
-        initiator.set_keypair_from_private(Noise::KeyPair::EPHEMERAL, create_ephemeral_private_key.htb)
-        initiator.set_keypair_from_public(Noise::KeyPair::REMOTE_STATIC, @remote_key.htb)
         initiator
       end
 
       def make_reader
-        responder = Noise::Connection.new('Noise_XK_secp256k1_ChaChaPoly_SHA256')
+        keypairs = { s: @static_key.htb, e: create_ephemeral_private_key.htb }
+        responder = Noise::Connection::Responder.new('Noise_XK_secp256k1_ChaChaPoly_SHA256', keypairs: keypairs)
         responder.prologue = PROLOGUE
-        responder.set_as_responder!
-        responder.set_keypair_from_private(Noise::KeyPair::STATIC, @static_key.htb)
-        responder.set_keypair_from_private(Noise::KeyPair::EPHEMERAL, create_ephemeral_private_key.htb)
         responder
       end
 
@@ -74,25 +69,18 @@ module Lightning
         include Lightning::Wire::HandshakeMessages
         include Lightning::Wire::LightningMessages
 
-        def initialize(actor, session, static_key, connection, buffer: +'', ck: nil)
+        def initialize(actor, session, static_key, connection, buffer: +'')
           @actor = actor
           @session = session
           @static_key = static_key
           @connection = connection
           @buffer = buffer
-          @ck = ck
         end
 
         def encrypt_internal(data)
-          n = @connection.protocol.cipher_state_encrypt.n
-          k = @connection.protocol.cipher_state_encrypt.k
-          ck = @connection.protocol.ck
+          n = @connection.cipher_state_encrypt.n
           ciphertext = @connection.encrypt(data)
-          if n == 999
-            ck, k = @connection.protocol.hkdf_fn.call(ck, k, 2)
-            @connection.protocol.ck = ck
-            @connection.protocol.cipher_state_encrypt.initialize_key(k)
-          end
+          @connection.rekey(@connection.cipher_state_encrypt) if n == 999
           ciphertext
         end
 
@@ -102,15 +90,9 @@ module Lightning
         end
 
         def decrypt_internal(data)
-          n = @connection.protocol.cipher_state_decrypt.n
-          k = @connection.protocol.cipher_state_decrypt.k
-          ck = @connection.protocol.ck
+          n = @connection.cipher_state_decrypt.n
           plaintext = @connection.decrypt(data)
-          if n == 999
-            ck, k = @connection.protocol.hkdf_fn.call(ck, k, 2)
-            @connection.protocol.ck = ck
-            @connection.protocol.cipher_state_decrypt.initialize_key(k)
-          end
+          @connection.rekey(@connection.cipher_state_decrypt) if n == 999
           plaintext
         end
 
@@ -153,7 +135,7 @@ module Lightning
 
       class TransportHandlerStateHandshake < TransportHandlerState
         def expected_length(connection)
-          case connection.protocol.handshake_state.message_patterns.length
+          case connection.handshake_state.message_patterns.length
           when 1 then 66
           when 2, 3 then 50
           end
@@ -178,7 +160,7 @@ module Lightning
               @buffer = remainder
 
               if @connection.handshake_finished
-                rs = @connection.protocol.keypairs[:rs][1]
+                rs = @connection.rs
                 @actor.reference.parent << HandshakeCompleted[@session, @actor.reference, @static_key, rs.bth]
                 TransportHandlerStateWaitingForListener.new(@actor, @session, @static_key, @connection, buffer: @buffer)
               else
@@ -197,7 +179,9 @@ module Lightning
             self
           when Listener
             @buffer = decrypt_and_send(@buffer, message[:listener])
-            TransportHandlerStateWaitingForCiphertext.new(@actor, @session, @static_key, @connection, buffer: @buffer, listener: message[:listener])
+            TransportHandlerStateWaitingForCiphertext.new(
+              @actor, @session, @static_key, @connection, buffer: @buffer, listener: message[:listener]
+            )
           end
         end
       end
@@ -221,6 +205,28 @@ module Lightning
           end
           self
         end
+      end
+    end
+  end
+end
+
+module Noise
+  module Connection
+    class Base
+      def rekey(cipher)
+        k = cipher.k
+        ck = handshake_state.symmetric_state.ck
+        ck, k = protocol.hkdf_fn.call(ck, k, 2)
+        handshake_state.symmetric_state.initialize_chaining_key(ck)
+        cipher.initialize_key(k)
+      end
+    end
+  end
+
+  module State
+    class SymmetricState
+      def initialize_chaining_key(ck)
+        @ck = ck
       end
     end
   end

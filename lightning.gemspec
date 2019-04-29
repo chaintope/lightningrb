@@ -47,7 +47,8 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'leveldb-ruby'
   spec.add_runtime_dependency 'lightning-invoice'
   spec.add_runtime_dependency 'lightning-onion'
-  spec.add_runtime_dependency 'noise-ruby'
+  spec.add_runtime_dependency 'noise-ruby', '>= 0.7.4'
   spec.add_runtime_dependency 'rbnacl'
+  spec.add_runtime_dependency 'secp256k1-ruby'
   spec.add_runtime_dependency 'sqlite3'
 end
