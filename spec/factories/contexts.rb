@@ -14,6 +14,7 @@ FactoryBot.define do
     peer_db { Lightning::Store::PeerDb.new('tmp/test_peer_db') }
     node_db { Lightning::Store::NodeDb.new('tmp/test_node_db') }
     channel_db { Lightning::Store::ChannelDb.new('tmp/test_channel_db') }
+    invoice_db { Lightning::Store::InvoiceDb.new('tmp/test_invoice_db') }
     initialize_with { new(spv) }
   end
 end

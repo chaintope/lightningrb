@@ -4,7 +4,7 @@ module Lightning
   class Context
     attr_accessor :node_params, :wallet, :spv, :blockchain, :router, :relayer, :broadcast, :register, :payment_handler, :payment_initiator
     attr_accessor :switchboard
-    attr_accessor :node_db, :peer_db, :channel_db
+    attr_accessor :node_db, :peer_db, :channel_db, :invoice_db
 
     def initialize(spv)
       @node_params = Lightning::NodeParams.new
@@ -13,9 +13,10 @@ module Lightning
       @blockchain = Lightning::Blockchain::Watcher.spawn(:watcher, spv)
       @broadcast = Lightning::IO::Broadcast.spawn(:broadcast)
 
-      @node_db = Lightning::Store::NodeDb.new("tmp/node_db")
+      @node_db = Lightning::Store::NodeDb.new('tmp/node_db')
       @peer_db = Lightning::Store::PeerDb.new('tmp/peer_db')
       @channel_db = Lightning::Store::ChannelDb.new('tmp/channel_db')
+      @invoice_db = Lightning::Store::InvoiceDb.new('tmp/invoice_db')
 
       @router = Lightning::Router::Router.spawn(:router, self)
       @relayer = Lightning::Payment::Relayer.spawn(:relayer, self)

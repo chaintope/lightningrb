@@ -3,16 +3,18 @@
 RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
 
-  config.before(:all) do
+  config.before(:each) do
     FactoryBot.reload
     FileUtils.rm_f('tmp/test_node_db')
     FileUtils.rm_f('tmp/test_peer_db')
     FileUtils.rm_f('tmp/test_channel_db')
+    FileUtils.rm_f('tmp/test_invoice_db')
   end
-  config.after(:all) do
+  config.after(:each) do
     FileUtils.rm_f('tmp/test_node_db')
     FileUtils.rm_f('tmp/test_peer_db')
     FileUtils.rm_f('tmp/test_channel_db')
+    FileUtils.rm_f('tmp/test_invoice_db')
   end
   config.before(:suite) do
     FactoryBot.find_definitions

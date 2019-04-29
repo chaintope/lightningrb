@@ -12,7 +12,14 @@ module Lightning
 
       def initialize(context)
         @context = context
-        @preimages = {}
+        @preimages = load_invoices
+      end
+
+      def load_invoices
+        context.invoice_db.all.map do |preimage, invoice|
+          payment_hash = Bitcoin.sha256(preimage.htb).bth
+          [payment_hash, [preimage, invoice]]
+        end.to_h
       end
 
       def on_message(message)
@@ -43,6 +50,7 @@ module Lightning
             m.sign(Bitcoin::Key.new(priv_key: key))
           end
           preimages[payment_hash] = [preimage, invoice]
+          context.invoice_db.insert(preimage, invoice)
           envelope.sender << invoice if envelope.sender.is_a? Concurrent::Actor::Reference
           invoice
         when UpdateAddHtlc
@@ -56,6 +64,7 @@ module Lightning
             payment_hash: message.payment_hash
           )
           preimages.delete(message.payment_hash)
+          context.invoice_db.delete(preimage)
         when :preimages
           preimages
         end
