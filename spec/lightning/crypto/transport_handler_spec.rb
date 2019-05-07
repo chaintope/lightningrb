@@ -255,9 +255,15 @@ describe Lightning::Crypto::TransportHandler do
 
     # for test
     class Noise::Connection::Base
-      attr_writer :cipher_state_encrypt
       def handshake_finished!
         @handshake_finished = true
+      end
+    end
+
+    # for test
+    class Noise::State::SymmetricState
+      def initialize_chaining_key(ck)
+        @ck = ck
       end
     end
 
@@ -268,8 +274,9 @@ describe Lightning::Crypto::TransportHandler do
         c.start_handshake
         cipher_state_encrypt = Noise::State::CipherState.new(cipher: c.protocol.cipher_fn)
         cipher_state_encrypt.initialize_key(sk)
-        c.cipher_state_encrypt = cipher_state_encrypt
+        cipher_state_decrypt = Noise::State::CipherState.new(cipher: c.protocol.cipher_fn)
         c.handshake_state.symmetric_state.initialize_chaining_key(ck)
+        c.handshake_done(cipher_state_encrypt, cipher_state_decrypt)
         c.handshake_finished!
       end
     end

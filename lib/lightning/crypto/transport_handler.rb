@@ -215,18 +215,18 @@ module Noise
     class Base
       def rekey(cipher)
         k = cipher.k
-        ck = handshake_state.symmetric_state.ck
-        ck, k = protocol.hkdf_fn.call(ck, k, 2)
-        handshake_state.symmetric_state.initialize_chaining_key(ck)
+        @ck, k = protocol.hkdf_fn.call(@ck, k, 2)
         cipher.initialize_key(k)
       end
-    end
-  end
 
-  module State
-    class SymmetricState
-      def initialize_chaining_key(ck)
-        @ck = ck
+      def handshake_done(_c1, _c2)
+        @handshake_hash = @symmetric_state.handshake_hash
+        @s = @handshake_state.s
+        @rs = @handshake_state.rs
+        @ck = @handshake_state.symmetric_state.ck
+        @handshake_state = nil
+        @symmetric_state = nil
+        @cipher_state_handshake = nil
       end
     end
   end
