@@ -69,12 +69,13 @@ module Lightning
         include Lightning::Wire::HandshakeMessages
         include Lightning::Wire::LightningMessages
 
-        def initialize(actor, session, static_key, connection, buffer: +'')
+        def initialize(actor, session, static_key, connection, buffer: +'', length: 0)
           @actor = actor
           @session = session
           @static_key = static_key
           @connection = connection
           @buffer = buffer
+          @length = length
         end
 
         def encrypt_internal(data)
@@ -96,25 +97,24 @@ module Lightning
           plaintext
         end
 
-        def decrypt(buffer)
-          if buffer.bytesize < 18
-            [nil, buffer]
-          else
-            cipher_length = buffer[0...18]
-            remainder = buffer[18..-1]
+        def decrypt(buffer, length)
+          return [nil, 0, buffer] if buffer.bytesize < 18
+
+          cipher_length = buffer[0...18]
+          remainder = buffer[18..-1]
+
+          if length.zero?
             plain_length = decrypt_internal(cipher_length)
             length = plain_length.unpack('n*').first
-            if remainder.bytesize < length + 16
-              [nil, buffer]
-            else
-              ciphertext = remainder[0...length + 16]
-              remainder = remainder[length + 16..-1]
-              payload = decrypt_internal(ciphertext)
-              log(Logger::DEBUG, '/transport', "RECEIVE_DATA #{payload.bth}")
-              message = Lightning::Wire::LightningMessages::LightningMessage.load(payload)
-              [message, remainder]
-            end
           end
+
+          return [nil, length, buffer] if remainder.bytesize < length + 16
+
+          ciphertext = remainder[0...length + 16]
+          remainder = remainder[length + 16..-1]
+          payload = decrypt_internal(ciphertext)
+          message = Lightning::Wire::LightningMessages::LightningMessage.load(payload)
+          [message, 0, remainder]
         end
 
         def send_to(listener, message)
@@ -122,14 +122,14 @@ module Lightning
           listener << message
         end
 
-        def decrypt_and_send(buffer, listener)
-          return +'' if buffer.nil? || buffer.empty?
+        def decrypt_and_send(buffer, length, listener)
+          return [+'', length] if buffer.nil? || buffer.empty?
           begin
-            lightning_message, remainder = decrypt(buffer)
+            lightning_message, length, remainder = decrypt(buffer, length)
             send_to(listener, lightning_message) if lightning_message
             buffer = remainder || +''
           end while lightning_message && !buffer.empty?
-          buffer
+          [buffer, length]
         end
       end
 
@@ -178,17 +178,17 @@ module Lightning
             @buffer += message[:data]
             self
           when Listener
-            @buffer = decrypt_and_send(@buffer, message[:listener])
+            @buffer, @length = decrypt_and_send(@buffer, @length, message[:listener])
             TransportHandlerStateWaitingForCiphertext.new(
-              @actor, @session, @static_key, @connection, buffer: @buffer, listener: message[:listener]
+              @actor, @session, @static_key, @connection, buffer: @buffer, length: @length, listener: message[:listener]
             )
           end
         end
       end
 
       class TransportHandlerStateWaitingForCiphertext < TransportHandlerState
-        def initialize(actor, session, static_key, connection, buffer: +'', listener: nil)
-          super(actor, session, static_key, connection, buffer: buffer)
+        def initialize(actor, session, static_key, connection, buffer: +'', length: 0, listener: nil)
+          super(actor, session, static_key, connection, buffer: buffer, length: length)
           @listener = listener
         end
 
@@ -196,7 +196,7 @@ module Lightning
           case message
           when Received
             @buffer += message[:data]
-            @buffer = decrypt_and_send(@buffer, @listener)
+            @buffer, @length = decrypt_and_send(@buffer, @length, @listener)
           when Lightning::Wire::LightningMessages
             ciphertext = encrypt(message.to_payload)
             log(Logger::DEBUG, '/transport', "SEND_DATA #{message.to_payload.bth}")
