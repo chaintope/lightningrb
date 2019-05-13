@@ -5,6 +5,24 @@ require 'jsonclient'
 module Lightning
   module Blockchain
     class BitcoinService
+      attr_reader :block_height
+
+      def initialize
+        @stub = Bitcoin::Grpc::Blockchain::Stub.new(build_bitcoin_grpc_url, :this_channel_is_insecure)
+        @block_height = blockchain_info['headers']
+        Thread.start do
+          request = Bitcoin::Grpc::EventsRequest.new(operation: :SUBSCRIBE, event_type: "BlockCreated")
+          responses = @stub.events([request])
+          responses.each do |response|
+            if response.block_created
+              if @block_height < response.block_created.height
+                @block_height = response.block_created.height
+              end
+            end
+          end
+        end
+      end
+
       def generate_new_address(account_name)
         create_account(account_name)
         client = JSONClient.new

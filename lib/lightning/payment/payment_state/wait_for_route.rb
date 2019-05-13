@@ -28,7 +28,7 @@ module Lightning
         end
 
         def block_height
-          context.spv.blockchain_info['headers']
+          context.spv.block_height
         end
       end
     end

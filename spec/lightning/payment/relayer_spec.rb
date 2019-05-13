@@ -18,7 +18,7 @@ describe Lightning::Payment::Relayer do
     let(:channel_announcement) { build(:channel_announcement) }
     let(:channel_update) { build(:channel_update) }
 
-    before { spv.stub(:blockchain_info).and_return({ 'headers' => 999 }) }
+    before { spv.stub(:block_height).and_return(999) }
 
     describe 'ChannelStateChanged' do
     end
