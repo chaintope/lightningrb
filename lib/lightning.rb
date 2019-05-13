@@ -18,6 +18,7 @@ require 'lightning/invoice'
 require 'lightning/onion'
 require 'noise'
 require 'protobuf'
+require 'yaml'
 
 require 'extensions'
 
