@@ -13,6 +13,7 @@ service LightningService {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
   rpc Connect(ConnectRequest) returns (stream ConnectResponse);
   rpc Open(OpenRequest) returns (stream OpenResponse);
+  rpc Invoice(InvoiceRequest) returns (InvoiceResponse);
 }
 
 enum Operation {
@@ -74,4 +75,34 @@ message OpenResponse {
     lightning.router.events.ChannelRegistered channel_registered = 6;
     lightning.router.events.ChannelUpdated channel_updated = 7;
   }
+}
+
+message InvoiceRequest {
+  uint64 amount_msat = 1;
+  string description = 2;
+}
+
+message InvoiceResponse {
+  string prefix = 1;
+  uint64 amount = 2;
+  string multiplier = 3;
+  uint64 timestamp = 4;
+  string signature = 5;
+  string payment_hash = 6;
+  string description = 7;
+  string pubkey = 8;
+  string description_hash = 9;
+  uint32 expiry = 10;
+  uint32 min_final_cltv_expiry = 11;
+  string fallback_address = 12;
+  repeated RoutingInfo routing_info = 13;
+  string payload = 14;
+}
+
+message RoutingInfo {
+  string pubkey = 1;
+  uint64 short_channel_id = 2;
+  uint64 fee_base_msat = 3;
+  uint64 fee_proportional_millionths = 4;
+  uint32 cltv_expiry_delta = 5;
 }

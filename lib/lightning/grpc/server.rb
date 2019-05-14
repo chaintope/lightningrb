@@ -44,6 +44,13 @@ module Lightning
         log(Logger::ERROR, 'open', "#{e.message}")
         log(Logger::ERROR, 'open', "#{e.backtrace}")
       end
+
+      def invoice(request, _call)
+        Lightning::Grpc::Api::Invoice.new(context, publisher).execute(request)
+      rescue => e
+        log(Logger::ERROR, 'invoice', "#{e.message}")
+        log(Logger::ERROR, 'invoice', "#{e.backtrace}")
+      end
     end
   end
 end

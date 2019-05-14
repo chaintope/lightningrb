@@ -59,6 +59,33 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :channel_updated, :message, 7, "lightning.router.events.ChannelUpdated"
     end
   end
+  add_message "lightning.grpc.InvoiceRequest" do
+    optional :amount_msat, :uint64, 1
+    optional :description, :string, 2
+  end
+  add_message "lightning.grpc.InvoiceResponse" do
+    optional :prefix, :string, 1
+    optional :amount, :uint64, 2
+    optional :multiplier, :string, 3
+    optional :timestamp, :uint64, 4
+    optional :signature, :string, 5
+    optional :payment_hash, :string, 6
+    optional :description, :string, 7
+    optional :pubkey, :string, 8
+    optional :description_hash, :string, 9
+    optional :expiry, :uint32, 10
+    optional :min_final_cltv_expiry, :uint32, 11
+    optional :fallback_address, :string, 12
+    repeated :routing_info, :message, 13, "lightning.grpc.RoutingInfo"
+    optional :payload, :string, 14
+  end
+  add_message "lightning.grpc.RoutingInfo" do
+    optional :pubkey, :string, 1
+    optional :short_channel_id, :uint64, 2
+    optional :fee_base_msat, :uint64, 3
+    optional :fee_proportional_millionths, :uint64, 4
+    optional :cltv_expiry_delta, :uint32, 5
+  end
   add_enum "lightning.grpc.Operation" do
     value :SUBSCRIBE, 0
     value :UNSUBSCRIBE, 1
@@ -73,6 +100,9 @@ module Lightning
     ConnectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectResponse").msgclass
     OpenRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.OpenRequest").msgclass
     OpenResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.OpenResponse").msgclass
+    InvoiceRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.InvoiceRequest").msgclass
+    InvoiceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.InvoiceResponse").msgclass
+    RoutingInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.RoutingInfo").msgclass
     Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Operation").enummodule
   end
 end
