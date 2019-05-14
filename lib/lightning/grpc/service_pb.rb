@@ -3,7 +3,9 @@
 
 require 'google/protobuf'
 
+require 'lightning/wire/types_pb'
 require 'lightning/channel/events_pb'
+require 'lightning/io/events_pb'
 require 'lightning/payment/events_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.grpc.EventsRequest" do
@@ -27,6 +29,17 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :payment_succeeded, :message, 304, "lightning.payment.events.PaymentSucceeded"
     end
   end
+  add_message "lightning.grpc.ConnectRequest" do
+    optional :remote_node_id, :string, 1
+    optional :host, :string, 2
+    optional :port, :uint32, 3
+  end
+  add_message "lightning.grpc.ConnectResponse" do
+    oneof :event do
+      optional :peer_connected, :message, 1, "lightning.io.events.PeerConnected"
+      optional :peer_disconnected, :message, 2, "lightning.io.events.PeerDisconnected"
+    end
+  end
   add_enum "lightning.grpc.Operation" do
     value :SUBSCRIBE, 0
     value :UNSUBSCRIBE, 1
@@ -37,6 +50,8 @@ module Lightning
   module Grpc
     EventsRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.EventsRequest").msgclass
     EventsResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.EventsResponse").msgclass
+    ConnectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectRequest").msgclass
+    ConnectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectResponse").msgclass
     Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Operation").enummodule
   end
 end

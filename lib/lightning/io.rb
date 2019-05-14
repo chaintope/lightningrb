@@ -14,4 +14,8 @@ module Lightning
     autoload :ServerConnection, 'lightning/io/server'
     autoload :Switchboard, 'lightning/io/switchboard'
   end
+
+  module Io
+    autoload :Events, 'lightning/io/events'
+  end
 end

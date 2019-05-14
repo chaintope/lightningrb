@@ -121,6 +121,8 @@ module Lightning
               task.execute
             end
 
+            context.broadcast << Lightning::Io::Events::PeerConnected.new(remote_node_id: remote_node_id)
+
             [
               PeerStateConnected.new(authenticator, context, remote_node_id, transport: transport),
               ConnectedData[data[:address_opt], data[:session], message, channels],
@@ -133,6 +135,7 @@ module Lightning
             task.execute
             [self, data]
           when Lightning::IO::AuthenticateMessages::Unauthenticated
+            context.broadcast << Lightning::Io::Events::PeerDisconnected.new(remote_node_id: remote_node_id)
             [
               PeerStateDisconnected.new(authenticator, context, remote_node_id),
               DisconnectedData[data[:address_opt]]
@@ -236,6 +239,7 @@ module Lightning
             end
             transport << message[:message] unless filtered
           when Lightning::IO::AuthenticateMessages::Unauthenticated
+            context.broadcast << Lightning::Io::Events::PeerDisconnected.new(remote_node_id: remote_node_id)
             return [
               PeerStateDisconnected.new(authenticator, context, remote_node_id),
               DisconnectedData[data[:address_opt]]

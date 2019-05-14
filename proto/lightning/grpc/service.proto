@@ -2,11 +2,15 @@ syntax = "proto3";
 
 package lightning.grpc;
 
+import "lightning/wire/types.proto";
+
 import "lightning/channel/events.proto";
+import "lightning/io/events.proto";
 import "lightning/payment/events.proto";
 
 service LightningService {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
+  rpc Connect(ConnectRequest) returns (stream ConnectResponse);
 }
 
 enum Operation {
@@ -36,3 +40,17 @@ message EventsResponse {
     lightning.payment.events.PaymentSucceeded payment_succeeded = 304;
   }
 }
+
+message ConnectRequest {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+  string host = 2 ;
+  uint32 port = 3 [(lightning.wire.bits) = 16];
+}
+
+message ConnectResponse {
+  oneof event {
+    lightning.io.events.PeerConnected peer_connected = 1;
+    lightning.io.events.PeerDisconnected peer_disconnected = 2;
+  }
+}
+

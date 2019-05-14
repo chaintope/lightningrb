@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package lightning.io.events;
+
+import "lightning/wire/types.proto";
+
+message PeerConnected {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+}
+
+message PeerDisconnected {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+}

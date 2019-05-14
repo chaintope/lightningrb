@@ -16,6 +16,7 @@ module Lightning
         self.service_name = 'lightning.grpc.LightningService'
 
         rpc :Events, stream(EventsRequest), stream(EventsResponse)
+        rpc :Connect, ConnectRequest, stream(ConnectResponse)
       end
 
       Stub = Service.rpc_stub_class
