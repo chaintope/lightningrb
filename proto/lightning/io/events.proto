@@ -8,6 +8,10 @@ message PeerConnected {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
 }
 
+message PeerAlreadyConnected {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+}
+
 message PeerDisconnected {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
 }

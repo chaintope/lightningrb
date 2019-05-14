@@ -7,10 +7,12 @@ import "lightning/wire/types.proto";
 import "lightning/channel/events.proto";
 import "lightning/io/events.proto";
 import "lightning/payment/events.proto";
+import "lightning/router/events.proto";
 
 service LightningService {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
   rpc Connect(ConnectRequest) returns (stream ConnectResponse);
+  rpc Open(OpenRequest) returns (stream OpenResponse);
 }
 
 enum Operation {
@@ -50,7 +52,26 @@ message ConnectRequest {
 message ConnectResponse {
   oneof event {
     lightning.io.events.PeerConnected peer_connected = 1;
-    lightning.io.events.PeerDisconnected peer_disconnected = 2;
+    lightning.io.events.PeerAlreadyConnected peer_already_connected = 2;
+    lightning.io.events.PeerDisconnected peer_disconnected = 3;
   }
 }
 
+message OpenRequest {
+  string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
+  uint64 funding_satoshis = 2;
+  uint64 push_msat = 3;
+  uint32 channel_flags = 4;
+}
+
+message OpenResponse {
+  oneof event {
+    lightning.channel.events.ChannelCreated channel_created = 1;
+    lightning.channel.events.ChannelRestored channel_restored = 2;
+    lightning.channel.events.ChannelIdAssigned channel_id_assigned = 3;
+    lightning.channel.events.ShortChannelIdAssigned short_channel_id_assigned = 4;
+    lightning.channel.events.LocalChannelUpdate local_channel_update = 5;
+    lightning.router.events.ChannelRegistered channel_registered = 6;
+    lightning.router.events.ChannelUpdated channel_updated = 7;
+  }
+}

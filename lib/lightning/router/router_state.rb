@@ -96,7 +96,7 @@ module Lightning
               log(Logger::DEBUG, 'router_state', "signature invalid #{message.to_payload.bth}")
               [self, data]
             elsif data[:updates].key?(desc)
-              # TODO: ChannelUpdateReceived
+              context.broadcast << Lightning::Router::Events::ChannelUpdated.new(short_channel_id: message.short_channel_id)
               context.channel_db.insert_or_update_channel_update(message)
               log(Logger::INFO, :router_state, '================================================================================')
               log(Logger::INFO, :router_state, '')
@@ -105,7 +105,7 @@ module Lightning
               log(Logger::INFO, :router_state, '================================================================================')
               [self, data.copy(updates: data[:updates].merge(desc => message))]
             else
-              # TODO: ChannelUpdateReceived
+              context.broadcast << Lightning::Router::Events::ChannelRegistered.new(short_channel_id: message.short_channel_id)
               context.channel_db.insert_or_update_channel_update(message)
               log(Logger::INFO, :router_state, '================================================================================')
               log(Logger::INFO, :router_state, '')

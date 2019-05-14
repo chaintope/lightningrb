@@ -17,6 +17,7 @@ module Lightning
 
         rpc :Events, stream(EventsRequest), stream(EventsResponse)
         rpc :Connect, ConnectRequest, stream(ConnectResponse)
+        rpc :Open, OpenRequest, stream(OpenResponse)
       end
 
       Stub = Service.rpc_stub_class

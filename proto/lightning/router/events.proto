@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package lightning.router.events;
+
+import "lightning/wire/types.proto";
+
+message ChannelRegistered {
+  uint64 short_channel_id = 1;
+}
+
+message ChannelUpdated {
+  uint64 short_channel_id = 1;
+}

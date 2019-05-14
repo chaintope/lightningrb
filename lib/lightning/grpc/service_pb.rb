@@ -7,6 +7,7 @@ require 'lightning/wire/types_pb'
 require 'lightning/channel/events_pb'
 require 'lightning/io/events_pb'
 require 'lightning/payment/events_pb'
+require 'lightning/router/events_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.grpc.EventsRequest" do
     optional :operation, :enum, 1, "lightning.grpc.Operation"
@@ -37,7 +38,25 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.grpc.ConnectResponse" do
     oneof :event do
       optional :peer_connected, :message, 1, "lightning.io.events.PeerConnected"
-      optional :peer_disconnected, :message, 2, "lightning.io.events.PeerDisconnected"
+      optional :peer_already_connected, :message, 2, "lightning.io.events.PeerAlreadyConnected"
+      optional :peer_disconnected, :message, 3, "lightning.io.events.PeerDisconnected"
+    end
+  end
+  add_message "lightning.grpc.OpenRequest" do
+    optional :remote_node_id, :string, 1
+    optional :funding_satoshis, :uint64, 2
+    optional :push_msat, :uint64, 3
+    optional :channel_flags, :uint32, 4
+  end
+  add_message "lightning.grpc.OpenResponse" do
+    oneof :event do
+      optional :channel_created, :message, 1, "lightning.channel.events.ChannelCreated"
+      optional :channel_restored, :message, 2, "lightning.channel.events.ChannelRestored"
+      optional :channel_id_assigned, :message, 3, "lightning.channel.events.ChannelIdAssigned"
+      optional :short_channel_id_assigned, :message, 4, "lightning.channel.events.ShortChannelIdAssigned"
+      optional :local_channel_update, :message, 5, "lightning.channel.events.LocalChannelUpdate"
+      optional :channel_registered, :message, 6, "lightning.router.events.ChannelRegistered"
+      optional :channel_updated, :message, 7, "lightning.router.events.ChannelUpdated"
     end
   end
   add_enum "lightning.grpc.Operation" do
@@ -52,6 +71,8 @@ module Lightning
     EventsResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.EventsResponse").msgclass
     ConnectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectRequest").msgclass
     ConnectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectResponse").msgclass
+    OpenRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.OpenRequest").msgclass
+    OpenResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.OpenResponse").msgclass
     Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Operation").enummodule
   end
 end

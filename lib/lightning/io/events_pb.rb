@@ -8,6 +8,9 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.io.events.PeerConnected" do
     optional :remote_node_id, :string, 1
   end
+  add_message "lightning.io.events.PeerAlreadyConnected" do
+    optional :remote_node_id, :string, 1
+  end
   add_message "lightning.io.events.PeerDisconnected" do
     optional :remote_node_id, :string, 1
   end
@@ -17,6 +20,7 @@ module Lightning
   module Io
     module Events
       PeerConnected = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.io.events.PeerConnected").msgclass
+      PeerAlreadyConnected = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.io.events.PeerAlreadyConnected").msgclass
       PeerDisconnected = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.io.events.PeerDisconnected").msgclass
     end
   end

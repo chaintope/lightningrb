@@ -37,6 +37,13 @@ module Lightning
         log(Logger::ERROR, 'connect', "#{e.message}")
         log(Logger::ERROR, 'connect', "#{e.backtrace}")
       end
+
+      def open(request, _call)
+        Lightning::Grpc::Api::Open.new(context, publisher).execute(request)
+      rescue => e
+        log(Logger::ERROR, 'open', "#{e.message}")
+        log(Logger::ERROR, 'open', "#{e.backtrace}")
+      end
     end
   end
 end

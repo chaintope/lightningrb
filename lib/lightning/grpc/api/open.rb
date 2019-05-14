@@ -3,7 +3,7 @@
 module Lightning
   module Grpc
     module Api
-      class Connect
+      class Open
         attr_reader :context, :publisher
 
         def initialize(context, publisher)
@@ -14,13 +14,13 @@ module Lightning
         def execute(request)
           events = []
 
-          receiver = ConnectReceiver.spawn(:receiver, events, context, publisher)
+          receiver = OpenReceiver.spawn(:receiver, events, context, publisher)
           receiver << request
 
-          ConnectResponseEnum.new(events).each
+          OpenResponseEnum.new(events).each
         end
 
-        class ConnectReceiver < Concurrent::Actor::Context
+        class OpenReceiver < Concurrent::Actor::Context
           include Concurrent::Concern::Logging
 
           attr_reader :events, :context, :publisher
@@ -33,11 +33,17 @@ module Lightning
 
           def on_message(message)
             case message
-            when Lightning::Grpc::ConnectRequest
-              publisher << [:subscribe, Lightning::Io::Events::PeerConnected]
-              publisher << [:subscribe, Lightning::Io::Events::PeerAlreadyConnected]
-              publisher << [:subscribe, Lightning::Io::Events::PeerDisconnected]
-              context.switchboard << Lightning::IO::PeerEvents::Connect[message.remote_node_id, message.host, message.port]
+            when Lightning::Grpc::OpenRequest
+              publisher << [:subscribe, Lightning::Channel::Events::ChannelCreated]
+              publisher << [:subscribe, Lightning::Channel::Events::ChannelRestored]
+              publisher << [:subscribe, Lightning::Channel::Events::ChannelIdAssigned]
+              publisher << [:subscribe, Lightning::Channel::Events::ShortChannelIdAssigned]
+              publisher << [:subscribe, Lightning::Channel::Events::LocalChannelUpdate]
+              publisher << [:subscribe, Lightning::Router::Events::ChannelRegistered]
+              publisher << [:subscribe, Lightning::Router::Events::ChannelUpdated]
+              context.switchboard << Lightning::IO::PeerEvents::OpenChannel[
+                message.remote_node_id, message.funding_satoshis, message.push_msat, message.channel_flags, {}
+              ]
             else
               events << message
             end
@@ -47,7 +53,7 @@ module Lightning
           end
         end
 
-        class ConnectResponseEnum
+        class OpenResponseEnum
           attr_reader :events
 
           def initialize(events)
@@ -59,7 +65,7 @@ module Lightning
             loop do
               event = events.shift
               if event
-                response = Lightning::Grpc::ConnectResponse.new
+                response = Lightning::Grpc::OpenResponse.new
                 field = event.class.name.split('::').last.snake
                 response[field] = event
                 yield response

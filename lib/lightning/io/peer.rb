@@ -244,6 +244,8 @@ module Lightning
               PeerStateDisconnected.new(authenticator, context, remote_node_id),
               DisconnectedData[data[:address_opt]]
             ]
+          when Connect
+            context.broadcast << Lightning::Io::Events::PeerAlreadyConnected.new(remote_node_id: remote_node_id)
           else
             log(Logger::WARN, '/peer@connected', "unhandled message: #{message.inspect}, data:#{data}")
           end
