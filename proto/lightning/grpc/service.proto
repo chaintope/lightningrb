@@ -14,6 +14,7 @@ service LightningService {
   rpc Connect(ConnectRequest) returns (stream ConnectResponse);
   rpc Open(OpenRequest) returns (stream OpenResponse);
   rpc Invoice(InvoiceRequest) returns (InvoiceResponse);
+  rpc Payment(PaymentRequest) returns (stream PaymentResponse);
 }
 
 enum Operation {
@@ -106,3 +107,16 @@ message RoutingInfo {
   uint64 fee_proportional_millionths = 4;
   uint32 cltv_expiry_delta = 5;
 }
+
+message PaymentRequest {
+  string node_id = 1;
+  string payment_hash = 2;
+  uint64 amount_msat = 3;
+}
+
+message PaymentResponse {
+  oneof event {
+    lightning.payment.events.PaymentSucceeded payment_succeeded = 1;
+  }
+}
+

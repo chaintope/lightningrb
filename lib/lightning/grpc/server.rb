@@ -11,7 +11,7 @@ module Lightning
 
       def self.run(context, publisher)
         addr = "0.0.0.0:8080"
-        s = GRPC::RpcServer.new
+        s = GRPC::RpcServer.new(pool_size: 300)
         s.add_http2_port(addr, :this_port_is_insecure)
         s.handle(new(context, publisher))
         s.run_till_terminated
@@ -25,6 +25,7 @@ module Lightning
       end
 
       def events(requests)
+        log(Logger::INFO, 'events', "#{requests.inspect}")
         Lightning::Grpc::Api::Events.new(publisher).execute(requests)
       rescue => e
         log(Logger::ERROR, 'events', "#{e.message}")
@@ -32,6 +33,7 @@ module Lightning
       end
 
       def connect(request, _call)
+        log(Logger::INFO, 'connect', "#{request.inspect}")
         Lightning::Grpc::Api::Connect.new(context, publisher).execute(request)
       rescue => e
         log(Logger::ERROR, 'connect', "#{e.message}")
@@ -39,6 +41,7 @@ module Lightning
       end
 
       def open(request, _call)
+        log(Logger::INFO, 'open', "#{request.inspect}")
         Lightning::Grpc::Api::Open.new(context, publisher).execute(request)
       rescue => e
         log(Logger::ERROR, 'open', "#{e.message}")
@@ -46,10 +49,19 @@ module Lightning
       end
 
       def invoice(request, _call)
+        log(Logger::INFO, 'invoice', "#{request.inspect}")
         Lightning::Grpc::Api::Invoice.new(context, publisher).execute(request)
       rescue => e
         log(Logger::ERROR, 'invoice', "#{e.message}")
         log(Logger::ERROR, 'invoice', "#{e.backtrace}")
+      end
+
+      def payment(request, _call)
+        log(Logger::INFO, 'payment', "#{request.inspect}")
+        Lightning::Grpc::Api::Payment.new(context, publisher).execute(request)
+      rescue => e
+        log(Logger::ERROR, 'payment', "#{e.message}")
+        log(Logger::ERROR, 'payment', "#{e.backtrace}")
       end
     end
   end

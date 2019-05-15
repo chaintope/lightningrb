@@ -86,6 +86,16 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :fee_proportional_millionths, :uint64, 4
     optional :cltv_expiry_delta, :uint32, 5
   end
+  add_message "lightning.grpc.PaymentRequest" do
+    optional :node_id, :string, 1
+    optional :payment_hash, :string, 2
+    optional :amount_msat, :uint64, 3
+  end
+  add_message "lightning.grpc.PaymentResponse" do
+    oneof :event do
+      optional :payment_succeeded, :message, 1, "lightning.payment.events.PaymentSucceeded"
+    end
+  end
   add_enum "lightning.grpc.Operation" do
     value :SUBSCRIBE, 0
     value :UNSUBSCRIBE, 1
@@ -103,6 +113,8 @@ module Lightning
     InvoiceRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.InvoiceRequest").msgclass
     InvoiceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.InvoiceResponse").msgclass
     RoutingInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.RoutingInfo").msgclass
+    PaymentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.PaymentRequest").msgclass
+    PaymentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.PaymentResponse").msgclass
     Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Operation").enummodule
   end
 end

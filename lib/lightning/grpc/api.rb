@@ -7,6 +7,7 @@ module Lightning
       autoload :Events, 'lightning/grpc/api/events'
       autoload :Open, 'lightning/grpc/api/open'
       autoload :Invoice, 'lightning/grpc/api/invoice'
+      autoload :Payment, 'lightning/grpc/api/payment'
     end
   end
 end

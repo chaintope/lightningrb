@@ -19,6 +19,7 @@ module Lightning
         rpc :Connect, ConnectRequest, stream(ConnectResponse)
         rpc :Open, OpenRequest, stream(OpenResponse)
         rpc :Invoice, InvoiceRequest, InvoiceResponse
+        rpc :Payment, PaymentRequest, stream(PaymentResponse)
       end
 
       Stub = Service.rpc_stub_class
