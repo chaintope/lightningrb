@@ -1,0 +1,94 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'lightning'
+require 'logger'
+
+local_node_ip = "localhost"
+remote_node_ip = "172.28.1.2"
+remote_node_id = "0353ecf9a7cdd9ddde6c49ce5f2384480d1e09c959d6715413e0d8b690198090f2"
+payment_count = 10
+
+stub = Lightning::Grpc::LightningService::Stub.new("#{local_node_ip}:8080", :this_channel_is_insecure)
+time = Time.now.strftime("%Y%m%d.%H%M%S")
+log = Logger.new("log/benchmark.#{time}.log")
+
+log.info("local_node_ip:#{local_node_ip}, remote_node_ip: #{remote_node_ip}, remote_node_id: #{remote_node_id}")
+log.info("payment_count: #{payment_count}")
+
+# Connect to peer
+request = Lightning::Grpc::ConnectRequest.new(
+  remote_node_id: remote_node_id,
+  host: remote_node_ip,
+  port: 9735
+)
+responses = stub.connect(request)
+responses.each do |response|
+  log.info response.inspect
+  # wait until connected
+  case
+  when response.peer_connected
+    break
+  when response.peer_already_connected
+    break
+  end
+end
+
+# Open channel
+request = Lightning::Grpc::OpenRequest.new(
+  remote_node_id: remote_node_id,
+  funding_satoshis: 10_000_000,
+  push_msat: 10_000_000 * 0.1 * 1000,
+  channel_flags: 0x01
+)
+responses = stub.open(request)
+responses.each do |response|
+  log.info response.inspect
+  case
+  when response.channel_registered
+    break
+  when response.channel_updated
+    break
+  end
+end
+
+# Invoice
+invoices = []
+remote_stub = Lightning::Grpc::LightningService::Stub.new("#{remote_node_ip}:8080", :this_channel_is_insecure)
+payment_count.times do
+  request = Lightning::Grpc::InvoiceRequest.new(
+    amount_msat: 1,
+    description: 'nonsense'
+  )
+  response = remote_stub.invoice(request)
+  log.info response.inspect
+  invoices << response
+end
+
+# Payment
+log.info("Start payment")
+payment_responses = {}
+invoices.each do |invoice|
+  request = Lightning::Grpc::PaymentRequest.new(
+    node_id: remote_node_id,
+    amount_msat: 1,
+    payment_hash: invoice.payment_hash
+  )
+  payment_responses[invoice.payment_hash] = stub.payment(request)
+end
+
+threads = []
+payment_responses.each do |payment_hash, responses|
+  threads << Thread.start(responses) do |responses|
+    responses.each do |response|
+      log.info response.inspect
+      case
+      when response.payment_succeeded
+        break
+      end
+    end
+  end
+end
+
+threads.each(&:join)
+log.info("End payment")
