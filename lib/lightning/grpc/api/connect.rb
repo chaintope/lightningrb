@@ -14,8 +14,7 @@ module Lightning
         def execute(request)
           events = []
 
-          receiver = ConnectReceiver.spawn(:receiver, events, context, publisher)
-          receiver << request
+          ConnectReceiver.spawn(:receiver, events, context, publisher, request)
 
           ConnectResponseEnum.new(events).each
         end
@@ -23,27 +22,29 @@ module Lightning
         class ConnectReceiver < Concurrent::Actor::Context
           include Concurrent::Concern::Logging
 
-          attr_reader :events, :context, :publisher
+          attr_reader :events
 
-          def initialize(events, context, publisher)
+          def initialize(events, context, publisher, request)
             @events = events
-            @context = context
-            @publisher = publisher
+            @request = request
+            publisher << [:subscribe, Lightning::Io::Events::PeerConnected]
+            publisher << [:subscribe, Lightning::Io::Events::PeerAlreadyConnected]
+            publisher << [:subscribe, Lightning::Io::Events::PeerDisconnected]
+
+            context.switchboard << Lightning::IO::PeerEvents::Connect[request.remote_node_id, request.host, request.port]
           end
 
           def on_message(message)
             case message
-            when Lightning::Grpc::ConnectRequest
-              publisher << [:subscribe, Lightning::Io::Events::PeerConnected]
-              publisher << [:subscribe, Lightning::Io::Events::PeerAlreadyConnected]
-              publisher << [:subscribe, Lightning::Io::Events::PeerDisconnected]
-              context.switchboard << Lightning::IO::PeerEvents::Connect[message.remote_node_id, message.host, message.port]
-            else
-              events << message
+            when Lightning::Io::Events::PeerConnected, Lightning::Io::Events::PeerAlreadyConnected
+              if message.remote_node_id == @request.remote_node_id
+                events << message
+              end
+            when Lightning::Io::Events::PeerDisconnected
+              if message.remote_node_id == @request.remote_node_id
+                events << message
+              end
             end
-          rescue NameError => e
-            log(Logger::ERROR, 'connect', "#{e.message}")
-            log(Logger::ERROR, 'connect', "#{e.backtrace}")
           end
         end
 

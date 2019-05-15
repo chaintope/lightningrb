@@ -14,42 +14,57 @@ module Lightning
         def execute(request)
           events = []
 
-          receiver = OpenReceiver.spawn(:receiver, events, context, publisher)
-          receiver << request
-
+          OpenReceiver.spawn(:receiver, events, context, publisher, request)
           OpenResponseEnum.new(events).each
         end
 
         class OpenReceiver < Concurrent::Actor::Context
           include Concurrent::Concern::Logging
 
-          attr_reader :events, :context, :publisher
+          attr_reader :events, :context
 
-          def initialize(events, context, publisher)
+          def initialize(events, context, publisher, request)
             @events = events
             @context = context
-            @publisher = publisher
+            @request = request
+            publisher << [:subscribe, Lightning::Channel::Events::ChannelCreated]
+            publisher << [:subscribe, Lightning::Channel::Events::ChannelRestored]
+            publisher << [:subscribe, Lightning::Channel::Events::ChannelIdAssigned]
+            publisher << [:subscribe, Lightning::Channel::Events::ShortChannelIdAssigned]
+            publisher << [:subscribe, Lightning::Channel::Events::LocalChannelUpdate]
+            publisher << [:subscribe, Lightning::Router::Events::ChannelRegistered]
+            publisher << [:subscribe, Lightning::Router::Events::ChannelUpdated]
+            context.switchboard << Lightning::IO::PeerEvents::OpenChannel[
+              request.remote_node_id, request.funding_satoshis, request.push_msat, request.channel_flags, {}
+            ]
           end
 
           def on_message(message)
             case message
-            when Lightning::Grpc::OpenRequest
-              publisher << [:subscribe, Lightning::Channel::Events::ChannelCreated]
-              publisher << [:subscribe, Lightning::Channel::Events::ChannelRestored]
-              publisher << [:subscribe, Lightning::Channel::Events::ChannelIdAssigned]
-              publisher << [:subscribe, Lightning::Channel::Events::ShortChannelIdAssigned]
-              publisher << [:subscribe, Lightning::Channel::Events::LocalChannelUpdate]
-              publisher << [:subscribe, Lightning::Router::Events::ChannelRegistered]
-              publisher << [:subscribe, Lightning::Router::Events::ChannelUpdated]
-              context.switchboard << Lightning::IO::PeerEvents::OpenChannel[
-                message.remote_node_id, message.funding_satoshis, message.push_msat, message.channel_flags, {}
-              ]
-            else
-              events << message
+            when Lightning::Channel::Events::ChannelCreated
+              if message.remote_node_id == @request.remote_node_id
+                @temporary_channel_id = message.temporary_channel_id
+                events << message
+              end
+            when Lightning::Channel::Events::ChannelIdAssigned
+              if message.temporary_channel_id == @temporary_channel_id
+                @channel_id = message.channel_id
+                events << message
+              end
+            when Lightning::Channel::Events::ShortChannelIdAssigned
+              if message.channel_id == @channel_id
+                @short_channel_id = message.short_channel_id
+                events << message
+              end
+            when Lightning::Router::Events::ChannelRegistered
+              if message.short_channel_id == @short_channel_id
+                events << message
+              end
+            when Lightning::Router::Events::ChannelUpdated
+              if message.short_channel_id == @short_channel_id
+                events << message
+              end
             end
-          rescue NameError => e
-            log(Logger::ERROR, 'connect', "#{e.message}")
-            log(Logger::ERROR, 'connect', "#{e.backtrace}")
           end
         end
 
