@@ -2,12 +2,12 @@ bitcoin:
   rpc:
     url: 'http://localhost:18443'
   grpc:
-    url: 'http://localhost:8080'
+    url: 'localhost:8080'
 lightning:
   ping_interval: 0
   dust_limit_satoshis: 546
   max_htlc_value_in_flight_msat: 100_000
-  reserve_to_funding_ratio: 01
+  reserve_to_funding_ratio: 0.01
   htlc_minimum_msat: 0
   delay_blocks: 144
   max_accepted_htlcs: 300

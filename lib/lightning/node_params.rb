@@ -35,7 +35,7 @@ module Lightning
       @extended_private_key = master
 
       yml = YAML.load_file('config.yml')
-      yml = yml['lightningrb'] || {}
+      yml = yml['lightning'] || {}
       @ping_interval = yml['ping_interval'] || 0
       @dust_limit_satoshis = yml['dust_limit_satoshis'] || 546
       @max_htlc_value_in_flight_msat = yml['max_htlc_value_in_flight_msat'] || 100_000
