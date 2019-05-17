@@ -3,18 +3,46 @@
 require 'bundler/setup'
 require 'lightning'
 require 'logger'
+require 'jsonclient'
+
+#----------------------------------------------------------------------------------------------------
+
+payment_count = 10
 
 local_node_ip = "localhost"
+local_node_id = "0266e2d965e784a97cdbee9a39ad6aea5bb27fb88ebe1787fa084b2c8c391c9a7a"
+
 remote_node_ip = "172.28.1.2"
 remote_node_id = "0353ecf9a7cdd9ddde6c49ce5f2384480d1e09c959d6715413e0d8b690198090f2"
-payment_count = 10
+
+# BTC fullnode setting
+domain = "http://btc1:18443"
+username = "username"
+password = "password"
+endpoint = "http://btc1:18443"
+
+#----------------------------------------------------------------------------------------------------
 
 stub = Lightning::Grpc::LightningService::Stub.new("#{local_node_ip}:8080", :this_channel_is_insecure)
 time = Time.now.strftime("%Y%m%d.%H%M%S")
 log = Logger.new("log/benchmark.#{time}.log")
 
-log.info("local_node_ip:#{local_node_ip}, remote_node_ip: #{remote_node_ip}, remote_node_id: #{remote_node_id}")
+log.info("local_node_ip: #{local_node_ip}, remote_node_ip: #{remote_node_ip}, remote_node_id: #{remote_node_id}")
 log.info("payment_count: #{payment_count}")
+
+# send BTC to wallet1 if wallet1 does not have enough funds.
+rpc = Lightning::Blockchain::BitcoinService.new
+address = rpc.generate_new_address(local_node_id)
+
+client = JSONClient.new
+client.debug_dev = STDOUT
+client.set_auth(domain, username, password)
+
+while balance = rpc.get_balance(local_node_id) < 1_000_000_000
+  client.post(endpoint, {'method': 'sendtoaddress','params': [address, 10]}).body
+  client.post(endpoint, {'method': 'generate','params': [1]})
+  sleep(3)
+end
 
 # Connect to peer
 request = Lightning::Grpc::ConnectRequest.new(
@@ -45,6 +73,16 @@ responses = stub.open(request)
 responses.each do |response|
   log.info response.inspect
   case
+  when response.channel_id_assigned
+    4.times do
+      sleep(3)
+      client.post(endpoint, {'method': 'generate','params': [1]})
+    end
+  when response.short_channel_id_assigned
+    4.times do
+      sleep(3)
+      client.post(endpoint, {'method': 'generate','params': [1]})
+    end
   when response.channel_registered
     break
   when response.channel_updated
@@ -67,18 +105,22 @@ end
 
 # Payment
 log.info("Start payment")
-payment_responses = {}
-invoices.each do |invoice|
+
+payment_responses = []
+
+invoices.map do |invoice|
   request = Lightning::Grpc::PaymentRequest.new(
     node_id: remote_node_id,
     amount_msat: 1,
     payment_hash: invoice.payment_hash
   )
-  payment_responses[invoice.payment_hash] = stub.payment(request)
+  payment_responses << stub.payment(request)
 end
 
+log.info("Wait payment process")
+
 threads = []
-payment_responses.each do |payment_hash, responses|
+payment_responses.each do |responses|
   threads << Thread.start(responses) do |responses|
     responses.each do |response|
       log.info response.inspect
