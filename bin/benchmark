@@ -4,6 +4,7 @@ require 'bundler/setup'
 require 'lightning'
 require 'logger'
 require 'jsonclient'
+require 'ruby-progressbar'
 
 #----------------------------------------------------------------------------------------------------
 
@@ -25,7 +26,7 @@ endpoint = "http://btc1:18443"
 
 stub = Lightning::Grpc::LightningService::Stub.new("#{local_node_ip}:8080", :this_channel_is_insecure)
 time = Time.now.strftime("%Y%m%d.%H%M%S")
-log = Logger.new("log/benchmark.#{time}.log")
+log = Logger.new(STDOUT)
 
 log.info("local_node_ip: #{local_node_ip}, remote_node_ip: #{remote_node_ip}, remote_node_id: #{remote_node_id}")
 log.info("payment_count: #{payment_count}")
@@ -38,7 +39,7 @@ client = JSONClient.new
 client.debug_dev = STDOUT
 client.set_auth(domain, username, password)
 
-while balance = rpc.get_balance(local_node_id) < 1_000_000_000
+while rpc.get_balance(local_node_id) < 1_000_000_000
   client.post(endpoint, {'method': 'sendtoaddress','params': [address, 10]}).body
   client.post(endpoint, {'method': 'generate','params': [1]})
   sleep(3)
@@ -71,7 +72,6 @@ request = Lightning::Grpc::OpenRequest.new(
 )
 responses = stub.open(request)
 responses.each do |response|
-  log.info response.inspect
   case
   when response.channel_id_assigned
     4.times do
@@ -99,7 +99,6 @@ payment_count.times do
     description: 'nonsense'
   )
   response = remote_stub.invoice(request)
-  log.info response.inspect
   invoices << response
 end
 
@@ -107,8 +106,10 @@ end
 log.info("Start payment")
 
 payment_responses = []
+pb = ProgressBar.create
 
 invoices.map do |invoice|
+  pb.progress += 100.0/payment_count
   request = Lightning::Grpc::PaymentRequest.new(
     node_id: remote_node_id,
     amount_msat: 1,
@@ -119,13 +120,14 @@ end
 
 log.info("Wait payment process")
 
+pb = ProgressBar.create
 threads = []
 payment_responses.each do |responses|
   threads << Thread.start(responses) do |responses|
     responses.each do |response|
-      log.info response.inspect
       case
       when response.payment_succeeded
+        pb.progress += 100.0/payment_count
         break
       end
     end
