@@ -39,7 +39,7 @@ module Lightning
               when :SUBSCRIBE
                 publisher << [:subscribe, clazz]
               when :UNSUBSCRIBE
-                publisher << [:unsubscribe, clazz]
+                publisher << :unsubscribe
               else
                 log(Logger::ERROR, 'events', "unsupported operation #{message.operation}")
               end

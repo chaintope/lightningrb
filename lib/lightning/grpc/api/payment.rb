@@ -37,7 +37,7 @@ module Lightning
             when Lightning::Payment::Events::PaymentSucceeded
               if message.payment_hash == @request.payment_hash
                 events << message
-                @publisher << [:unsubscribe, Lightning::Payment::Events::PaymentSucceeded]
+                @publisher.ask!(:unsubscribe)
                 reference << :terminate!
               end
             end

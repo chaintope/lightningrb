@@ -16,7 +16,7 @@ module Lightning
             @receivers[type.name] << envelope.sender
           end
         end), (on :unsubscribe do
-          @receivers.each { |receiver| receiver.delete(envelope.sender) }
+          @receivers.each { |type, receiver| receiver.delete(envelope.sender) }
         end), (on Array.(:subscribe?, ~any) do |type|
           @receivers[type.name]&.include?(envelope.sender)
         end), (on any do
