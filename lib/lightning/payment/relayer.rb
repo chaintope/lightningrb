@@ -139,7 +139,7 @@ module Lightning
         else
           channel_update = @channel_updates[hop_data.per_hop.short_channel_id]
           if !channel_update
-            CommandFailHtlc[add.id, UnknownNextPeer[true]]
+            CommandFailHtlc[add.id, UnknownNextPeer, true]
           elsif channel_update.channel_flags.to_i(16) & 64 == 64
             reason =  ChannelDisabled[channel_update.channel_flags.to_s(16), channel_update.to_payload.bth]
             CommandFailHtlc[add.id, reason, true]

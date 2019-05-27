@@ -4,6 +4,8 @@ module Lightning
   module Channel
     class ChannelState
       class WaitForFundingCreated < ChannelState
+        include Lightning::Crypto
+
         def next(message, data)
           case message
           when FundingCreated
@@ -33,7 +35,7 @@ module Lightning
               remote_first_per_commitment_point,
               # node_params.max_feerate_mismatch
             )
-            Transactions.inspect(local_commit_tx.tx)
+
             local_sig_of_local_tx = Transactions.sign(local_commit_tx.tx, local_commit_tx.utxo, local_param.funding_priv_key)
             signed_local_commit_tx = Transactions.add_sigs(
               local_commit_tx.tx,
@@ -58,19 +60,31 @@ module Lightning
             )
             channel.parent << event
             context.broadcast << event
-
-            log(Logger::INFO, :channel, "local_sig_of_remote_tx:#{local_sig_of_remote_tx}")
-
             commit_utxo = local_commit_tx.utxo
             funding_signed = FundingSigned.new(
               channel_id: channel_id,
               signature: Lightning::Wire::Signature.new(value: local_sig_of_remote_tx)
             )
             random_key = Bitcoin::Key.generate
-
-            # TODO Watch UTXO to detect it to be spent
-
+            remote_revocation_pubkey = Key.revocation_public_key(
+              local_param.revocation_basepoint, remote_first_per_commitment_point
+            )
+            remote_delayed_payment_pubkey = Key.derive_public_key(
+              remote_param.delayed_payment_basepoint, remote_first_per_commitment_point
+            )
             context.blockchain << WatchConfirmed[channel, commit_utxo.txid.rhex, context.node_params.min_depth_blocks]
+            penalty = Lightning::Transactions::Penalty.make_to_local_penalty_tx(
+              remote_commit_tx.tx,
+              local_param.dust_limit_satoshis,
+              remote_revocation_pubkey,
+              local_param.default_final_script_pubkey,
+              remote_param.to_self_delay,
+              remote_delayed_payment_pubkey,
+              data[:initial_feerate_per_kw]
+            )
+            cipher = RbNaCl::AEAD::ChaCha20Poly1305IETF.new(remote_commit_tx.tx.tx_hash.htb)
+            payload = cipher.encrypt("\x00" * 12, penalty.tx.to_payload, '').bth
+            context.watch_tower << Lightning::Blockchain::WatchTower::Register.new(head_tx_hash: remote_commit_tx.tx.tx_hash[0...32], encrypted_payload: payload)
 
             commitments = Commitments[
               local_param,

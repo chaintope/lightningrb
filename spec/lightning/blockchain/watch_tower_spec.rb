@@ -7,13 +7,6 @@ describe Lightning::Blockchain::WatchTower do
   let(:ln_context) { build(:context, spv: spv) }
   let(:watch_tower) { described_class.spawn(:watch_tower, ln_context) }
 
-  before do
-    mock = double('grpc')
-    allow(Bitcoin::Grpc::Blockchain::Stub).to receive(:new).and_return(mock)
-    allow(mock).to receive(:watch_tx_confirmed).and_return(nil)
-    allow(mock).to receive(:events).and_return([])
-  end
-
   describe 'on_message' do
     context 'with Register' do
       subject { watch_tower << message}
@@ -33,12 +26,15 @@ describe Lightning::Blockchain::WatchTower do
 
       it do
         subject
-        expect(watch_tower.ask!(:transactions)[tx_hash[0...32]]).to eq [encrypted_payload]
+        expect(watch_tower.ask!(:transactions)[tx_hash[0...32]]).to eq [[encrypted_payload, 0]]
       end
     end
 
     context 'with TxReceived' do
-      subject { watch_tower << message}
+      subject do
+        watch_tower << message
+        watch_tower.ask(:await).wait
+      end
 
       let(:message) { Bitcoin::Grpc::TxReceived.new(tx_hash: tx_hash, tx_payload: tx.to_payload.bth) }
       let(:tx) { Bitcoin::Tx.new }

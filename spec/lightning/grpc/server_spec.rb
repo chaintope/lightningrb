@@ -5,7 +5,7 @@ require 'spec_helper'
 describe Lightning::Grpc::Server do
   describe '#events' do
     subject do
-      response = described_class.new(publisher).events(requests)
+      response = described_class.new(context, publisher).events(requests)
       sleep(1) # Idle for subscribing events
       publisher.ask(:await).wait
       response
@@ -14,6 +14,7 @@ describe Lightning::Grpc::Server do
     let(:requests) { [Lightning::Grpc::EventsRequest.new(operation: :SUBSCRIBE, event_type: "Lightning::Channel::Events::ChannelCreated")] }
     let(:publisher) { Lightning::IO::Broadcast.spawn(:broadcast) }
     let(:channel) { spawn_dummy_actor }
+    let(:context) { build(:context) }
 
     it 'subscribe' do
       expect(publisher).to receive(:<<).with([:subscribe, Lightning::Channel::Events::ChannelCreated])

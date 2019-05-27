@@ -11,6 +11,7 @@ module Lightning
     autoload :HtlcSuccess, 'lightning/transactions/htlc_success'
     autoload :HtlcTimeout, 'lightning/transactions/htlc_timeout'
     autoload :Scripts, 'lightning/transactions/scripts'
+    autoload :Penalty, 'lightning/transactions/penalty'
     autoload :Utxo, 'lightning/transactions/utxo'
 
     class InvalidTransactionError < StandardError
