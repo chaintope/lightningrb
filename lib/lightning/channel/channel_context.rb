@@ -3,7 +3,7 @@
 module Lightning
   module Channel
     class ChannelContext
-      attr_accessor :node_params, :forwarder, :remote_node_id, :wallet, :blockchain, :router, :relayer, :broadcast, :spv
+      attr_accessor :node_params, :forwarder, :remote_node_id, :wallet, :blockchain, :router, :relayer, :broadcast, :spv, :watch_tower
       attr_accessor :channel_db
       def initialize(context, forwarder, remote_node_id)
         @node_params = context.node_params
@@ -14,6 +14,7 @@ module Lightning
         @router = context.router
         @relayer = context.relayer
         @broadcast = context.broadcast
+        @watch_tower = context.watch_tower
         @spv = context.spv
         @channel_db = context.channel_db
       end

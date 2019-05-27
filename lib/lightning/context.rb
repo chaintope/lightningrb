@@ -2,7 +2,8 @@
 
 module Lightning
   class Context
-    attr_accessor :node_params, :wallet, :spv, :blockchain, :router, :relayer, :broadcast, :register, :payment_handler, :payment_initiator
+    attr_accessor :node_params, :wallet, :spv, :blockchain, :router, :relayer, :broadcast, :register, :payment_handler
+    attr_accessor :payment_initiator, :watch_tower
     attr_accessor :switchboard
     attr_accessor :node_db, :peer_db, :channel_db
 
@@ -12,6 +13,7 @@ module Lightning
       @spv = spv
       @blockchain = Lightning::Blockchain::Watcher.spawn(:watcher, spv)
       @broadcast = Lightning::IO::Broadcast.spawn(:broadcast)
+      @watch_tower = Lightning::Blockchain::WatchTower.spawn(:watch_tower, self)
 
       @node_db = Lightning::Store::NodeDb.new("tmp/node_db")
       @peer_db = Lightning::Store::PeerDb.new('tmp/peer_db')
