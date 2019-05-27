@@ -5,6 +5,15 @@ require 'lightning'
 require 'factory_bot'
 require 'support/factory_bot'
 
+RSpec.configure do |config|
+  config.before do
+    mock = double('grpc')
+    allow(Bitcoin::Grpc::Blockchain::Stub).to receive(:new).and_return(mock)
+    allow(mock).to receive(:watch_tx_confirmed).and_return(nil)
+    allow(mock).to receive(:events).and_return([])
+  end
+end
+
 def test_wallet_path(wallet_id: 1)
   default_path = Dir.tmpdir + '/wallet'
   "#{default_path}wallet#{wallet_id}/"
