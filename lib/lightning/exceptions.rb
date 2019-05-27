@@ -2,7 +2,7 @@
 
 module Lightning
   module Exceptions
-    autoload :AmountBelowDustLimit, 'lightning/exceptions/amount_below_dustLimit'
+    autoload :AmountBelowDustLimit, 'lightning/exceptions/amount_below_dust_limit'
     autoload :AmountTooLarge, 'lightning/exceptions/amount_too_large'
     autoload :CannotAffordFees, 'lightning/exceptions/cannot_afford_fees'
     autoload :CannotCloseWithUnsignedOutgoingHtlcs, 'lightning/exceptions/cannot_close_with_unsigned_outgoing_htlcs'
