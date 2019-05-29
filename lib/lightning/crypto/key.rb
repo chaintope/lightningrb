@@ -17,14 +17,14 @@ module Lightning
       end
 
       def self.derive_private_key(base_point_secret, per_commitment_point)
-        # secretkey = basepoint-secret + SHA256(per-commitment-point || basepoint)
+        # privkey = basepoint-secret + SHA256(per-commitment-point || basepoint)
 
         basepoint = Bitcoin::Key.new(priv_key: base_point_secret)
-        secret_key =
+        privkey =
           base_point_secret.to_i(16) +
           Bitcoin.sha256(per_commitment_point.htb + basepoint.pubkey.htb).bth.to_i(16)
 
-        secret_key.to_s(16).rjust(64, '0')
+        (privkey % ECDSA::Group::Secp256k1.order).to_s(16).rjust(64, '0')
       end
 
       def self.per_commitment_point(seed, index)

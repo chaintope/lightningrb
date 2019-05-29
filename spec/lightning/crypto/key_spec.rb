@@ -19,6 +19,13 @@ describe Lightning::Crypto::Key do
     let(:per_commitment_point) { '025f7117a78150fe2ef97db7cfc83bd57b2e2c0d0dd25eaf467a4a1c2a45ce1486' }
 
     it { is_expected.to eq 'cbced912d3b21bf196a766651e436aff192362621ce317704ea2f75d87e7be0f' }
+
+    context 'when overflow group order' do
+      let(:base_point_secret) { 'e787680a1f1f301d59daad282218720dff4cbf7c45f5efd609e6b0d86cab88e9' }
+      let(:per_commitment_point) { '03078f2a3c8e65dcc7af1cba390a0d412c90145b017702ba94a1327a32a5437ebe' }
+
+      it { is_expected.to eq '3ba635eaffe022548f4ee9141c90d0ca3c233b570351f9086e40d085a2c6fc88' }
+    end
   end
 
   describe 'revocation_public_key_open_ssl' do
