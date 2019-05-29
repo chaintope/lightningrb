@@ -7,7 +7,8 @@ module Lightning
     class BitcoinService
       attr_reader :block_height
 
-      def initialize
+      def initialize(config: nil)
+        @config = config
         @stub = Bitcoin::Grpc::Blockchain::Stub.new(build_bitcoin_grpc_url, :this_channel_is_insecure)
         @block_height = blockchain_info['headers']
         Thread.start do
