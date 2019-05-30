@@ -384,7 +384,7 @@ module Lightning
 
         htlc_value_in_flight = reduced.htlcs.sum { |htlc| htlc.add.amount_msat }
         if htlc_value_in_flight > commitments1[:remote_param][:max_htlc_value_in_flight_msat]
-          return HtlcValueTooHighInFlight.new(commitments1, add)
+          return HtlcValueTooHighInFlight.new(commitments1[:remote_param][:max_htlc_value_in_flight_msat], htlc_value_in_flight)
         end
 
         accepted_htlcs = reduced.received.size
@@ -431,7 +431,7 @@ module Lightning
 
         htlc_value_in_flight = reduced.htlcs.sum { |htlc| htlc.add.amount_msat }
         if htlc_value_in_flight > commitments1[:local_param][:max_htlc_value_in_flight_msat]
-          raise HtlcValueTooHighInFlight.new(commitments1, add)
+          raise HtlcValueTooHighInFlight.new(commitments1[:local_param][:max_htlc_value_in_flight_msat], htlc_value_in_flight)
         end
         accepted_htlcs = reduced.received.size
         if accepted_htlcs > commitments1[:local_param][:max_accepted_htlcs]
