@@ -8,5 +8,13 @@ FactoryBot.define do
     initialize_with do
       new(Lightning::Channel::Messages::RemoteChanges[proposed, acked, signed])
     end
+
+    trait :has_remote_change do
+      proposed { [ build(:update_add_htlc) ] }
+    end
+
+    trait :has_fulfill do
+      proposed { [ build(:update_add_htlc), build(:update_fulfill_htlc)] }
+    end
   end
 end

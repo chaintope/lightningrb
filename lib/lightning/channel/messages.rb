@@ -295,7 +295,7 @@ module Lightning
           len, rest = payload.unpack('na*')
           proposed = []
           len.times do
-            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::LightningMessage.load(rest)
             size = update.to_payload.bytesize
             rest = rest[size..-1]
             proposed << update
@@ -304,7 +304,7 @@ module Lightning
           len, rest = rest.unpack('na*')
           signed = []
           len.times do
-            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::LightningMessage.load(rest)
             size = update.to_payload.bytesize
             rest = rest[size..-1]
             signed << update
@@ -313,7 +313,7 @@ module Lightning
           len, rest = rest.unpack('na*')
           acked = []
           len.times do
-            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::LightningMessage.load(rest)
             size = update.to_payload.bytesize
             rest = rest[size..-1]
             acked << update
@@ -361,7 +361,7 @@ module Lightning
           len, rest = payload.unpack('na*')
           proposed = []
           len.times do
-            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::LightningMessage.load(rest)
             size = update.to_payload.bytesize
             rest = rest[size..-1]
             proposed << update
@@ -370,7 +370,7 @@ module Lightning
           len, rest = rest.unpack('na*')
           acked = []
           len.times do
-            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::LightningMessage.load(rest)
             size = update.to_payload.bytesize
             rest = rest[size..-1]
             acked << update
@@ -379,7 +379,7 @@ module Lightning
           len, rest = rest.unpack('na*')
           signed = []
           len.times do
-            update = Lightning::Wire::LightningMessages::UpdateAddHtlc.load(rest)
+            update = Lightning::Wire::LightningMessages::LightningMessage.load(rest)
             size = update.to_payload.bytesize
             rest = rest[size..-1]
             signed << update

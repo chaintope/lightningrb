@@ -12,5 +12,9 @@ FactoryBot.define do
     trait :has_local_change do
       proposed { [ build(:update_add_htlc) ] }
     end
+
+    trait :has_fulfill do
+      proposed { [ build(:update_add_htlc), build(:update_fulfill_htlc)] }
+    end
   end
 end

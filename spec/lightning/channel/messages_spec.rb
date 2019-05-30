@@ -38,7 +38,7 @@ describe Lightning::Channel::Messages do
   describe 'LocalChanges#to_payload/#load' do
     subject { Lightning::Channel::Messages::LocalChanges.load(local_change.to_payload) }
 
-    let(:local_change) { build(:local_change).get }
+    let(:local_change) { build(:local_change, :has_fulfill).get }
 
     it { expect(subject[0]).to eq local_change }
   end
@@ -46,7 +46,7 @@ describe Lightning::Channel::Messages do
   describe 'RemoteChanges#to_payload/#load' do
     subject { Lightning::Channel::Messages::RemoteChanges.load(remote_change.to_payload) }
 
-    let(:remote_change) { build(:remote_change).get }
+    let(:remote_change) { build(:remote_change, :has_fulfill).get }
 
     it { expect(subject[0]).to eq remote_change }
   end
@@ -70,7 +70,10 @@ describe Lightning::Channel::Messages do
   describe 'Commitments#to_poayload/load' do
     subject { Lightning::Channel::Messages::Commitments.load(commitments.to_payload) }
 
-    let(:commitments) { build(:commitment).get }
+    let(:commitments) { build(:commitment, local_change: local_change, remote_change: remote_change).get }
+
+    let(:local_change) { build(:local_change, :has_local_change).get }
+    let(:remote_change) { build(:remote_change, :has_remote_change).get }
 
     it { expect(subject[0].to_payload.bth).to eq commitments.to_payload.bth }
 
