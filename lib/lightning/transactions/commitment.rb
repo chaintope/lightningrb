@@ -622,12 +622,6 @@ module Lightning
             remote_next_per_commitment_point,
             spec
           )
-        log(Logger::DEBUG, 'commitments', "commitments:#{commitments.inspect}")
-        log(Logger::DEBUG, 'commitments', "remote_next_per_commitment_point:#{remote_next_per_commitment_point}")
-        log(Logger::DEBUG, 'commitments', "remote_commit_tx:#{remote_commit_tx.tx.to_payload.bth}")
-        log(Logger::DEBUG, 'commitments', "htlc_timeout_txs:#{htlc_timeout_txs.first&.to_payload&.bth}")
-        log(Logger::DEBUG, 'commitments', "htlc_success_txs:#{htlc_success_txs.first&.to_payload&.bth}")
-
         sig =
           begin
             Transactions.sign(remote_commit_tx.tx, remote_commit_tx.utxo, commitments[:local_param].funding_priv_key)
@@ -701,7 +695,6 @@ module Lightning
               commit[:signature].value
             )
           rescue => e
-
             puts e
             raise InvalidCommitmentSignature.new(commitments[:channel_id], local_commit_tx.tx)
           end
@@ -726,21 +719,27 @@ module Lightning
           commitments[:remote_param].htlc_basepoint, local_per_commitment_point
         )
         htlc_txs_and_sigs = [sorted_htlc_txs, htlc_sigs, commit[:htlc_signature]].transpose
-        htlc_txs_and_sigs = htlc_txs_and_sigs.select do |htlc_tx, local_sig, remote_sig|
+        htlc_txs_and_sigs = htlc_txs_and_sigs.map do |htlc_tx, local_sig, remote_sig|
           match htlc_tx, (on ~HtlcTimeout do |htlc_timeout|
             htlc_timeout.add_sigs(local_sig, remote_sig.value)
             unless Transactions.spendable?(htlc_timeout.tx)
               raise InvalidHtlcSignature.new(local_sig, remote_sig.value)
             end
-            unless Transactions.check_sig(htlc_tx, remote_sig, remote_htlc_pubkey)
+            unless Transactions.check_sig(htlc_timeout)
               raise InvalidHtlcSignature.new(local_sig, remote_sig.value)
             end
-            [htlc_timeout, local_sig, remote_sig.value]
+            HtlcTxAndSigs[TransactionWithUtxo[htlc_timeout.tx, htlc_timeout.utxo], local_sig, remote_sig.value]
           end), (on ~HtlcSuccess do |htlc_success|
-            unless Transactions.check_sig(htlc_tx, remote_sig, remote_htlc_pubkey)
+            index = htlc_success.utxo.index
+            amount = htlc_success.utxo.value
+            redeem_script = htlc_success.utxo.redeem_script
+            sighash = htlc_success.tx.sighash_for_input(index, redeem_script, amount: amount, sig_version: :witness_v0)
+            key = Bitcoin::Key.new(pubkey: remote_htlc_pubkey)
+            unless key.verify(remote_sig.value.htb, sighash)
               raise InvalidHtlcSignature.new(local_sig, remote_sig.value)
             end
-            [htlc_tx, local_sig, remote_sig.value]
+
+            HtlcTxAndSigs[TransactionWithUtxo[htlc_success.tx, htlc_success.utxo], local_sig, remote_sig.value]
           end)
         end
 

@@ -438,7 +438,7 @@ module Lightning
         def self.load(payload)
           len, rest = payload.unpack('na*')
           tx_payload, rest = rest.unpack("a#{len}a*")
-          tx = Bitcoin::Tx.parse_from_payload(tx_payload)
+          tx, rest = TransactionWithUtxo.load(tx_payload)
           len, rest = rest.unpack('na*')
           local_sig, rest = rest.unpack("H#{2 * len}a*")
           len, rest = rest.unpack('na*')

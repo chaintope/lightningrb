@@ -69,7 +69,7 @@ module Lightning
       true
     end
 
-    def self.check_sig(htlc_tx, remote_sig, remote_htlc_pubkey)
+    def self.check_sig(htlc_tx)
       amount = htlc_tx.utxo.value
       redeem_script = htlc_tx.utxo.redeem_script
       htlc_tx.tx.verify_input_sig(0, Bitcoin::Script.to_p2wsh(redeem_script), amount: amount)
