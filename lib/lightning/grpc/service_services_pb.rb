@@ -20,6 +20,7 @@ module Lightning
         rpc :Open, OpenRequest, stream(OpenResponse)
         rpc :Invoice, InvoiceRequest, InvoiceResponse
         rpc :Payment, PaymentRequest, stream(PaymentResponse)
+        rpc :Route, RouteRequest, stream(RouteResponse)
       end
 
       Stub = Service.rpc_stub_class

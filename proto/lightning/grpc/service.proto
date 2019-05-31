@@ -8,6 +8,7 @@ import "lightning/channel/events.proto";
 import "lightning/io/events.proto";
 import "lightning/payment/events.proto";
 import "lightning/router/events.proto";
+import "lightning/router/messages.proto";
 
 service LightningService {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
@@ -15,6 +16,7 @@ service LightningService {
   rpc Open(OpenRequest) returns (stream OpenResponse);
   rpc Invoice(InvoiceRequest) returns (InvoiceResponse);
   rpc Payment(PaymentRequest) returns (stream PaymentResponse);
+  rpc Route(RouteRequest) returns (stream RouteResponse);
 }
 
 enum Operation {
@@ -96,16 +98,8 @@ message InvoiceResponse {
   uint32 expiry = 10;
   uint32 min_final_cltv_expiry = 11;
   string fallback_address = 12;
-  repeated RoutingInfo routing_info = 13;
+  repeated lightning.router.messages.RoutingInfo routing_info = 13;
   string payload = 14;
-}
-
-message RoutingInfo {
-  string pubkey = 1;
-  uint64 short_channel_id = 2;
-  uint64 fee_base_msat = 3;
-  uint64 fee_proportional_millionths = 4;
-  uint32 cltv_expiry_delta = 5;
 }
 
 message PaymentRequest {
@@ -120,3 +114,14 @@ message PaymentResponse {
   }
 }
 
+message RouteRequest {
+  string source_node_id = 1;
+  string target_node_id = 2;
+}
+
+message RouteResponse {
+  oneof event {
+    lightning.router.messages.RouteDiscovered route_discovered = 1;
+    lightning.router.messages.RouteNotFound route_not_found = 2;
+  }
+}

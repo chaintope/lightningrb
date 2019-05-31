@@ -32,6 +32,7 @@ module Lightning
         log(Logger::ERROR, 'events', "#{e.backtrace}")
       end
 
+      # Connect to remote node (if not connected)
       def connect(request, _call)
         log(Logger::INFO, 'connect', "#{request.inspect}")
         Lightning::Grpc::Api::Connect.new(context, publisher).execute(request)
@@ -40,6 +41,7 @@ module Lightning
         log(Logger::ERROR, 'connect', "#{e.backtrace}")
       end
 
+      # Open channel between connected remote node
       def open(request, _call)
         log(Logger::INFO, 'open', "#{request.inspect}")
         Lightning::Grpc::Api::Open.new(context, publisher).execute(request)
@@ -62,6 +64,15 @@ module Lightning
       rescue => e
         log(Logger::ERROR, 'payment', "#{e.message}")
         log(Logger::ERROR, 'payment', "#{e.backtrace}")
+      end
+
+      # Find routing to target node
+      def route(request, _call)
+        log(Logger::INFO, 'route', "#{request.inspect}")
+        Lightning::Grpc::Api::Route.new(context).execute(request)
+      rescue => e
+        log(Logger::ERROR, 'route', "#{e.message}")
+        log(Logger::ERROR, 'route', "#{e.backtrace}")
       end
     end
   end

@@ -8,6 +8,7 @@ require 'lightning/channel/events_pb'
 require 'lightning/io/events_pb'
 require 'lightning/payment/events_pb'
 require 'lightning/router/events_pb'
+require 'lightning/router/messages_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.grpc.EventsRequest" do
     optional :operation, :enum, 1, "lightning.grpc.Operation"
@@ -76,15 +77,8 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :expiry, :uint32, 10
     optional :min_final_cltv_expiry, :uint32, 11
     optional :fallback_address, :string, 12
-    repeated :routing_info, :message, 13, "lightning.grpc.RoutingInfo"
+    repeated :routing_info, :message, 13, "lightning.router.messages.RoutingInfo"
     optional :payload, :string, 14
-  end
-  add_message "lightning.grpc.RoutingInfo" do
-    optional :pubkey, :string, 1
-    optional :short_channel_id, :uint64, 2
-    optional :fee_base_msat, :uint64, 3
-    optional :fee_proportional_millionths, :uint64, 4
-    optional :cltv_expiry_delta, :uint32, 5
   end
   add_message "lightning.grpc.PaymentRequest" do
     optional :node_id, :string, 1
@@ -94,6 +88,16 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.grpc.PaymentResponse" do
     oneof :event do
       optional :payment_succeeded, :message, 1, "lightning.payment.events.PaymentSucceeded"
+    end
+  end
+  add_message "lightning.grpc.RouteRequest" do
+    optional :source_node_id, :string, 1
+    optional :target_node_id, :string, 2
+  end
+  add_message "lightning.grpc.RouteResponse" do
+    oneof :event do
+      optional :route_discovered, :message, 1, "lightning.router.messages.RouteDiscovered"
+      optional :route_not_found, :message, 2, "lightning.router.messages.RouteNotFound"
     end
   end
   add_enum "lightning.grpc.Operation" do
@@ -112,9 +116,10 @@ module Lightning
     OpenResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.OpenResponse").msgclass
     InvoiceRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.InvoiceRequest").msgclass
     InvoiceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.InvoiceResponse").msgclass
-    RoutingInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.RoutingInfo").msgclass
     PaymentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.PaymentRequest").msgclass
     PaymentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.PaymentResponse").msgclass
+    RouteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.RouteRequest").msgclass
+    RouteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.RouteResponse").msgclass
     Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Operation").enummodule
   end
 end

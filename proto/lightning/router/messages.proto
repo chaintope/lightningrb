@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package lightning.router.messages;
+
+message RouteDiscovered {
+  repeated RoutingInfo routing_info = 1;
+}
+
+message RoutingInfo {
+  string pubkey = 1;
+  uint64 short_channel_id = 2;
+  uint64 fee_base_msat = 3;
+  uint64 fee_proportional_millionths = 4;
+  uint32 cltv_expiry_delta = 5;
+}
+message RouteNotFound {
+  string source_node_id = 1;
+  string target_node_id = 2;
+}

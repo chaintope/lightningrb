@@ -131,6 +131,9 @@ module Lightning
           rescue Lightning::Exceptions::RouteNotFound => e
             log(Logger::DEBUG, 'router_state', 'Route to the final node is not found. Retry after a while')
             log(Logger::DEBUG, 'router_state', e.message)
+            if router.envelope.sender.is_a? Concurrent::Actor::Reference
+              router.envelope.sender << :route_not_found
+            end
             [self, data]
           end
         when Lightning::Router::Messages::RequestGossipQuery
