@@ -47,6 +47,7 @@ module Lightning
               events << Lightning::Router::Messages::RouteNotFound.new(
                 source_node_id: @request.source_node_id, target_node_id: @request.target_node_id
               )
+              reference << :terminate!
             end
           end
         end
