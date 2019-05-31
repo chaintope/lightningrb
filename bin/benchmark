@@ -6,6 +6,9 @@ require 'logger'
 require 'jsonclient'
 require 'ruby-progressbar'
 
+require 'lightning/utils/benchmark'
+include Lightning::Utils::Benchmark
+
 #----------------------------------------------------------------------------------------------------
 
 payment_count = 10
@@ -21,7 +24,12 @@ domain = "http://btc1:18443"
 username = "username"
 password = "password"
 endpoint = "http://btc1:18443"
-
+btc_setting = {
+  domain: domain,
+  username: username,
+  password: password,
+  endpoint: endpoint
+}
 #----------------------------------------------------------------------------------------------------
 
 stub = Lightning::Grpc::LightningService::Stub.new("#{local_node_ip}:8080", :this_channel_is_insecure)
@@ -44,7 +52,7 @@ config = {
   'lightning' => {
     'ping_interval' => 0,
     'dust_limit_satoshis' => 546,
-    'max_htlc_value_in_flight_msat' => 100_000,
+    'max_htlc_value_in_flight_msat' => 100_000_000,
     'reserve_to_funding_ratio' => 0.01,
     'htlc_minimum_msat' => 0,
     'delay_blocks' => 144,
@@ -62,105 +70,33 @@ config = {
   }
 }
 rpc = Lightning::Blockchain::BitcoinService.new(config: config)
-address = rpc.generate_new_address(local_node_id)
 
-client = JSONClient.new
-client.debug_dev = STDOUT
-client.set_auth(domain, username, password)
+client = create_btc_client(btc_setting)
 
-while rpc.get_balance(local_node_id) < 1_000_000_000
-  client.post(endpoint, {'method': 'sendtoaddress','params': [address, 10]}).body
-  client.post(endpoint, {'method': 'generate','params': [1]})
-  sleep(3)
-end
+send_btc_if_needed(client, rpc, local_node_id)
 
-# Connect to peer
-request = Lightning::Grpc::ConnectRequest.new(
-  remote_node_id: remote_node_id,
-  host: remote_node_ip,
-  port: 9735
-)
-responses = stub.connect(request)
-responses.each do |response|
-  log.info response.inspect
-  # wait until connected
-  case
-  when response.peer_connected
-    break
-  when response.peer_already_connected
-    break
-  end
-end
+connect(stub, remote_node_id, remote_node_ip)
 
-# Open channel
-request = Lightning::Grpc::OpenRequest.new(
-  remote_node_id: remote_node_id,
-  funding_satoshis: 10_000_000,
-  push_msat: 10_000_000 * 0.1 * 1000,
-  channel_flags: 0x01
-)
-responses = stub.open(request)
-responses.each do |response|
-  case
-  when response.channel_id_assigned
-    4.times do
-      sleep(3)
-      client.post(endpoint, {'method': 'generate','params': [1]})
-    end
-  when response.short_channel_id_assigned
-    4.times do
-      sleep(3)
-      client.post(endpoint, {'method': 'generate','params': [1]})
-    end
-  when response.channel_registered
-    break
-  when response.channel_updated
-    break
-  end
-end
+# Open channel if not exist
+open(client, stub, remote_node_id)
 
 # Invoice
-invoices = []
 remote_stub = Lightning::Grpc::LightningService::Stub.new("#{remote_node_ip}:8080", :this_channel_is_insecure)
-payment_count.times do
-  request = Lightning::Grpc::InvoiceRequest.new(
-    amount_msat: 100_000_000,
-    description: 'nonsense'
-  )
-  response = remote_stub.invoice(request)
-  invoices << response
-end
+invoices = (0 ... payment_count).map { invoice(remote_stub) }
+
+wait_for_route(client, stub, local_node_id, remote_node_id)
 
 # Payment
 log.info("Start payment")
 
-payment_responses = []
 pb = ProgressBar.create
-
-invoices.map do |invoice|
-  pb.progress += 100.0/payment_count
-  request = Lightning::Grpc::PaymentRequest.new(
-    node_id: remote_node_id,
-    amount_msat: 100_000_000,
-    payment_hash: invoice.payment_hash
-  )
-  payment_responses << stub.payment(request)
-end
+payments = invoices.map { |invoice| increment(pb, payment_count) ;  payment(stub, invoice, remote_node_id) }
 
 log.info("Wait payment process")
 
 pb = ProgressBar.create
-threads = []
-payment_responses.each do |responses|
-  threads << Thread.start(responses) do |responses|
-    responses.each do |response|
-      case
-      when response.payment_succeeded
-        pb.progress += 100.0/payment_count
-        break
-      end
-    end
-  end
+threads = payments.map do |responses|
+   Thread.start(responses) { |responses| increment(pb, payment_count); wait_for_payment(responses) }
 end
 
 threads.each(&:join)
