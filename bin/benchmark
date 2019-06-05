@@ -90,13 +90,13 @@ wait_for_route(client, stub, local_node_id, remote_node_id)
 log.info("Start payment")
 
 pb = ProgressBar.create
-payments = invoices.map { |invoice| increment(pb, payment_count) ;  payment(stub, invoice, remote_node_id) }
+payments = invoices.map { |invoice| increment(pb, payment_count); payment(stub, invoice, remote_node_id) }
 
 log.info("Wait payment process")
 
 pb = ProgressBar.create
 threads = payments.map do |responses|
-   Thread.start(responses) { |responses| increment(pb, payment_count); wait_for_payment(responses) }
+   Thread.start(responses) { |responses| wait_for_payment(responses); increment(pb, payment_count) }
 end
 
 threads.each(&:join)
