@@ -100,6 +100,26 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :route_not_found, :message, 2, "lightning.router.messages.RouteNotFound"
     end
   end
+  add_message "lightning.grpc.GetChannelRequest" do
+    optional :channel_id, :string, 1
+  end
+  add_message "lightning.grpc.GetChannelResponse" do
+    optional :channel, :message, 1, "lightning.grpc.Channel"
+  end
+  add_message "lightning.grpc.ListChannelsRequest" do
+    optional :node_id, :string, 1
+  end
+  add_message "lightning.grpc.ListChannelsResponse" do
+    repeated :channel, :message, 1, "lightning.grpc.Channel"
+  end
+  add_message "lightning.grpc.Channel" do
+    optional :channel_id, :string, 1
+    optional :status, :string, 2
+    optional :to_local_msat, :uint64, 3
+    optional :to_remote_msat, :uint64, 4
+    optional :local_node_id, :string, 5
+    optional :remote_node_id, :string, 6
+  end
   add_enum "lightning.grpc.Operation" do
     value :SUBSCRIBE, 0
     value :UNSUBSCRIBE, 1
@@ -120,6 +140,11 @@ module Lightning
     PaymentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.PaymentResponse").msgclass
     RouteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.RouteRequest").msgclass
     RouteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.RouteResponse").msgclass
+    GetChannelRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetChannelRequest").msgclass
+    GetChannelResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetChannelResponse").msgclass
+    ListChannelsRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ListChannelsRequest").msgclass
+    ListChannelsResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ListChannelsResponse").msgclass
+    Channel = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Channel").msgclass
     Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Operation").enummodule
   end
 end

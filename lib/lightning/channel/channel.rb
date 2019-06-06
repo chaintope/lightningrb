@@ -76,8 +76,11 @@ module Lightning
             temporary_channel_id: data.temporary_channel_id,
             channel_id: data.channel_id,
             status: data.status,
+            short_channel_id: data.short_channel_id,
             to_local_msat: commitments[:local_commit][:spec][:to_local_msat],
-            to_remote_msat: commitments[:local_commit][:spec][:to_remote_msat]
+            to_remote_msat: commitments[:local_commit][:spec][:to_remote_msat],
+            local_node_id: commitments[:local_param][:node_id],
+            remote_node_id: commitments[:remote_param][:node_id]
           }
         else
           {}

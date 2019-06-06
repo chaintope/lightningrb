@@ -17,6 +17,8 @@ service LightningService {
   rpc Invoice(InvoiceRequest) returns (InvoiceResponse);
   rpc Payment(PaymentRequest) returns (stream PaymentResponse);
   rpc Route(RouteRequest) returns (stream RouteResponse);
+  rpc GetChannel(GetChannelRequest) returns (GetChannelResponse);
+  rpc ListChannels(ListChannelsRequest) returns (ListChannelsResponse);
 }
 
 enum Operation {
@@ -124,4 +126,29 @@ message RouteResponse {
     lightning.router.messages.RouteDiscovered route_discovered = 1;
     lightning.router.messages.RouteNotFound route_not_found = 2;
   }
+}
+
+message GetChannelRequest {
+  string channel_id = 1;
+}
+
+message GetChannelResponse {
+  Channel channel = 1;
+}
+
+message ListChannelsRequest {
+  string node_id = 1;
+}
+
+message ListChannelsResponse {
+  repeated Channel channel = 1;
+}
+
+message Channel {
+  string channel_id = 1;
+  string status = 2;
+  uint64 to_local_msat = 3;
+  uint64 to_remote_msat = 4;
+  string local_node_id = 5;
+  string remote_node_id = 6;
 }

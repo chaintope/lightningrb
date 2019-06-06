@@ -21,6 +21,8 @@ module Lightning
         rpc :Invoice, InvoiceRequest, InvoiceResponse
         rpc :Payment, PaymentRequest, stream(PaymentResponse)
         rpc :Route, RouteRequest, stream(RouteResponse)
+        rpc :GetChannel, GetChannelRequest, GetChannelResponse
+        rpc :ListChannels, ListChannelsRequest, ListChannelsResponse
       end
 
       Stub = Service.rpc_stub_class

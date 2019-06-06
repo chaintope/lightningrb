@@ -15,13 +15,14 @@ module Lightning
 
       def on_message(message)
         log(Logger::DEBUG, "#{@status.class}, data:#{@data}, message: #{message.inspect}")
-        match message, (on :channels do
-          log(Logger::DEBUG, "#{@status}, channels: #{@data.channels}")
-          return @data.channels.values.map {|channel| channel.ask!(:data) }
-        end), (on :status do
+        case message
+        when :channels, Lightning::Grpc::ListChannelsRequest
+          return @data.channels.values.map {|channel| channel.ask!(:data) }.uniq { |channel| channel[:temporary_channel_id] }
+        when Lightning::Grpc::GetChannelRequest
+          return @data.channels[message.channel_id]&.ask!(:data)
+        when :status
           return @status.class.name
-        end), (on any do
-        end)
+        end
         @status, @data = @status.next(self.reference, message, @data)
       end
 

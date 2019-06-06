@@ -74,6 +74,22 @@ module Lightning
         log(Logger::ERROR, 'route', "#{e.message}")
         log(Logger::ERROR, 'route', "#{e.backtrace}")
       end
+
+      def get_channel(request, _call)
+        log(Logger::INFO, 'get_channel', "#{request.inspect}")
+        Lightning::Grpc::Api::GetChannel.new(context).execute(request)
+      rescue => e
+        log(Logger::ERROR, 'get_channel', "#{e.message}")
+        log(Logger::ERROR, 'get_channel', "#{e.backtrace}")
+      end
+
+      def list_channels(request, _call)
+        log(Logger::INFO, 'list_channels', "#{request.inspect}")
+        Lightning::Grpc::Api::ListChannels.new(context).execute(request)
+      rescue => e
+        log(Logger::ERROR, 'list_channels', "#{e.message}")
+        log(Logger::ERROR, 'list_channels', "#{e.backtrace}")
+      end
     end
   end
 end

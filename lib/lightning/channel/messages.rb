@@ -783,6 +783,10 @@ module Lightning
           false
         end
 
+        def short_channel_id
+          0
+        end
+
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
           temporary_channel_id, rest = rest.unpack('H64a*')
@@ -835,6 +839,10 @@ module Lightning
           false
         end
 
+        def short_channel_id
+          self[:short_channel_id]
+        end
+
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
           temporary_channel_id, rest = rest.unpack('H64a*')
@@ -863,6 +871,10 @@ module Lightning
 
         def shutting_down?
           self[:local_shutdown].maybe || self[:remote_shutdown].maybe
+        end
+
+        def short_channel_id
+          self[:short_channel_id]
         end
 
         def copy(

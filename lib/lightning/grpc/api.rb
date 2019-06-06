@@ -9,6 +9,8 @@ module Lightning
       autoload :Open, 'lightning/grpc/api/open'
       autoload :Payment, 'lightning/grpc/api/payment'
       autoload :Route, 'lightning/grpc/api/route'
+      autoload :GetChannel, 'lightning/grpc/api/get_channel'
+      autoload :ListChannels, 'lightning/grpc/api/list_channels'
     end
   end
 end
