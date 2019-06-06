@@ -49,6 +49,12 @@ module Lightning
         end
       end
 
+      def get_channel(stub, remote_node_id)
+        request = Lightning::Grpc::ListChannelsRequest.new(node_id: remote_node_id)
+        responses = stub.list_channels(request)
+        responses.channel.sort_by(&:to_local_msat).last
+      end
+
       def open(client, stub, remote_node_id)
         request = Lightning::Grpc::OpenRequest.new(
           remote_node_id: remote_node_id,

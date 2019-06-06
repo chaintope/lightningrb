@@ -77,8 +77,11 @@ send_btc_if_needed(client, rpc, local_node_id)
 
 connect(stub, remote_node_id, remote_node_ip)
 
-# Open channel if not exist
-open(client, stub, remote_node_id)
+# Open channel if channel does not exist or channel does not have enough funds
+channel = get_channel(stub, remote_node_id)
+if !channel || channel.to_local_msat < 1000000000
+  open(client, stub, remote_node_id)
+end
 
 # Invoice
 remote_stub = Lightning::Grpc::LightningService::Stub.new("#{remote_node_ip}:8080", :this_channel_is_insecure)

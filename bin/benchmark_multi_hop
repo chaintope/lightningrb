@@ -83,13 +83,20 @@ send_btc_if_needed(client, rpc, node_1_id)
 connect(stub1, node_2_id, node_2_ip)
 
 # Open channel(node_1 => node_2)
-open(client, stub1, node_2_id)
+channel = get_channel(stub1, node_2_id)
+if !channel || channel.to_local_msat < 1000000000
+  open(client, stub1, node_2_id)
+end
+
 
 # Connect to peer(node_1 => node_3)
 connect(stub1, node_3_id, node_3_ip)
 
 # Open channel(node_1 => node_3)
-open(client, stub1, node_3_id)
+channel = get_channel(stub1, node_3_id)
+if !channel || channel.to_local_msat < 1000000000
+  open(client, stub1, node_3_id)
+end
 
 # Invoice(node_3)
 stub3 = Lightning::Grpc::LightningService::Stub.new("#{node_3_ip}:8080", :this_channel_is_insecure)
