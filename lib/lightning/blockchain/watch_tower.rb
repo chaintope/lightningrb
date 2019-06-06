@@ -79,7 +79,7 @@ module Lightning
           Bitcoin::Grpc::EventsRequest.new(operation: :SUBSCRIBE, event_type: "Bitcoin::Grpc::TxReceived"),
           Bitcoin::Grpc::EventsRequest.new(operation: :SUBSCRIBE, event_type: "Bitcoin::Grpc::BlockCreated")
         ]
-        stub.events(requests).each do |reponse|
+        stub.events(requests).each do |response|
           reference << response
         end
         stub
