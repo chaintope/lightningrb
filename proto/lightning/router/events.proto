@@ -4,10 +4,16 @@ package lightning.router.events;
 
 import "lightning/wire/types.proto";
 
+/**
+* Event fired when node receive ChannelUpdate messages which is not registered in the node.
+*/
 message ChannelRegistered {
   uint64 short_channel_id = 1;
 }
 
+/**
+* Event fired when node receive ChannelUpdate messages which is already registered in the node.
+*/
 message ChannelUpdated {
   uint64 short_channel_id = 1;
 }

@@ -16,3 +16,14 @@ $ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightn
 $ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightning/router/events.proto
 $ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightning/router/messages.proto
 ```
+
+### Generate document for gRPC
+
+```
+
+cd proto
+protoc --doc_out=./ --doc_opt=markdown,API.md ./lightning/**/*.proto ./lightning/**/**/*.proto
+
+```
+
+see https://github.com/pseudomuto/protoc-gen-doc for more detail

@@ -4,29 +4,51 @@ package lightning.channel.events;
 
 import "lightning/wire/types.proto";
 
+/**
+* Event fired when channel created.
+*/
 message ChannelCreated {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
   uint32 is_funder = 2 [(lightning.wire.bits) = 8];
   string temporary_channel_id = 3 [(lightning.wire.hex) = true];
 }
 
+/**
+* Event fired after lightning node started and channel data restored from database.
+*/
 message ChannelRestored {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
   uint32 is_funder = 2 [(lightning.wire.bits) = 8];
   string channel_id = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
 }
 
+/**
+* Event fired when channel_id is calculated and assigned to the channel.
+*
+* A channel_id is based on funding transaction (txid and output_index), so
+* this event is fired after funding transaction is created
+* (but the funding transaction is not required to be broadcasted).
+*/
 message ChannelIdAssigned {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
   string temporary_channel_id = 2 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
   string channel_id = 3 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
 }
 
+/**
+* Event fired when short_channel_id is calculated and assigned to the channel.
+*
+* A short_channel_id is calculated with txid, block_height and tx_index of the funding
+* transaction. So the funding transaction is need to be * broadcasted and confirmed.
+*/
 message ShortChannelIdAssigned {
   string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
   uint64 short_channel_id = 2;
 }
 
+/**
+* Event fired when channel updated.
+*/
 message LocalChannelUpdate {
   string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
   uint64 short_channel_id = 2;
@@ -49,6 +71,9 @@ message ChannelSignatureReceived {
   string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
 }
 
+/**
+* Event fired when channel closed.
+*/
 message ChannelClosed {
   string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
 }

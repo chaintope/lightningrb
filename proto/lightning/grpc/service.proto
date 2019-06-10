@@ -10,14 +10,50 @@ import "lightning/payment/events.proto";
 import "lightning/router/events.proto";
 import "lightning/router/messages.proto";
 
+/**
+* Service for the lightning network.
+*/
 service LightningService {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
+
+  /*
+  * Connect to a remote peer.
+  */
   rpc Connect(ConnectRequest) returns (stream ConnectResponse);
+
+  /**
+  * Open a channel.
+  * Call Connect api before calling this api.
+  */
   rpc Open(OpenRequest) returns (stream OpenResponse);
+
+  /*
+  * Make an invoice.
+  * This api is not required to connect remote peer.
+  */
   rpc Invoice(InvoiceRequest) returns (InvoiceResponse);
+
+  /**
+  * Make a payment.
+  * Wait until receiving PaymentSucceeded event.
+  */
   rpc Payment(PaymentRequest) returns (stream PaymentResponse);
+
+  /**
+  * Find routing to destination node.
+  */
   rpc Route(RouteRequest) returns (stream RouteResponse);
+
+  /**
+  * Get the channel data with specified channel_id.
+  */
   rpc GetChannel(GetChannelRequest) returns (GetChannelResponse);
+
+  /**
+  * List channel data with specified remote_node_id.
+  * node_id is optional.
+  *  if node_id is not specified, return all channels connected to this node.
+  */
   rpc ListChannels(ListChannelsRequest) returns (ListChannelsResponse);
 }
 

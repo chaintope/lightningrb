@@ -4,14 +4,24 @@ package lightning.io.events;
 
 import "lightning/wire/types.proto";
 
+/**
+* Event fired when local node connects to the remote node
+*/
 message PeerConnected {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
 }
 
+/**
+* Event fired when local node tries to connect to the remote node,
+* but has been already connected to it.
+*/
 message PeerAlreadyConnected {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
 }
 
+/**
+* Event fired when local node disconnects from the remote node
+*/
 message PeerDisconnected {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
 }

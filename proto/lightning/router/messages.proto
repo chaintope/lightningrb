@@ -13,6 +13,7 @@ message RoutingInfo {
   uint64 fee_proportional_millionths = 4;
   uint32 cltv_expiry_delta = 5;
 }
+
 message RouteNotFound {
   string source_node_id = 1;
   string target_node_id = 2;
