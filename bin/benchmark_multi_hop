@@ -34,7 +34,7 @@ btc_setting = {
   password: password,
   endpoint: endpoint
 }
-
+Bitcoin.chain_params = :regtest
 #----------------------------------------------------------------------------------------------------
 
 stub1 = Lightning::Grpc::LightningService::Stub.new("#{node_1_ip}:8080", :this_channel_is_insecure)
