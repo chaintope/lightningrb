@@ -11,6 +11,7 @@ module Lightning
       def initialize(authenticator, context, remote_node_id)
         @status = PeerStateDisconnected.new(authenticator, context, remote_node_id)
         @data = DisconnectedData[Algebrick::None]
+        context.broadcast << [:subscribe, Lightning::Channel::Events::ChannelClosed]
       end
 
       def on_message(message)
@@ -245,6 +246,10 @@ module Lightning
               PeerStateDisconnected.new(authenticator, context, remote_node_id),
               DisconnectedData[data[:address_opt]]
             ]
+          when Lightning::Channel::Events::ChannelClosed
+            channel_id = message.channel_id
+            closed_channel = data[:channels][channel_id]
+            data[:channels].delete_if { |key, channel| channel == closed_channel }
           when Connect
             context.broadcast << Lightning::Io::Events::PeerAlreadyConnected.new(remote_node_id: remote_node_id)
           else
