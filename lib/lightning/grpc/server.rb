@@ -90,6 +90,14 @@ module Lightning
         log(Logger::ERROR, 'list_channels', "#{e.message}")
         log(Logger::ERROR, 'list_channels', "#{e.backtrace}")
       end
+
+      def close(request, _call)
+        log(Logger::INFO, 'close', "#{request.inspect}")
+        Lightning::Grpc::Api::Close.new(context, publisher).execute(request)
+      rescue => e
+        log(Logger::ERROR, 'close', "#{e.message}")
+        log(Logger::ERROR, 'close', "#{e.backtrace}")
+      end
     end
   end
 end

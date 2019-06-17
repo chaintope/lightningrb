@@ -11,6 +11,7 @@ module Lightning
       autoload :Route, 'lightning/grpc/api/route'
       autoload :GetChannel, 'lightning/grpc/api/get_channel'
       autoload :ListChannels, 'lightning/grpc/api/list_channels'
+      autoload :Close,  'lightning/grpc/api/close'
     end
   end
 end

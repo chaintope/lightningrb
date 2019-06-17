@@ -7,6 +7,8 @@ require 'lightning/grpc/service_pb'
 module Lightning
   module Grpc
     module LightningService
+      # *
+      # Service for the lightning network.
       class Service
 
         include GRPC::GenericService
@@ -16,13 +18,35 @@ module Lightning
         self.service_name = 'lightning.grpc.LightningService'
 
         rpc :Events, stream(EventsRequest), stream(EventsResponse)
+        #
+        # Connect to a remote peer.
         rpc :Connect, ConnectRequest, stream(ConnectResponse)
+        # *
+        # Open a channel.
+        # Call Connect api before calling this api.
         rpc :Open, OpenRequest, stream(OpenResponse)
+        #
+        # Make an invoice.
+        # This api is not required to connect remote peer.
         rpc :Invoice, InvoiceRequest, InvoiceResponse
+        # *
+        # Make a payment.
+        # Wait until receiving PaymentSucceeded event.
         rpc :Payment, PaymentRequest, stream(PaymentResponse)
+        # *
+        # Find routing to destination node.
         rpc :Route, RouteRequest, stream(RouteResponse)
+        # *
+        # Get the channel data with specified channel_id.
         rpc :GetChannel, GetChannelRequest, GetChannelResponse
+        # *
+        # List channel data with specified remote_node_id.
+        # node_id is optional.
+        #  if node_id is not specified, return all channels connected to this node.
         rpc :ListChannels, ListChannelsRequest, ListChannelsResponse
+        # *
+        # Close channel.
+        rpc :Close, CloseRequest, stream(CloseResponse)
       end
 
       Stub = Service.rpc_stub_class

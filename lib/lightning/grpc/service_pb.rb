@@ -112,13 +112,23 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "lightning.grpc.ListChannelsResponse" do
     repeated :channel, :message, 1, "lightning.grpc.Channel"
   end
+  add_message "lightning.grpc.CloseRequest" do
+    optional :channel_id, :string, 1
+    optional :script_pubkey, :string, 2
+  end
+  add_message "lightning.grpc.CloseResponse" do
+    oneof :event do
+      optional :channel_closed, :message, 1, "lightning.channel.events.ChannelClosed"
+    end
+  end
   add_message "lightning.grpc.Channel" do
     optional :channel_id, :string, 1
     optional :status, :string, 2
-    optional :to_local_msat, :uint64, 3
-    optional :to_remote_msat, :uint64, 4
-    optional :local_node_id, :string, 5
-    optional :remote_node_id, :string, 6
+    optional :short_channel_id, :uint64, 3
+    optional :to_local_msat, :uint64, 4
+    optional :to_remote_msat, :uint64, 5
+    optional :local_node_id, :string, 6
+    optional :remote_node_id, :string, 7
   end
   add_enum "lightning.grpc.Operation" do
     value :SUBSCRIBE, 0
@@ -144,6 +154,8 @@ module Lightning
     GetChannelResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetChannelResponse").msgclass
     ListChannelsRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ListChannelsRequest").msgclass
     ListChannelsResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ListChannelsResponse").msgclass
+    CloseRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.CloseRequest").msgclass
+    CloseResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.CloseResponse").msgclass
     Channel = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Channel").msgclass
     Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.Operation").enummodule
   end

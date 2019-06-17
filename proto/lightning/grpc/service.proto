@@ -55,6 +55,11 @@ service LightningService {
   *  if node_id is not specified, return all channels connected to this node.
   */
   rpc ListChannels(ListChannelsRequest) returns (ListChannelsResponse);
+
+  /**
+  * Close channel.
+  */
+  rpc Close(CloseRequest) returns (stream CloseResponse);
 }
 
 enum Operation {
@@ -180,11 +185,23 @@ message ListChannelsResponse {
   repeated Channel channel = 1;
 }
 
+message CloseRequest {
+  string channel_id = 1;
+  string script_pubkey = 2;
+}
+
+message CloseResponse {
+  oneof event {
+    lightning.channel.events.ChannelClosed channel_closed = 1;
+  }
+}
+
 message Channel {
   string channel_id = 1;
   string status = 2;
-  uint64 to_local_msat = 3;
-  uint64 to_remote_msat = 4;
-  string local_node_id = 5;
-  string remote_node_id = 6;
+  uint64 short_channel_id = 3;
+  uint64 to_local_msat = 4;
+  uint64 to_remote_msat = 5;
+  string local_node_id = 6;
+  string remote_node_id = 7;
 }
