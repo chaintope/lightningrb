@@ -44,6 +44,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "lightning.channel.events.ChannelClosed" do
     optional :channel_id, :string, 1
+    optional :short_channel_id, :uint64, 2
   end
 end
 

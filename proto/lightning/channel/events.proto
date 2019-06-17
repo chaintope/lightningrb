@@ -76,4 +76,5 @@ message ChannelSignatureReceived {
 */
 message ChannelClosed {
   string channel_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 32];
+  uint64 short_channel_id = 2;
 }

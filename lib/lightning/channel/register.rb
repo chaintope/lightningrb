@@ -23,6 +23,7 @@ module Lightning
         context.broadcast << [:subscribe, ChannelRestored]
         context.broadcast << [:subscribe, ChannelIdAssigned]
         context.broadcast << [:subscribe, ShortChannelIdAssigned]
+        context.broadcast << [:subscribe, ChannelClosed]
       end
 
       def on_message(message)
@@ -41,6 +42,10 @@ module Lightning
           @remotes[message.channel_id] = message.remote_node_id
         when ShortChannelIdAssigned
           @short_channel_ids[message.short_channel_id] = message.channel_id
+        when ChannelClosed
+          @short_channel_ids.delete(message.short_channel_id)
+          @channels.delete(message.channel_id)
+          @remotes.delete(message.channel_id)
         when Forward
           channel = @channels[message.channel_id]
           channel << message.message if channel
