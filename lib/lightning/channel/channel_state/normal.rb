@@ -172,6 +172,7 @@ module Lightning
                   negotiating,
                   data: store(DataNegotiating[
                     data[:commitments],
+                    data[:short_channel_id],
                     local_shutdown,
                     message,
                     [ClosingTxProposed[closing.tx, closing.closing_signed]],
@@ -184,6 +185,7 @@ module Lightning
                   Shutdowning.new(channel, context),
                   data: store(DataShutdown[
                     data[:commitments],
+                    data[:short_channel_id],
                     local_shutdown,
                     message
                   ]),

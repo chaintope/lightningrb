@@ -23,6 +23,7 @@ describe Lightning::Channel::ChannelState::Negotiating do
       let(:data) do
         Lightning::Channel::Messages::DataNegotiating[
           commitment,
+          0,
           build(:shutdown),
           build(:shutdown),
           [Lightning::Channel::Messages::ClosingTxProposed[tx, build(:closing_signed)]],

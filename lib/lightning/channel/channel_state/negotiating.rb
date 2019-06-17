@@ -36,6 +36,7 @@ module Lightning
               else
                 data = DataNegotiating[
                   data[:commitments],
+                  data[:short_channel_id],
                   data[:local_shutdown],
                   data[:remote_shutdown],
                   data[:closing_tx_proposed] + [ClosingTxProposed[closing.tx, closing.closing_signed]],
@@ -56,6 +57,7 @@ module Lightning
           closing_signed = data[:closing_tx_proposed].last.local_closing_signed
           new_data = DataClosing[
             data[:commitments],
+            data[:short_channel_id],
             [closing_signed],
             [tx],
             None, None, None, None, []

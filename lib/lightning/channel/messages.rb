@@ -605,10 +605,6 @@ module Lightning
           self[:commitments][:channel_id]
         end
 
-        def temporary_channel_id
-          self[:temporary_channel_id]
-        end
-
         def self.load(payload)
           type, rest = payload.unpack('Ca*')
           case type
@@ -733,11 +729,13 @@ module Lightning
 
         DataShutdown = type do
           fields  commitments: Commitments,
+                  short_channel_id: Numeric,
                   local_shutdown: Shutdown,
                   remote_shutdown: Shutdown
         end
         DataNegotiating = type do
           fields  commitments: Commitments,
+                  short_channel_id: Numeric,
                   local_shutdown: Shutdown,
                   remote_shutdown: Shutdown,
                   closing_tx_proposed: Array,
@@ -745,6 +743,7 @@ module Lightning
         end
         DataClosing = type do
           fields  commitments: Commitments,
+                  short_channel_id: Numeric,
                   mutual_close_proposed: Array,
                   mutual_close_published: Array,
                   local_commit_published: Algebrick::Maybe[LocalCommitPublished],
@@ -785,6 +784,10 @@ module Lightning
 
         def short_channel_id
           0
+        end
+
+        def temporary_channel_id
+          self[:temporary_channel_id]
         end
 
         def self.load(payload)
@@ -843,6 +846,10 @@ module Lightning
           self[:short_channel_id]
         end
 
+        def temporary_channel_id
+          self[:temporary_channel_id]
+        end
+
         def self.load(payload)
           _type, rest = payload.unpack('Ca*')
           temporary_channel_id, rest = rest.unpack('H64a*')
@@ -875,6 +882,10 @@ module Lightning
 
         def short_channel_id
           self[:short_channel_id]
+        end
+
+        def temporary_channel_id
+          self[:temporary_channel_id]
         end
 
         def copy(
@@ -976,6 +987,10 @@ module Lightning
       module DataShutdown
         include HasCommitments
 
+        def short_channel_id
+          self[:short_channel_id]
+        end
+
         def status
           'closing'
         end
@@ -987,6 +1002,10 @@ module Lightning
 
       module DataNegotiating
         include HasCommitments
+
+        def short_channel_id
+          self[:short_channel_id]
+        end
 
         def status
           'closing'
@@ -1000,6 +1019,10 @@ module Lightning
       module DataClosing
         include HasCommitments
 
+        def short_channel_id
+          self[:short_channel_id]
+        end
+
         def status
           'closing'
         end
@@ -1011,6 +1034,10 @@ module Lightning
 
       module DataWaitForRemotePublishFutureCommitment
         include HasCommitments
+
+        def short_channel_id
+          self[:short_channel_id]
+        end
 
         def status
           'closing'

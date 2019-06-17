@@ -13,7 +13,6 @@ module Lightning
       end
 
       def on_message(message)
-        log(Logger::DEBUG, "state=#{@state}")
         case message
         when :data
           return to_h(@data)
@@ -73,10 +72,10 @@ module Lightning
         if data.is_a? Lightning::Channel::Messages::HasCommitments
           commitments = data[:commitments]
           {
-            temporary_channel_id: data.temporary_channel_id,
+            temporary_channel_id: data.respond_to?(:temporary_channel_id) ? data.temporary_channel_id  : '',
             channel_id: data.channel_id,
             status: data.status,
-            short_channel_id: data.short_channel_id,
+            short_channel_id: data.respond_to?(:short_channel_id) ? data.short_channel_id : '',
             to_local_msat: commitments[:local_commit][:spec][:to_local_msat],
             to_remote_msat: commitments[:local_commit][:spec][:to_remote_msat],
             local_node_id: commitments[:local_param][:node_id],
