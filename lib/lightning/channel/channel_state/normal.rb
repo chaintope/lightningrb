@@ -115,7 +115,7 @@ module Lightning
           when CommandAck
 
           when CommandClose
-            local_script_pubkey = message[:script_pubkey]&.value || data[:commitments][:local_param][:default_final_script_pubkey]
+            local_script_pubkey = message[:script_pubkey].empty? ? data[:commitments][:local_param][:default_final_script_pubkey] : message[:script_pubkey]
             if data[:local_shutdown] && !data[:local_shutdown].is_a?(None)
               return handle_command_error(ClosingAlreadyInProgress.new(data[:commitments]), data)
             end
@@ -265,6 +265,8 @@ module Lightning
               task.execute
               [self, data]
             end
+          else
+            [self, data]
           end
         end
 

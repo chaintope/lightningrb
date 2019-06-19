@@ -50,8 +50,7 @@ module Lightning
         when 'close'
           channel_id = params[0]
           script_pubkey = params[1]
-          script_pubkey = script_pubkey ? Algebrick::Some[String][script_pubkey] : Algebrick::None
-          command = Lightning::Channel::Messages::CommandClose[script_pubkey]
+          command = Lightning::Channel::Messages::CommandClose[script_pubkey || '']
           context.register << Lightning::Channel::Register::Forward[channel_id, command]
           Async::HTTP::Response[200, {}, []]
         when 'receive'

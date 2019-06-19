@@ -40,7 +40,7 @@ module Lightning
       end
 
       CommandClose = Algebrick.type do
-        fields! script_pubkey: Algebrick::Maybe[String]
+        fields! script_pubkey: String
       end
 
       CommandSignature = Algebrick.atom

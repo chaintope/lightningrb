@@ -212,7 +212,7 @@ describe Lightning::Channel::ChannelState::Normal do
 
     describe 'with CommandClose' do
       let(:script_pubkey) { '0014ccf1af2f2aabee14bb40fa3851ab2301de843110' }
-      let(:message) { Lightning::Channel::Messages::CommandClose[Algebrick::Some[String][script_pubkey]] }
+      let(:message) { Lightning::Channel::Messages::CommandClose[script_pubkey] }
 
       it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
       it { expect(subject[1][:local_shutdown]).to be_a Algebrick::Some[Lightning::Wire::LightningMessages::Shutdown] }
