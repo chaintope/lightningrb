@@ -48,7 +48,8 @@ module Lightning
       RouteRequest = Algebrick.type do
         fields! source: String,
                 target: String,
-                assisted_routes: Array
+                assisted_routes: Array,
+                assisted_channels: Array
       end
 
       RouteResponse = Algebrick.type do

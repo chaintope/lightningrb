@@ -84,6 +84,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :node_id, :string, 1
     optional :payment_hash, :string, 2
     optional :amount_msat, :uint64, 3
+    repeated :short_channel_ids, :uint64, 4
   end
   add_message "lightning.grpc.PaymentResponse" do
     oneof :event do

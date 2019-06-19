@@ -125,7 +125,7 @@ module Lightning
           begin
             ignore_nodes = []
             ignore_channels = []
-            hops = RouteFinder.find(message[:source], message[:target], data[:updates], message[:assisted_routes])
+            hops = RouteFinder.find(message[:source], message[:target], data[:updates], message[:assisted_routes], message[:assisted_channels])
             if router.envelope.sender.is_a? Concurrent::Actor::Reference
               router.envelope.sender << RouteResponse[hops, ignore_nodes, ignore_channels]
             end

@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe Lightning::Router::RouteFinder do
   describe '#find' do
-    subject { described_class.find(source, target, updates, assisted_routes) }
+    subject { described_class.find(source, target, updates, assisted_routes, assisted_channels) }
 
     let(:public_key0) { '02eec7245d6b7d2ccb30380bfbe2a3648cd7a942653f5aa340edcea1f283686619' }
     let(:public_key1) { '0324653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c' }
@@ -22,6 +22,7 @@ describe Lightning::Router::RouteFinder do
       }
     end
     let(:assisted_routes) { [] }
+    let(:assisted_channels) { [] }
 
     describe '1st node' do
       it { expect(subject[0][:node_id]).to eq source }
@@ -53,6 +54,30 @@ describe Lightning::Router::RouteFinder do
 
     describe 'next to 4th node' do
       it { expect(subject[3][:next_node_id]).to eq public_key4 }
+    end
+
+    context 'has two route' do
+      let(:updates) do
+        {
+          Lightning::Router::Messages::ChannelDesc[1, public_key1, public_key4] => build(:channel_update),
+          Lightning::Router::Messages::ChannelDesc[0, public_key0, public_key1] => build(:channel_update),
+          Lightning::Router::Messages::ChannelDesc[2, public_key0, public_key4] => build(:channel_update),
+        }
+      end
+      context  'no assisted_channels' do
+        it { expect(subject.length).to eq 1 }
+        it { expect(subject[0][:node_id]).to eq public_key0 }
+        it { expect(subject[0][:next_node_id]).to eq public_key4 }
+      end
+      context  'with assisted_channels' do
+        let(:assisted_channels) { [0, 1] }
+
+        it { expect(subject.length).to eq 2 }
+        it { expect(subject[0][:node_id]).to eq public_key0 }
+        it { expect(subject[0][:next_node_id]).to eq public_key1 }
+        it { expect(subject[1][:node_id]).to eq public_key1 }
+        it { expect(subject[1][:next_node_id]).to eq public_key4 }
+      end
     end
   end
 end

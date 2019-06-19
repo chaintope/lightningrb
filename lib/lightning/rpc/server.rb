@@ -63,7 +63,7 @@ module Lightning
           node_id = params[0]
           payment_hash = params[1]
           amount_msat = params[2]
-          context.payment_initiator.ask!(Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, node_id, [], 144])
+          context.payment_initiator.ask!(Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, node_id, [], [], 144])
           Async::HTTP::Response[200, {}, []]
         when 'nodes'
           response = context.router.ask!(:nodes).map(&:to_h).to_json

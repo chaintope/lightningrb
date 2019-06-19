@@ -29,7 +29,7 @@ module Lightning
             @request = request
             @publisher = publisher
             publisher << [:subscribe, Lightning::Payment::Events::PaymentSucceeded]
-            context.payment_initiator << Lightning::Payment::Messages::SendPayment[request.amount_msat, request.payment_hash, request.node_id, [], 144]
+            context.payment_initiator << Lightning::Payment::Messages::SendPayment[request.amount_msat, request.payment_hash, request.node_id, [], request.short_channel_ids, 144]
           end
 
           def on_message(message)

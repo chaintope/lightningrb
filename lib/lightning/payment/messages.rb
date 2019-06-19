@@ -8,6 +8,7 @@ module Lightning
                 payment_hash: String,
                 target_node_id: String,
                 routes: Array,
+                channels: Array,
                 final_cltv_expiry: Numeric
       end
 

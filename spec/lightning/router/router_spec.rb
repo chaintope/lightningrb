@@ -23,7 +23,7 @@ describe Lightning::Router::Router do
       let(:source) { public_key0 }
       let(:target) { public_key4 }
 
-      let(:message) { Lightning::Router::Messages::RouteRequest[public_key0, public_key4, []] }
+      let(:message) { Lightning::Router::Messages::RouteRequest[public_key0, public_key4, [], []] }
 
       context "Route exists" do
         before do

@@ -149,6 +149,7 @@ message PaymentRequest {
   string node_id = 1;
   string payment_hash = 2;
   uint64 amount_msat = 3;
+  repeated uint64 short_channel_ids = 4;
 }
 
 message PaymentResponse {

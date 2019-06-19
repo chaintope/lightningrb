@@ -7,7 +7,7 @@ module Lightning
         def next(message, data)
           match message, (on ~Lightning::Payment::Messages::SendPayment do |msg|
             # TODO: Assisted Routes
-            context.router << Lightning::Router::Messages::RouteRequest[node_id, msg[:target_node_id], msg[:routes]]
+            context.router << Lightning::Router::Messages::RouteRequest[node_id, msg[:target_node_id], msg[:routes], msg[:channels]]
             goto(
               WaitForRoute.new(node_id, context, payment),
               data: Lightning::Payment::Messages::DataWaitForRoute[payment.reference, msg, []]
