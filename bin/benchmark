@@ -74,14 +74,15 @@ rpc = Lightning::Blockchain::BitcoinService.new(config: config)
 
 client = create_btc_client(btc_setting)
 
-send_btc_if_needed(client, rpc, local_node_id)
+address = rpc.generate_new_address(local_node_id)
+send_btc_if_needed(client, rpc, local_node_id, address)
 
 connect(stub, remote_node_id, remote_node_ip)
 
 # Open channel if channel does not exist or channel does not have enough funds
 channel = get_channel(stub, remote_node_id)
 if !channel || channel.to_local_msat < 1000000000
-  open(client, stub, remote_node_id)
+  channel = open(client, stub, remote_node_id)
 end
 
 # Invoice
@@ -105,3 +106,9 @@ end
 
 threads.each(&:join)
 log.info("End payment")
+
+script_pubkey = Bitcoin::Script.parse_from_addr(address).to_payload.bth
+close(stub, channel, script_pubkey: script_pubkey)
+wait_for_close(client, stub, channel.channel_id)
+
+log.info("End")

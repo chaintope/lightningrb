@@ -6,7 +6,7 @@ module Lightning
     module Benchmark
       def create_btc_client(btc_setting)
         client = JSONClient.new
-        client.debug_dev = STDOUT
+        # client.debug_dev = STDOUT
         client.set_auth(btc_setting[:domain], btc_setting[:username], btc_setting[:password])
         [client, btc_setting[:endpoint]]
       end
@@ -21,9 +21,7 @@ module Lightning
         sleep(1)
       end
 
-      def send_btc_if_needed(client, rpc, local_node_id)
-        address = rpc.generate_new_address(local_node_id)
-
+      def send_btc_if_needed(client, rpc, local_node_id, address)
         while rpc.get_balance(local_node_id) < 1_000_000_000
           send_to_address(client, address)
           generate(client)
@@ -55,6 +53,12 @@ module Lightning
         responses.channel.sort_by(&:to_local_msat).last
       end
 
+      def get_channel_by_id(stub, channel_id)
+        request = Lightning::Grpc::GetChannelRequest.new(channel_id: channel_id)
+        response = stub.get_channel(request)
+        response.channel
+      end
+
       def open(client, stub, remote_node_id)
         request = Lightning::Grpc::OpenRequest.new(
           remote_node_id: remote_node_id,
@@ -63,9 +67,11 @@ module Lightning
           channel_flags: 0x01
         )
         responses = stub.open(request)
+        channel_id = nil
         responses.each do |response|
           case
           when response.channel_id_assigned
+            channel_id = response.channel_id_assigned.channel_id
             4.times do
               generate(client)
             end
@@ -79,6 +85,7 @@ module Lightning
             break
           end
         end
+        get_channel_by_id(stub, channel_id)
       end
 
       def invoice(stub)
@@ -98,6 +105,7 @@ module Lightning
         responses.each do |response|
           case
           when response.route_discovered
+            puts response.route_discovered.inspect
             break
           when response.route_not_found
             generate(client)
@@ -122,6 +130,20 @@ module Lightning
           when response.payment_succeeded
             break
           end
+        end
+      end
+
+      def close(stub, channel, script_pubkey: nil)
+        request = Lightning::Grpc::CloseRequest.new(
+          channel_id: channel.channel_id,
+          script_pubkey: script_pubkey
+        )
+        stub.close(request)
+      end
+
+      def wait_for_close(client, stub, channel_id)
+        while get_channel_by_id(stub, channel_id)
+          generate(client)
         end
       end
 

@@ -77,7 +77,8 @@ rpc = Lightning::Blockchain::BitcoinService.new(config: config)
 
 client = create_btc_client(btc_setting)
 
-send_btc_if_needed(client, rpc, node_1_id)
+address = rpc.generate_new_address(node_1_id)
+send_btc_if_needed(client, rpc, node_1_id, address)
 
 # Connect to peer(node_1 => node_2)
 connect(stub1, node_2_id, node_2_ip)
@@ -95,7 +96,7 @@ connect(stub1, node_3_id, node_3_ip)
 # Open channel(node_1 => node_3)
 channel = get_channel(stub1, node_3_id)
 if !channel || channel.to_local_msat < 1000000000
-  open(client, stub1, node_3_id)
+  channel = open(client, stub1, node_3_id)
 end
 
 # Invoice(node_3)
@@ -123,3 +124,9 @@ end
 threads.each(&:join)
 
 log.info("End payment")
+
+script_pubkey = Bitcoin::Script.parse_from_addr(address).to_payload.bth
+close(stub, channel, script_pubkey: script_pubkey)
+wait_for_close(client, stub, channel.channel_id)
+
+log.info("End")
