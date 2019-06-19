@@ -5,6 +5,7 @@ module Lightning
     class ChannelState
       class Shutdowning < ChannelState
         def next(message, data)
+          [self, data]
         end
       end
     end

@@ -5,12 +5,15 @@ module Lightning
     class ChannelState
       class Closed < ChannelState
         def next(message, data)
-          match message, (on :shutdown do
+          case message
+          when :shutdown
             if data.is_a? HasCommitments
               context.channel_db.remove(data.channel_id)
+              context.broadcast << ChannelClosed.build(channel, channel_id: data.channel_id, short_channel_id: data.short_channel_id)
             end
             stop
-          end)
+          end
+          [self, data]
         end
 
         def stop

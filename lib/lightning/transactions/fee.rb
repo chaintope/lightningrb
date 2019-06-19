@@ -38,8 +38,8 @@ module Lightning
         tx = dummy_closing_tx.tx
         script_witness = Bitcoin::ScriptWitness.new
         script_witness.stack << ''
-        script_witness.stack << 'aa' * 71
-        script_witness.stack << 'bb' * 71
+        script_witness.stack << "\x00" * 71
+        script_witness.stack << "\x00" * 71
         tx.inputs.first.script_witness = script_witness
         weight = tx.weight
         feerate_per_kw = commitments[:local_commit][:spec][:feerate_per_kw]

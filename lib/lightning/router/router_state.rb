@@ -42,9 +42,11 @@ module Lightning
           [self, data]
         when LocalChannelDown
           channel = data[:channels][message.short_channel_id]
-          desc = Announcements.to_channel_desc(channel)
-          data[:channels].delete(message.short_channel_id)
-          data[:updates].delete(desc)
+          if channel
+            desc = Announcements.to_channel_desc(channel)
+            data[:channels].delete(message.short_channel_id)
+            data[:updates].delete(desc)
+          end
           [self, data]
         when ChannelAnnouncement
           if data[:channels].key?(message.short_channel_id)

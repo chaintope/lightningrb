@@ -45,6 +45,8 @@ module Lightning
                 goto(self, data: store(data), sending: closing.closing_signed)
               end
             end
+          else
+            return [self, data]
           end
         rescue InvalidCloseFee, RuntimeError => e
           puts e.backtrace

@@ -12,6 +12,8 @@ module Lightning
           when ClosingSigned
             # closing transaction has been already sent.
             return [self, data]
+          else
+            return [self, data]
           end
         end
       end
