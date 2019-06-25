@@ -27,7 +27,7 @@ class LightningDaemon < DaemonSpawn::Base
         context.node_params.private_key
       )
     end
-    Thread.start { Lightning::Grpc::Server.run(context, context.broadcast) }
+    Thread.start { Lightning::Grpc::Server.new(context).run }
     Lightning::Rpc::Server.run(context)
   end
 

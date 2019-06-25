@@ -52,6 +52,7 @@ module Lightning
         context.node_params.private_key
       )
     end
+    Thread.start { Grpc::Server.new(context).run }
     Thread.start { Rpc::Server.run(context) }
   end
 
@@ -65,7 +66,6 @@ module Lightning
 end
 
 LN = Lightning
-# require 'em/pure_ruby'
 
 # log level is one of FATAL, DEBUG, INFO, WARN, ERROR
 Concurrent.use_simple_logger Logger::INFO
