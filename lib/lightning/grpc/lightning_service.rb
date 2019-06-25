@@ -1,13 +1,14 @@
-require 'lightning/grpc/service_services_pb'
 require 'lightning/channel/events'
 require 'lightning/io/events'
 require 'lightning/payment/events'
 require 'lightning/router/events'
 
+require 'lightning/grpc/service_services_pb'
+
 module Lightning
   module Grpc
     module LightningService
-      class Service
+      class ServiceImpl < Service
         include Concurrent::Concern::Logging
 
         attr_reader :context, :publisher

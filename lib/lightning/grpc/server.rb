@@ -9,7 +9,7 @@ module Lightning
         addr = "0.0.0.0:8080"
         @connection = GRPC::RpcServer.new(pool_size: 300)
         @connection.add_http2_port(addr, :this_port_is_insecure)
-        add_service(Lightning::Grpc::LightningService::Service.new(context, context.broadcast))
+        add_service(Lightning::Grpc::LightningService::ServiceImpl.new(context, context.broadcast))
       end
 
       def run
