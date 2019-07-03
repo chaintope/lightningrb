@@ -31,13 +31,10 @@ describe Lightning::Blockchain::Wallet do
   end
 
   describe '#complete' do
-    subject { wallet.complete(tx) }
+    subject { wallet.complete(tx, outputs) }
 
-    let(:tx) do
-      tx = Bitcoin::Tx.new
-      tx.outputs << Bitcoin::TxOut.new(value: 1000, script_pubkey: script_pubkey)
-      tx
-    end
+    let(:tx) { Bitcoin::Tx.new }
+    let(:outputs) { [Bitcoin::TxOut.new(value: 1000, script_pubkey: script_pubkey)] }
 
     context 'when exists a utxo whose value is same as tx output amount.' do
       let(:utxos) do

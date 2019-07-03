@@ -16,15 +16,16 @@ module Lightning
         fee_base_msat + (amount_to_forward * fee_proportional_millionths) / 1000000
       end
 
-      def build_command(amount_msat, expiry, payment_hash, hops = [])
-        output = build_payloads(amount_msat, expiry, hops[1..-1])
+      def build_command(request, expiry, hops = [])
+        payment_hash = request[:payment_hash]
+        output = build_payloads(request[:amount_msat], expiry, hops[1..-1])
         first_amount_msat = output[:msat]
         final_expiry = output[:expiry]
         payloads = output[:payloads]
         nodes = hops.map(&:next_node_id)
         onion, shared_secrets = build_onion(nodes, payloads, payment_hash)
         [
-          CommandAddHtlc[first_amount_msat, payment_hash, final_expiry, onion.to_payload.bth, None, true],
+          create_command_add_htlc(first_amount_msat, payment_hash, final_expiry, onion, options: request),
           shared_secrets,
         ]
       end
@@ -45,6 +46,10 @@ module Lightning
         session_key = SecureRandom.hex(32)
         payloads = payloads.map(&:to_payload).map(&:bth).map { |p| '00' + p }
         Sphinx.make_packet(session_key, nodes, payloads, payment_hash)
+      end
+
+      def create_command_add_htlc(amount_msat, payment_hash, expiry, onion, options: {})
+        CommandAddHtlc[amount_msat, payment_hash, expiry, onion.to_payload.bth, None, true]
       end
     end
   end

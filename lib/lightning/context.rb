@@ -9,7 +9,7 @@ module Lightning
 
     def initialize(spv)
       @node_params = Lightning::NodeParams.new
-      @wallet = Lightning::Blockchain::Wallet.new(spv, self)
+      @wallet = create_wallet(spv)
       @spv = spv
       @blockchain = Lightning::Blockchain::Watcher.spawn(:watcher, spv)
       @broadcast = Lightning::IO::Broadcast.spawn(:broadcast)
@@ -24,6 +24,10 @@ module Lightning
       @register = Lightning::Channel::Register.spawn(:register, self)
       @payment_handler = Lightning::Payment::PaymentHandler.spawn(:payment_handler, self)
       @payment_initiator = Lightning::Payment::PaymentInitiator.spawn(:payment_initiator, node_params.node_id, self)
+    end
+
+    def create_wallet(spv)
+      Lightning::Blockchain::Wallet.new(spv, self)
     end
   end
 end

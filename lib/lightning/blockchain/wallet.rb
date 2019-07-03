@@ -10,7 +10,8 @@ module Lightning
         @spv = spv
       end
 
-      def complete(tx)
+      def complete(tx, outputs, options: {})
+        outputs.each { |output| tx.outputs << output }
         amount = tx.outputs.sum(&:value)
         sum = 0
         utxos = spv.list_unspent(account_name)

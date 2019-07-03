@@ -9,7 +9,7 @@ module Lightning
           match message, (on ~Lightning::Router::Messages::RouteResponse do |response|
             first_hop = response[:hops].first
             final_expiry = block_height + data[:request][:final_cltv_expiry]
-            cmd, shared_secrets = build_command(data[:request][:amount_msat], final_expiry, data[:request][:payment_hash], response[:hops])
+            cmd, shared_secrets = build_command(data[:request], final_expiry, response[:hops])
             context.register << Lightning::Channel::Register::ForwardShortId[first_hop.last_update.short_channel_id, cmd]
             goto(
               WaitForComplete.new(node_id, context, payment),

@@ -354,14 +354,8 @@ module Lightning
         # for Bitcoin blockchain only
         return HtlcValueTooLarge.new(commitments, cmd) if cmd[:amount_msat] > 0x00000000FFFFFFFF
 
-        add = UpdateAddHtlc.new(
-          channel_id: commitments[:channel_id],
-          id: commitments[:local_next_htlc_id],
-          amount_msat: cmd[:amount_msat],
-          payment_hash: cmd[:payment_hash],
-          cltv_expiry: cmd[:cltv_expiry],
-          onion_routing_packet: cmd[:onion]
-        )
+        add = create_update_add_htlc_message(commitments, cmd)
+
         commitments1 = add_local_proposal(
           commitments,
           add,
@@ -405,6 +399,17 @@ module Lightning
         end
 
         [commitments1, add]
+      end
+
+      def self.create_update_add_htlc_message(commitments, cmd)
+        UpdateAddHtlc.new(
+          channel_id: commitments[:channel_id],
+          id: commitments[:local_next_htlc_id],
+          amount_msat: cmd[:amount_msat],
+          payment_hash: cmd[:payment_hash],
+          cltv_expiry: cmd[:cltv_expiry],
+          onion_routing_packet: cmd[:onion]
+        )
       end
 
       def self.receive_add(commitments, add, spv)

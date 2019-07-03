@@ -128,6 +128,8 @@ describe Lightning::Payment::RouteBuilder do
   end
 
   describe '.build_command' do
+    let(:request) { Lightning::Payment::Messages::SendPayment[final_amount_msat, payment_hash, public_keys[4], [], [], final_expiry] }
+
     let(:cltv_expiry) do
       final_expiry +
       channel_update_bc.cltv_expiry_delta +
@@ -136,7 +138,7 @@ describe Lightning::Payment::RouteBuilder do
     end
 
     it 'build a command with no hops' do
-      command, _ = build_command(final_amount_msat, final_expiry, payment_hash, [hops[0]])
+      command, _ = build_command(request, final_expiry, [hops[0]])
       hop_data, _ = Lightning::Onion::Sphinx.parse(keys[1].priv_key, command[:onion].htb)
       expect(command[:amount_msat]).to eq final_amount_msat
       expect(command[:cltv_expiry]).to eq final_expiry
@@ -147,7 +149,7 @@ describe Lightning::Payment::RouteBuilder do
     end
 
     it 'build a command including the onion' do
-      command, _ = build_command(final_amount_msat, final_expiry, payment_hash, hops)
+      command, _ = build_command(request, final_expiry, hops)
       expect(command[:amount_msat]).to be > final_amount_msat
       expect(command[:cltv_expiry]).to eq cltv_expiry
       expect(command[:payment_hash]).to eq payment_hash

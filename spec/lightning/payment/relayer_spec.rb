@@ -132,7 +132,8 @@ describe Lightning::Payment::Relayer do
       let(:expiry_ab) { expiry_bc + channel_update_bc.cltv_expiry_delta }
       let(:amount_ab) { amount_bc + fee_b }
 
-      let(:command_add_htlc) { build_command(final_amount_msat, final_expiry, payment_hash, hops)[0] }
+      let(:request) { Lightning::Payment::Messages::SendPayment[final_amount_msat, payment_hash, public_keys[4], [], [], final_expiry] }
+      let(:command_add_htlc) { build_command(request, final_expiry, hops)[0] }
       let(:amount_msat) { 42_000_000 }
       let(:add) do
         build(

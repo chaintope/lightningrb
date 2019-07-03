@@ -3,13 +3,13 @@
 module Lightning
   module Transactions
     module Funding
-      def self.make_funding_tx(wallet, funding_pubkey_script, funding_satoshis, funding_tx_feerate_per_kw)
+      def self.make_funding_tx(wallet, funding_pubkey_script, funding_satoshis, funding_tx_feerate_per_kw, options: {})
         tx = Bitcoin::Tx.new
         tx.version = 2
-        tx.outputs << Bitcoin::TxOut.new(value: funding_satoshis, script_pubkey: funding_pubkey_script)
         tx.lock_time = 0
-        signed_tx = wallet&.complete(tx)
-        MakeFundingTxResponse[signed_tx, 0]
+        outputs = [ Bitcoin::TxOut.new(value: funding_satoshis, script_pubkey: funding_pubkey_script) ]
+        signed_tx = wallet&.complete(tx, outputs, options: options)
+        MakeFundingTxResponse[signed_tx, funding_tx_output_index]
       end
 
       def self.make_funding_utxo(funding_tx_txid, funding_tx_output_index, funding_satoshis, local_funding_pubkey, remote_funding_pubkey)
@@ -28,6 +28,11 @@ module Lightning
           end
         Bitcoin::Script.to_multisig_script(2, keys)
       end
+
+      def self.funding_tx_output_index
+        0
+      end
+
       MakeFundingTxResponse = Algebrick.type do
         fields! tx: Bitcoin::Tx,
                 index: Numeric
