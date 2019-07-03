@@ -25,22 +25,22 @@ module Lightning
       end
 
       ForwardAdd = Algebrick.type do
-        fields! add: UpdateAddHtlc
+        fields! add: UpdateMessage
       end
       ForwardFulfill = Algebrick.type do
         fields! fulfill: UpdateFulfillHtlc,
                 to: Origin,
-                htlc: UpdateAddHtlc
+                htlc: UpdateMessage
       end
       ForwardFail = Algebrick.type do
         fields! fail: UpdateFailHtlc,
                 to: Origin,
-                htlc: UpdateAddHtlc
+                htlc: UpdateMessage
       end
       ForwardFailMalformed = Algebrick.type do
         fields! fail: UpdateFailMalformedHtlc,
                 to: Origin,
-                htlc: UpdateAddHtlc
+                htlc: UpdateMessage
       end
 
       attr_accessor :context
@@ -71,7 +71,7 @@ module Lightning
             parent << command
           when CommandAddHtlc
             context.register << Register::ForwardShortId[hop_data.per_hop.short_channel_id, command]
-          when UpdateAddHtlc
+          when UpdateMessage
             context.payment_handler << command
           end
         when ForwardFulfill
@@ -122,7 +122,12 @@ module Lightning
         when :channel_updates
           @channel_updates
         else
+          handle_unsupported_message(message)
         end
+      end
+
+      def handle_unsupported_message(message)
+        
       end
 
       def packet_to_command(hop_data, packet, add)
@@ -150,7 +155,7 @@ module Lightning
           elsif add.cltv_expiry < block_height + 3
             CommandFailHtlc[add.id, ExpiryTooSoon[channel_update.to_payload.bth], true]
           else
-            CommandAddHtlc[hop_data.per_hop.amt_to_forward, add.payment_hash, hop_data.per_hop.outgoing_cltv_value, packet.to_payload.bth, Algebrick::Some[UpdateAddHtlc][add], true]
+            CommandAddHtlc[hop_data.per_hop.amt_to_forward, add.payment_hash, hop_data.per_hop.outgoing_cltv_value, packet.to_payload.bth, Algebrick::Some[UpdateMessage][add], true]
           end
         end
       end

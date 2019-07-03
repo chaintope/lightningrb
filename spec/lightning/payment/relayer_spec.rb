@@ -174,7 +174,7 @@ describe Lightning::Payment::Relayer do
         end
 
         it do
-          expect(context.payment_handler).to receive(:<<).with(Lightning::Wire::LightningMessages::UpdateAddHtlc)
+          expect(context.payment_handler).to receive(:<<).with(Lightning::Wire::LightningMessages::UpdateMessage)
           subject
         end
       end
