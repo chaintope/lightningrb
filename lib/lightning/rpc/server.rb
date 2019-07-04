@@ -3,15 +3,13 @@
 require 'async'
 require 'async/http/server'
 require 'async/reactor'
-require 'async/http/url_endpoint'
-require 'async/http/response'
-
+require 'async/http/endpoint'
 
 Async.logger.level = Logger::DEBUG
 
 module Lightning
   module Rpc
-    END_POINT = Async::HTTP::URLEndpoint.parse('http://0.0.0.0:9222')
+    END_POINT = Async::HTTP::Endpoint.parse('http://0.0.0.0:9222')
 
     class Server
       def self.run(context)
@@ -33,51 +31,51 @@ module Lightning
         case request['method']
         when 'getnodeinfo'
           response = { node_id: context.node_params.node_id }.to_json
-          Async::HTTP::Response[200, {}, [response]]
+          Protocol::HTTP::Response[200, {}, [response]]
         when 'connect'
           node_id = params[0]
           ip = params[1]
           port = params[2] || 9735
           context.switchboard << Lightning::IO::PeerEvents::Connect[node_id, ip, port]
-          Async::HTTP::Response[200, {}, []]
+          Protocol::HTTP::Response[200, {}, []]
         when 'open'
           node_id = params[0]
           funding_satoshis = params[1]
           push_msat = params[2] || funding_satoshis * context.node_params.reserve_to_funding_ratio * 1000
           channel_flags = params[3] || 0x01
           context.switchboard << Lightning::IO::PeerEvents::OpenChannel[node_id, funding_satoshis, push_msat, channel_flags, {}]
-          Async::HTTP::Response[200, {}, []]
+          Protocol::HTTP::Response[200, {}, []]
         when 'close'
           channel_id = params[0]
           script_pubkey = params[1]
           command = Lightning::Channel::Messages::CommandClose[script_pubkey || '']
           context.register << Lightning::Channel::Register::Forward[channel_id, command]
-          Async::HTTP::Response[200, {}, []]
+          Protocol::HTTP::Response[200, {}, []]
         when 'receive'
           payment = Lightning::Payment::Messages::ReceivePayment[params[0], params[1]]
           message = context.payment_handler.ask!(payment)
           response = message.to_h.merge(invoice: message.to_bech32).to_json
-          Async::HTTP::Response[200, {}, [response]]
+          Protocol::HTTP::Response[200, {}, [response]]
         when 'send'
           node_id = params[0]
           payment_hash = params[1]
           amount_msat = params[2]
           context.payment_initiator.ask!(Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, node_id, [], [], 144])
-          Async::HTTP::Response[200, {}, []]
+          Protocol::HTTP::Response[200, {}, []]
         when 'nodes'
           response = context.router.ask!(:nodes).map(&:to_h).to_json
-          Async::HTTP::Response[200, {}, [response]]
+          Protocol::HTTP::Response[200, {}, [response]]
         when 'channels'
           response = context.switchboard.ask!(:channels).map(&:to_h).to_json
-          Async::HTTP::Response[200, {}, [response]]
+          Protocol::HTTP::Response[200, {}, [response]]
         when 'payments'
           response = context.payment_initiator.ask!(:payments).to_json
-          Async::HTTP::Response[200, {}, [response]]
+          Protocol::HTTP::Response[200, {}, [response]]
         else
-          Async::HTTP::Response[400, {}, ["Unsupported method. #{request['method']}"]]
+          Protocol::HTTP::Response[400, {}, ["Unsupported method. #{request['method']}"]]
         end
       rescue StandardError => e
-        Async::HTTP::Response[400, {}, ["Bad Request #{e.message} \n #{e.backtrace}"]]
+        Protocol::HTTP::Response[400, {}, ["Bad Request #{e.message} \n #{e.backtrace}"]]
       end
     end
   end
