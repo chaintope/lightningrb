@@ -11,7 +11,7 @@ module Lightning
                 payment_hash: String,
                 cltv_expiry: Numeric,
                 onion: String,
-                upstream_opt: Algebrick::Maybe[UpdateAddHtlc],
+                upstream_opt: Algebrick::Maybe[UpdateMessage],
                 commit: Algebrick::Boolean
       end
 
