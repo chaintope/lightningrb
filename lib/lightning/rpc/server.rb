@@ -72,11 +72,15 @@ module Lightning
           response = context.payment_initiator.ask!(:payments).to_json
           Protocol::HTTP::Response[200, {}, [response]]
         else
-          Protocol::HTTP::Response[400, {}, ["Unsupported method. #{request['method']}"]]
+          handle_unsupported_message(request['method'], request, params)
         end
       rescue StandardError => e
         Protocol::HTTP::Response[400, {}, ["Bad Request #{e.message} \n #{e.backtrace}"]]
       end
+    end
+
+    def self.handle_unsupported_message(method, request, params)
+      Protocol::HTTP::Response[400, {}, ["Unsupported method. #{method}"]]
     end
   end
 end
