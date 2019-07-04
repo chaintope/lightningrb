@@ -47,7 +47,8 @@ module Lightning
         initial_feerate_per_kw,
         funding_tx_txid,
         funding_tx_output_index,
-        remote_first_per_commitment_point
+        remote_first_per_commitment_point,
+        additional_field
       )
         to_local_msat = local_param.funder? ? funding_satoshis * 1000 - push_msat : push_msat
         to_remote_msat = local_param.funder? ? push_msat : funding_satoshis * 1000 - push_msat

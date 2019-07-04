@@ -22,7 +22,7 @@ module Lightning
               funding_tx.txid,
               funding_tx_output_index,
               remote_first_per_commitment_point,
-              # node_params.max_feerate_mismatch
+              data[:additional_field]
             )
             Transactions.inspect(remote_commit_tx.tx)
             local_sig_of_remote_tx = Transactions.sign(remote_commit_tx.tx, remote_commit_tx.utxo, local_param.funding_priv_key)
