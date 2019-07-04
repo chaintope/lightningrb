@@ -43,7 +43,7 @@ module Lightning
           funding_satoshis = params[1]
           push_msat = params[2] || funding_satoshis * context.node_params.reserve_to_funding_ratio * 1000
           channel_flags = params[3] || 0x01
-          context.switchboard << Lightning::IO::PeerEvents::OpenChannel[node_id, funding_satoshis, push_msat, channel_flags, {}]
+          context.switchboard << Lightning::IO::PeerEvents::OpenChannel[node_id, funding_satoshis, push_msat, channel_flags, '']
           Protocol::HTTP::Response[200, {}, []]
         when 'close'
           channel_id = params[0]
@@ -52,7 +52,7 @@ module Lightning
           context.register << Lightning::Channel::Register::Forward[channel_id, command]
           Protocol::HTTP::Response[200, {}, []]
         when 'receive'
-          payment = Lightning::Payment::Messages::ReceivePayment[params[0], params[1]]
+          payment = Lightning::Payment::Messages::ReceivePayment[params[0], params[1], '']
           message = context.payment_handler.ask!(payment)
           response = message.to_h.merge(invoice: message.to_bech32).to_json
           Protocol::HTTP::Response[200, {}, [response]]
@@ -60,7 +60,7 @@ module Lightning
           node_id = params[0]
           payment_hash = params[1]
           amount_msat = params[2]
-          context.payment_initiator.ask!(Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, node_id, [], [], 144])
+          context.payment_initiator.ask!(Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, node_id, [], [], 144, ''])
           Protocol::HTTP::Response[200, {}, []]
         when 'nodes'
           response = context.router.ask!(:nodes).map(&:to_h).to_json

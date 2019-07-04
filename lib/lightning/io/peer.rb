@@ -192,7 +192,8 @@ module Lightning
               local_param,
               transport,
               data[:remote_init],
-              message.channel_flags
+              message.channel_flags,
+              message.additional_field
             ]
             data[:channels][temporary_channel_id] = channel
           when Lightning::Wire::LightningMessages::OpenChannel

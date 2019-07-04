@@ -18,7 +18,8 @@ FactoryBot.define do
         cltv_expiry,
         onion,
         upstream_opt,
-        commit
+        commit,
+        ''
       ])
     end
 

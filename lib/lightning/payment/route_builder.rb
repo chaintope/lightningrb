@@ -48,8 +48,8 @@ module Lightning
         Sphinx.make_packet(session_key, nodes, payloads, payment_hash)
       end
 
-      def create_command_add_htlc(amount_msat, payment_hash, expiry, onion, options: {})
-        CommandAddHtlc[amount_msat, payment_hash, expiry, onion.to_payload.bth, None, true]
+      def create_command_add_htlc(amount_msat, payment_hash, expiry, onion, options: nil)
+        CommandAddHtlc[amount_msat, payment_hash, expiry, onion.to_payload.bth, None, true, '']
       end
     end
   end

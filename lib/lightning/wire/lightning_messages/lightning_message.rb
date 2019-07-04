@@ -8,7 +8,13 @@ module Lightning
       class LightningMessage < Lightning::Wire::LightningMessages::Generated::LightningMessage
         def self.load(payload)
           type = payload.unpack('n').first
-          clazz = [
+          clazz = message_classes.select{|clazz| clazz.const_get('TYPE') == type}.first
+          return nil unless clazz
+          clazz.load(payload)
+        end
+
+        def self.message_classes
+          [
             Init,
             Error,
             Ping,
@@ -37,9 +43,11 @@ module Lightning
             QueryShortChannelIds,
             ReplyChannelRange,
             ReplyShortChannelIdsEnd
-          ].select{|clazz| clazz.const_get('TYPE') == type}.first
-          return nil unless clazz
-          clazz.load(payload)
+          ] + extension_message_classes
+        end
+
+        def self.extension_message_classes
+          []
         end
       end
     end

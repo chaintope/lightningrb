@@ -9,7 +9,7 @@ FactoryBot.define do
     channels { [] }
     final_cltv_expiry { 144 }
     initialize_with do
-      new(Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, target_node_id, routes, channels, final_cltv_expiry])
+      new(Lightning::Payment::Messages::SendPayment[amount_msat, payment_hash, target_node_id, routes, channels, final_cltv_expiry, ''])
     end
   end
 end

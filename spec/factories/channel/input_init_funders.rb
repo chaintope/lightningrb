@@ -20,7 +20,8 @@ FactoryBot.define do
           local_param,
           remote,
           remote_init,
-          channel_flags
+          channel_flags,
+          ''
         ])
     end
   end

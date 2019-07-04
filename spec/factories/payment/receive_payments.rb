@@ -5,7 +5,7 @@ FactoryBot.define do
     amount_msat { 10_000_000 }
     description { 'ナンセンス1杯' }
     initialize_with do
-      new(Lightning::Payment::Messages::ReceivePayment[amount_msat, description])
+      new(Lightning::Payment::Messages::ReceivePayment[amount_msat, description, ''])
     end
   end
 end

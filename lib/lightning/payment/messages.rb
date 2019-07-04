@@ -9,12 +9,14 @@ module Lightning
                 target_node_id: String,
                 routes: Array,
                 channels: Array,
-                final_cltv_expiry: Numeric
+                final_cltv_expiry: Numeric,
+                additional_field: String
       end
 
       ReceivePayment = Algebrick.type do
         fields  amount_msat: Numeric,
-                description: String
+                description: String,
+                additional_field: String
       end
 
       DataWaitForRequest = Algebrick.atom

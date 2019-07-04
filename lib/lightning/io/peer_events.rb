@@ -13,13 +13,12 @@ module Lightning
                   funding_satoshis: Numeric,
                   push_msat: Numeric,
                   channel_flags: Numeric,
-                  option: Hash
+                  additional_field: String
         end
         Connect = type do
           fields! remote_node_id: String,
                   host: String,
-                  port: Numeric,
-                  option: Hash
+                  port: Numeric
         end
         variants Timeout, Reconnect, OpenChannel, Connect
       end

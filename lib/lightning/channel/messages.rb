@@ -12,7 +12,8 @@ module Lightning
                 cltv_expiry: Numeric,
                 onion: String,
                 upstream_opt: Algebrick::Maybe[UpdateMessage],
-                commit: Algebrick::Boolean
+                commit: Algebrick::Boolean,
+                additional_field: String
       end
 
       CommandFulfillHtlc = Algebrick.type do
@@ -626,7 +627,8 @@ module Lightning
                 local_param: LocalParam,
                 remote: Concurrent::Actor::Reference,
                 remote_init: Init,
-                channel_flags: Numeric
+                channel_flags: Numeric,
+                additional_field: String
       end
       InputInitFundee = Algebrick.type do
         fields! temporary_channel_id: String,
@@ -637,9 +639,6 @@ module Lightning
       InputCloseCompleteTimeout = Algebrick.atom
       InputPublishLocalcommit = Algebrick.atom
       InputDisconnected = Algebrick.atom
-      # InputRestored = Algebrick.type do
-      #   fields! data: HasCommitments
-      # end
       InputReconnected = Algebrick.type do
         fields! remote: Concurrent::Actor::Reference,
                 data: HasCommitments

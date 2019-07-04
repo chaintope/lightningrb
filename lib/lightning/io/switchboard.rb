@@ -21,14 +21,14 @@ module Lightning
         @peers = context.peer_db.connected
           .inject({}) do |peers, (node_id, host, port, connected)|
             peer = create_or_get_peer(peers, node_id)
-            peer << Connect[node_id, host, port, {}]
+            peer << Connect[node_id, host, port]
             peers[node_id] = peer
             peers
           end
       end
 
       def on_message(message)
-        match message, (on ~Connect.(~any, ~any, ~any, any) do |connect, remote_node_id, host, port|
+        match message, (on ~Connect.(~any, ~any, ~any) do |connect, remote_node_id, host, port|
           unless valid_connect?(connect)
             parent << Error['cannot open connection with oneself']
           end

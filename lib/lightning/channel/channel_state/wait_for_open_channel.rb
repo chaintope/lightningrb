@@ -66,11 +66,15 @@ module Lightning
                 message.first_per_commitment_point,
                 message.channel_flags,
                 accept,
-                data[:additional_field]
+                create_additional_field(message, data)
               ],
               sending: accept
             )
           end
+        end
+
+        def create_additional_field(message, data)
+          ''
         end
       end
     end

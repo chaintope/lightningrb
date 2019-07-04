@@ -155,7 +155,7 @@ module Lightning
           elsif add.cltv_expiry < block_height + 3
             CommandFailHtlc[add.id, ExpiryTooSoon[channel_update.to_payload.bth], true]
           else
-            CommandAddHtlc[hop_data.per_hop.amt_to_forward, add.payment_hash, hop_data.per_hop.outgoing_cltv_value, packet.to_payload.bth, Algebrick::Some[UpdateMessage][add], true]
+            CommandAddHtlc[hop_data.per_hop.amt_to_forward, add.payment_hash, hop_data.per_hop.outgoing_cltv_value, packet.to_payload.bth, Algebrick::Some[UpdateMessage][add], true, '']
           end
         end
       end

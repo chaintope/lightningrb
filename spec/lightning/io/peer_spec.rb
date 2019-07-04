@@ -116,7 +116,7 @@ describe Lightning::IO::Peer do
           peer.ask(:await).wait
         end
 
-        let(:open_channel) { Lightning::IO::PeerEvents::OpenChannel['00' * 32, 10_000_000, 10_000, 1, {}] }
+        let(:open_channel) { Lightning::IO::PeerEvents::OpenChannel['00' * 32, 10_000_000, 10_000, 1, ''] }
 
         it 'add channel' do
           expect { subject }.to change { peer.ask!(:channels).size }.by(1)

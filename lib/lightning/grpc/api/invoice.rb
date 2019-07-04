@@ -12,7 +12,7 @@ module Lightning
         end
 
         def execute(request)
-          payment = Lightning::Payment::Messages::ReceivePayment[request.amount_msat, request.description]
+          payment = Lightning::Payment::Messages::ReceivePayment[request.amount_msat, request.description, '']
           message = context.payment_handler.ask!(payment)
           Lightning::Grpc::InvoiceResponse.new(message.to_h.merge(payload: message.to_bech32))
         end
