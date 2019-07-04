@@ -665,11 +665,13 @@ module Lightning
 
       Data = Algebrick.type do
         DataWaitForOpenChannel = type do
-          fields  init_fundee: InputInitFundee
+          fields  init_fundee: InputInitFundee,
+                  additional_field: String
         end
         DataWaitForAcceptChannel = type do
           fields  init_funder: InputInitFunder,
-                  last_sent: OpenChannel
+                  last_sent: OpenChannel,
+                  additional_field: String
         end
         DataWaitForFundingCreated = type do
           fields  temporary_channel_id: String,
@@ -680,7 +682,8 @@ module Lightning
                   initial_feerate_per_kw: Numeric,
                   remote_first_per_commitment_point: String,
                   channel_flags: Numeric,
-                  last_sent: AcceptChannel
+                  last_sent: AcceptChannel,
+                  additional_field: String
         end
         DataWaitForFundingInternal = type do
           fields  temporary_channel_id: String,
@@ -690,7 +693,8 @@ module Lightning
                   push_msat: Numeric,
                   initial_feerate_per_kw: Numeric,
                   remote_first_per_commitment_point: String,
-                  last_sent: OpenChannel
+                  last_sent: OpenChannel,
+                  additional_field: String
         end
         DataWaitForFundingSigned = type do
           fields  temporary_channel_id: String,
@@ -702,19 +706,22 @@ module Lightning
                   local_commit_tx: TransactionWithUtxo,
                   remote_commit: RemoteCommit,
                   channel_flags: Numeric,
-                  last_sent: FundingCreated
+                  last_sent: FundingCreated,
+                  additional_field: String
         end
         DataWaitForFundingConfirmed = type do
           fields  temporary_channel_id: String,
                   commitments: Commitments,
                   deferred: Algebrick::Maybe[FundingLocked],
-                  last_sent: type { variants FundingCreated, FundingSigned }
+                  last_sent: type { variants FundingCreated, FundingSigned },
+                  additional_field: String
         end
         DataWaitForFundingLocked = type do
           fields  temporary_channel_id: String,
                   commitments: Commitments,
                   short_channel_id: Numeric,
-                  last_sent: FundingLocked
+                  last_sent: FundingLocked,
+                  additional_field: String
         end
         DataNormal = type do
           fields  temporary_channel_id: String,
@@ -724,14 +731,16 @@ module Lightning
                   channel_announcement: Algebrick::Maybe[ChannelAnnouncement],
                   channel_update: ChannelUpdate,
                   local_shutdown: Algebrick::Maybe[Shutdown],
-                  remote_shutdown: Algebrick::Maybe[Shutdown]
+                  remote_shutdown: Algebrick::Maybe[Shutdown],
+                  additional_field: String
         end
 
         DataShutdown = type do
           fields  commitments: Commitments,
                   short_channel_id: Numeric,
                   local_shutdown: Shutdown,
-                  remote_shutdown: Shutdown
+                  remote_shutdown: Shutdown,
+                  additional_field: String
         end
         DataNegotiating = type do
           fields  commitments: Commitments,
@@ -739,7 +748,8 @@ module Lightning
                   local_shutdown: Shutdown,
                   remote_shutdown: Shutdown,
                   closing_tx_proposed: Array,
-                  best_unpublished_closing_tx_opt: Algebrick::Maybe[Bitcoin::Tx]
+                  best_unpublished_closing_tx_opt: Algebrick::Maybe[Bitcoin::Tx],
+                  additional_field: String
         end
         DataClosing = type do
           fields  commitments: Commitments,
@@ -750,11 +760,13 @@ module Lightning
                   remote_commit_published: Algebrick::Maybe[RemoteCommitPublished],
                   next_remote_commit_published: Algebrick::Maybe[RemoteCommitPublished],
                   future_remote_commit_published: Algebrick::Maybe[RemoteCommitPublished],
-                  revoked_commit_published: Array
+                  revoked_commit_published: Array,
+                  additional_field: String
         end
         DataWaitForRemotePublishFutureCommitment = type do
           fields  commitments: Commitments,
-                  remote_channel_reestablish: ChannelReestablish
+                  remote_channel_reestablish: ChannelReestablish,
+                  additional_field: String
         end
 
         variants  DataWaitForOpenChannel,
@@ -811,7 +823,9 @@ module Lightning
           end
           len = last_sent.to_payload.bytesize
           rest = rest[len..-1]
-          [new(temporary_channel_id, commitments, deferred, last_sent), rest]
+          len, rest = rest.unpack('na*')
+          additional_field, rest = rest.unpack("H{len * 2}a*")
+          [new(temporary_channel_id, commitments, deferred, last_sent, additional_field), rest]
         end
 
         def to_payload
@@ -827,6 +841,8 @@ module Lightning
           end
           payload << [self[:last_sent].type].pack('n')
           payload << self[:last_sent].to_payload
+          payload << [self[:additional_field].bytesize].pack('n')
+          payload << self[:additional_field].htb
           payload.string
         end
       end
@@ -858,7 +874,9 @@ module Lightning
           last_sent = Lightning::Wire::LightningMessages::FundingLocked.load(rest)
           len = last_sent.to_payload.bytesize
           rest = rest[len..-1]
-          [new(temporary_channel_id, commitments, short_channel_id, last_sent), rest]
+          len, rest = rest.unpack('na*')
+          additional_field, rest = rest.unpack("H{len * 2}a*")
+          [new(temporary_channel_id, commitments, short_channel_id, last_sent, additional_field), rest]
         end
 
         def to_payload
@@ -868,6 +886,8 @@ module Lightning
           payload << self[:commitments].to_payload
           payload << [self[:short_channel_id]].pack('q>')
           payload << self[:last_sent].to_payload
+          payload << [self[:additional_field].bytesize].pack('n')
+          payload << self[:additional_field].htb
           payload.string
         end
       end
@@ -906,7 +926,8 @@ module Lightning
             channel_announcement,
             channel_update,
             local_shutdown,
-            remote_shutdown
+            remote_shutdown,
+            self[:additional_field]
           ]
         end
 
@@ -951,7 +972,9 @@ module Lightning
             remote_shutdown = Lightning::Wire::LightningMessages::Shutdown.load(rest)
             rest = rest[0..-1]
           end
-          [new(temporary_channel_id, commitments, short_channel_id, buried, channel_announcement, channel_update, local_shutdown, remote_shutdown), rest]
+          len, rest = rest.unpack('na*')
+          additional_field, rest = rest.unpack("H{len * 2}a*")
+          [new(temporary_channel_id, commitments, short_channel_id, buried, channel_announcement, channel_update, local_shutdown, remote_shutdown, additional_field), rest]
         end
 
         def to_payload
@@ -980,6 +1003,8 @@ module Lightning
           else
             payload << self[:remote_shutdown].value.to_payload
           end
+          payload << [self[:additional_field].bytesize].pack('n')
+          payload << self[:additional_field].htb
           payload.string
         end
       end

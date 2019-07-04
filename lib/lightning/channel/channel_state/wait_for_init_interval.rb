@@ -18,7 +18,7 @@ module Lightning
             open.validate!
             goto(
               WaitForAcceptChannel.new(channel, context),
-              data: DataWaitForAcceptChannel[init, open],
+              data: DataWaitForAcceptChannel[init, open, create_additional_field(init)],
               sending: open
             )
           end), (on ~InputInitFundee do |init|
@@ -26,7 +26,7 @@ module Lightning
             context.forwarder << init[:remote]
             goto(
               WaitForOpenChannel.new(channel, context),
-              data: DataWaitForOpenChannel[init]
+              data: DataWaitForOpenChannel[init, create_additional_field(init)]
             )
           end), (on OpenChannel do
             # TODO: pending open_channel message.
@@ -94,6 +94,10 @@ module Lightning
           first_per_commitment_point: first_per_commitment_point,
           channel_flags: init[:channel_flags]
         )
+      end
+
+      def create_additional_field(init)
+        ""
       end
     end
   end

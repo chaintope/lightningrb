@@ -22,7 +22,8 @@ FactoryBot.define do
         initial_feerate_per_kw,
         remote_first_per_commitment_point,
         channel_flags,
-        last_sent
+        last_sent,
+        ''
       ])
     end
   end

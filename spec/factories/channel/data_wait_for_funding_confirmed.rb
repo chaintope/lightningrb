@@ -12,7 +12,8 @@ FactoryBot.define do
         temporary_channel_id,
         commitments,
         deferred,
-        last_sent
+        last_sent,
+        ''
       ])
     end
   end

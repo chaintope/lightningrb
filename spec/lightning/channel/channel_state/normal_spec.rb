@@ -44,7 +44,8 @@ describe Lightning::Channel::ChannelState::Normal do
         channel_announcement: Algebrick::None,
         channel_update: build(:channel_update),
         local_shutdown: Algebrick::None,
-        remote_shutdown: Algebrick::None
+        remote_shutdown: Algebrick::None,
+        additional_field: ''
       ]
     end
 

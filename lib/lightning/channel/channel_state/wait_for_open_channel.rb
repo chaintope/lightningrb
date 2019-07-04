@@ -65,7 +65,8 @@ module Lightning
                 message.feerate_per_kw,
                 message.first_per_commitment_point,
                 message.channel_flags,
-                accept
+                accept,
+                data[:additional_field]
               ],
               sending: accept
             )

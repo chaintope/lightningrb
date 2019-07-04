@@ -6,7 +6,7 @@ FactoryBot.define do
     last_sent { build(:open_channel) }
     initialize_with do
       new(Lightning::Channel::Messages::DataWaitForAcceptChannel[
-        init_funder, last_sent
+        init_funder, last_sent, ''
       ])
     end
   end

@@ -7,7 +7,7 @@ FactoryBot.define do
     local_shutdown { build(:shutdown) }
     remote_shutdown { build(:shutdown) }
     initialize_with do
-      new(Lightning::Channel::Messages::DataShutdown[commitments, short_channel_id, local_shutdown, remote_shutdown])
+      new(Lightning::Channel::Messages::DataShutdown[commitments, short_channel_id, local_shutdown, remote_shutdown, ''])
     end
   end
 end

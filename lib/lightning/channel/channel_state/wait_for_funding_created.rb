@@ -115,7 +115,8 @@ module Lightning
                 temporary_channel_id,
                 commitments,
                 ::Algebrick::None,
-                funding_signed
+                funding_signed,
+                data[:additional_field]
               ]),
               sending: funding_signed
             )

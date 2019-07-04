@@ -27,7 +27,7 @@ module Lightning
               goto(
                 WaitForFundingLocked.new(channel, context),
                 data: store(DataWaitForFundingLocked[
-                  temporary_channel_id, commitments, short_channel_id, funding_locked
+                  temporary_channel_id, commitments, short_channel_id, funding_locked, data[:additional_field]
                 ]),
                 sending: funding_locked
               )

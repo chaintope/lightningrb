@@ -19,7 +19,8 @@ FactoryBot.define do
         channel_announcement,
         channel_update,
         local_shutdown,
-        remote_shutdown
+        remote_shutdown,
+        ''
       ])
     end
   end

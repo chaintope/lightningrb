@@ -52,7 +52,8 @@ module Lightning
                 push_msat,
                 initial_feerate_per_kw,
                 remote_first_per_commitment_point,
-                open_channel
+                open_channel,
+                data[:additional_field]
               ]
             )
           end

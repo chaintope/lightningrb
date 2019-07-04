@@ -51,7 +51,7 @@ module Lightning
 
             goto(
               Normal.new(channel, context),
-              data: store(DataNormal[temporary_channel_id, new_commitments, short_channel_id, 0, None, channel_update, None, None])
+              data: store(DataNormal[temporary_channel_id, new_commitments, short_channel_id, 0, None, channel_update, None, None, data[:additional_field]])
             )
           when WatchEventConfirmed
             task = Concurrent::TimerTask.new(execution_interval: 60) do

@@ -54,7 +54,8 @@ module Lightning
                 local_commit_tx,
                 Transactions::Commitment::RemoteCommit[0, remote_spec, remote_commit_tx.tx.txid, remote_first_per_commitment_point],
                 data[:last_sent].channel_flags,
-                funding_created
+                funding_created,
+                data[:additional_field]
               ],
               sending: funding_created
             )
