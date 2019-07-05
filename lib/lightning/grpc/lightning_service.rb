@@ -3,7 +3,7 @@ require 'lightning/io/events'
 require 'lightning/payment/events'
 require 'lightning/router/events'
 
-require 'lightning/grpc/service_services_pb'
+require 'lightning/grpc/lightning_services_pb'
 
 module Lightning
   module Grpc
