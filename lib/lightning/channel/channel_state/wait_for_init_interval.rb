@@ -28,7 +28,7 @@ module Lightning
               WaitForOpenChannel.new(channel, context),
               data: DataWaitForOpenChannel[init, create_additional_field(message, data)]
             )
-          end), (on OpenChannel do
+          end), (on OpenMessage do
             # TODO: pending open_channel message.
             [self, data]
           end), (on ~InputReconnected do |msg|

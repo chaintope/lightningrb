@@ -6,7 +6,7 @@ module Lightning
       class WaitForOpenChannel < ChannelState
         def next(message, data)
           case message
-          when OpenChannel
+          when OpenMessage
             init_fundee = data[:init_fundee]
             local_param = init_fundee[:local_param]
             remote_init = init_fundee[:remote_init]

@@ -196,7 +196,7 @@ module Lightning
               message.additional_field
             ]
             data[:channels][temporary_channel_id] = channel
-          when Lightning::Wire::LightningMessages::OpenChannel
+          when Lightning::Wire::LightningMessages::OpenMessage
             temporary_channel_id = message.temporary_channel_id
             channel = data[:channels][temporary_channel_id]
             if channel

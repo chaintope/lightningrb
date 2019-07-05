@@ -13,6 +13,9 @@ module Lightning
       module HasChannelId
       end
 
+      module OpenMessage
+      end
+
       module UpdateMessage
       end
 

@@ -669,7 +669,7 @@ module Lightning
         end
         DataWaitForAcceptChannel = type do
           fields  init_funder: InputInitFunder,
-                  last_sent: OpenChannel,
+                  last_sent: OpenMessage,
                   additional_field: String
         end
         DataWaitForFundingCreated = type do
@@ -692,7 +692,7 @@ module Lightning
                   push_msat: Numeric,
                   initial_feerate_per_kw: Numeric,
                   remote_first_per_commitment_point: String,
-                  last_sent: OpenChannel,
+                  last_sent: OpenMessage,
                   additional_field: String
         end
         DataWaitForFundingSigned = type do
