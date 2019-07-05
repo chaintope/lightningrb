@@ -13,10 +13,11 @@ module Lightning
       end
 
       def on_message(message)
-        match message, (on WatchConfirmed.(~any, ~any, ~any) do |listener, tx_hash, blocks|
-          Thread.start(listener) do |listener|
+        case message
+        when WatchConfirmed
+          Thread.start(message[:listener]) do |listener|
             id = SecureRandom.random_number(1 << 32)
-            request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash: tx_hash, confirmations: 3)
+            request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash: message[:tx_hash], confirmations: 3)
             response = stub.watch_tx_confirmed(request)
             response.each do |r|
               log(Logger::INFO, :watcher, "RECEIVE WatchEventConfirmed event.#{r}")
@@ -25,9 +26,9 @@ module Lightning
             end
           end
 
-          Thread.start(listener) do |listener|
+          Thread.start(message[:listener]) do |listener|
             id = SecureRandom.random_number(1 << 32)
-            request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash: tx_hash, confirmations: 6)
+            request = Bitcoin::Grpc::WatchTxConfirmedRequest.new(id: id, tx_hash:  message[:tx_hash], confirmations: 6)
             response = stub.watch_tx_confirmed(request)
             response.each do |r|
               log(Logger::INFO, :watcher, "RECEIVE WatchEventConfirmed event.#{r}")
@@ -35,7 +36,13 @@ module Lightning
               break
             end
           end
-        end)
+        else
+          handle_unsupported_message(message)
+        end
+      end
+
+      def handle_unsupported_message(message)
+        log(Logger::WARN, :watcher, "unsupported mesage:#{message}")
       end
     end
   end
