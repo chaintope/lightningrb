@@ -29,7 +29,7 @@ module Lightning
             funding_created = FundingCreated.new(
               temporary_channel_id: temporary_channel_id,
               funding_txid: funding_tx.txid,
-              funding_tx_output_index: funding_tx_output_index,
+              funding_output_index: funding_tx_output_index,
               signature: Lightning::Wire::Signature.new(value: local_sig_of_remote_tx)
             )
 
