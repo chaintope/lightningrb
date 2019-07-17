@@ -10,7 +10,14 @@ module Lightning
       def initialize(config: nil)
         @config = config
         @stub = Bitcoin::Grpc::Blockchain::Stub.new(build_bitcoin_grpc_url, :this_channel_is_insecure)
-        @block_height = blockchain_info['headers']
+        while true
+          info = blockchain_info
+          if info
+            @block_height = info['headers']
+            break
+          end
+          sleep(5)
+        end
         Thread.start do
           request = Bitcoin::Grpc::EventsRequest.new(operation: :SUBSCRIBE, event_type: "BlockCreated")
           responses = @stub.events([request])
