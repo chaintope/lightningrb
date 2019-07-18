@@ -4,7 +4,7 @@ module Lightning
   module Transactions
     DirectedHtlc = Algebrick.type do
       fields! direction: Numeric, # 0: offered, 1: received
-              add: Lightning::Wire::LightningMessages::UpdateAddHtlc
+              add: Lightning::Wire::LightningMessages::UpdateAddHtlcMessage
     end
 
     module DirectedHtlc

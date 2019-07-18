@@ -11,6 +11,7 @@ module Lightning
         include Lightning::Wire::LightningMessages
         include Lightning::Wire::LightningMessages::HasChannelId
         include Lightning::Wire::LightningMessages::UpdateMessage
+        include Lightning::Wire::LightningMessages::UpdateAddHtlcMessage
         TYPE = 128
 
         def initialize(fields = {})

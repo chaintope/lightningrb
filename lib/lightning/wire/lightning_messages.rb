@@ -19,6 +19,9 @@ module Lightning
       module UpdateMessage
       end
 
+      module UpdateAddHtlcMessage
+      end
+
       module RoutingMessage
       end
 

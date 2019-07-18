@@ -18,7 +18,7 @@ module Lightning
               payment_hash: message[:payment_hash]
             )
             return goto(self, data: data.copy(commitments: new_commitments), sending: new_message)
-          when UpdateAddHtlc
+          when UpdateAddHtlcMessage
             new_commitments = Commitment.receive_add(data[:commitments], message, context.spv)
             return handle_local_error(new_commitments, data) unless new_commitments.is_a? Commitments
             return goto(self, data: data.copy(commitments: new_commitments))
@@ -108,7 +108,7 @@ module Lightning
             new_commitments = Commitment.receive_revocation(data[:commitments], message)
             return handle_local_error(new_commitments, data) unless new_commitments.is_a? Commitments
             data[:commitments][:remote_changes][:signed].each do |change|
-              context.relayer << Lightning::Payment::Relayer::ForwardAdd[change] if change.is_a?(UpdateAddHtlc)
+              context.relayer << Lightning::Payment::Relayer::ForwardAdd[change] if change.is_a?(UpdateAddHtlcMessage)
             end
             # TODO:
             return goto(self, data: store(data.copy(commitments: new_commitments)))

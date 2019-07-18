@@ -45,7 +45,7 @@ module Lightning
           preimages[payment_hash] = [preimage, invoice]
           envelope.sender << invoice if envelope.sender.is_a? Concurrent::Actor::Reference
           invoice
-        when UpdateAddHtlc
+        when UpdateAddHtlcMessage
           preimage, = preimages[message.payment_hash]
           return unless preimage
           command = CommandFulfillHtlc[message.id, preimage, true]

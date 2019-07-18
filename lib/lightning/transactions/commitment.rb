@@ -821,11 +821,11 @@ module Lightning
       end
 
       def self.local_has_unsigned_outgoing_htlcs?(commitments)
-        commitments[:local_changes].proposed.any? { |u| u.is_a? Lightning::Wire::LightningMessages::UpdateAddHtlc }
+        commitments[:local_changes].proposed.any? { |u| u.is_a? Lightning::Wire::LightningMessages::UpdateAddHtlcMessage }
       end
 
       def self.remote_has_unsigned_outgoing_htlcs?(commitments)
-        commitments[:remote_changes].proposed.any? { |u| u.is_a? Lightning::Wire::LightningMessages::UpdateAddHtlc }
+        commitments[:remote_changes].proposed.any? { |u| u.is_a? Lightning::Wire::LightningMessages::UpdateAddHtlcMessage }
       end
 
       def self.add_local_proposal(

@@ -45,14 +45,14 @@ module Lightning
       def self.reduce(local_commit_spec, local_changes, remote_changes)
         spec1 = local_changes.inject(local_commit_spec) do |spec, change|
           case change
-          when Lightning::Wire::LightningMessages::UpdateAddHtlc
+          when Lightning::Wire::LightningMessages::UpdateAddHtlcMessage
             add_htlc(spec, OFFER, change)
           else spec
           end
         end
         spec2 = remote_changes.inject(spec1) do |spec, change|
           case change
-          when Lightning::Wire::LightningMessages::UpdateAddHtlc
+          when Lightning::Wire::LightningMessages::UpdateAddHtlcMessage
             add_htlc(spec, RECEIVE, change)
           else spec
           end
