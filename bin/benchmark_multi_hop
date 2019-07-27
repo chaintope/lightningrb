@@ -14,14 +14,13 @@ include Lightning::Utils::Benchmark
 payment_count = 10
 
 node_1_ip = "localhost"
-node_1_id = "0266e2d965e784a97cdbee9a39ad6aea5bb27fb88ebe1787fa084b2c8c391c9a7a"
+node_1_id = "0296928602758150d2b4a8a253451b887625b94ab0a91f801f1408cb33b9cf0f83"
 
 node_2_ip = "172.28.1.2"
-node_2_id = "0353ecf9a7cdd9ddde6c49ce5f2384480d1e09c959d6715413e0d8b690198090f2"
+node_2_id = "026add811de19c2f67798ebf3cdfff8abec89a2b628d58b099b9ebd7ca4e3c6280"
 
 node_3_ip = "172.28.1.3"
 node_3_id = "037ed1d6b9b6d973d393ca40734af24b0edd266ffb4fb267ca1fb6a1b93a7bbdcd"
-
 
 # BTC fullnode setting
 domain = "http://btc1:18443"
@@ -76,6 +75,8 @@ config = {
 rpc = Lightning::Blockchain::BitcoinService.new(config: config)
 
 client = create_btc_client(btc_setting)
+btc_setting[:coinbase_address] = generate_btc_address(client)
+generator = Lightning::Utils::BlockGenerator.spawn(:generator, btc_setting)
 
 address = rpc.generate_new_address(node_1_id)
 send_btc_if_needed(client, rpc, node_1_id, address)
@@ -84,9 +85,9 @@ send_btc_if_needed(client, rpc, node_1_id, address)
 connect(stub1, node_2_id, node_2_ip)
 
 # Open channel(node_1 => node_2)
-channel = get_channel(stub1, node_2_id)
-if !channel || channel.to_local_msat < 1000000000
-  open(client, stub1, node_2_id)
+channel1 = get_channel(stub1, node_2_id)
+if !channel1 || channel1.to_local_msat < 1000000000
+  channel1 = open(stub1, node_2_id)
 end
 
 
@@ -94,9 +95,9 @@ end
 connect(stub1, node_3_id, node_3_ip)
 
 # Open channel(node_1 => node_3)
-channel = get_channel(stub1, node_3_id)
-if !channel || channel.to_local_msat < 1000000000
-  channel = open(client, stub1, node_3_id)
+channel2 = get_channel(stub1, node_3_id)
+if !channel2 || channel2.to_local_msat < 1000000000
+  channel2 = open(stub1, node_3_id)
 end
 
 # Invoice(node_3)
@@ -106,7 +107,7 @@ invoices = (0 ... payment_count).map { invoice(stub3) }
 stub2 = Lightning::Grpc::LightningService::Stub.new("#{node_2_ip}:8080", :this_channel_is_insecure)
 
 # Confirm routing info
-wait_for_route(client, stub2, node_2_id, node_3_id)
+wait_for_route(stub2, node_2_id, node_3_id)
 
 # Payment(node_2 => node_1 => node_3)
 log.info("Start payment")
@@ -126,7 +127,12 @@ threads.each(&:join)
 log.info("End payment")
 
 script_pubkey = Bitcoin::Script.parse_from_addr(address).to_payload.bth
-close(stub, channel, script_pubkey: script_pubkey)
-wait_for_close(client, stub, channel.channel_id)
+close(stub1, channel1, script_pubkey: script_pubkey)
+wait_for_close(stub1, channel1.channel_id)
+
+close(stub1, channel2, script_pubkey: script_pubkey)
+wait_for_close(stub1, channel2.channel_id)
+
+generator.ask!(:terminate!)
 
 log.info("End")

@@ -6,25 +6,23 @@ module Lightning
     module Benchmark
       def create_btc_client(btc_setting)
         client = JSONClient.new
-        # client.debug_dev = STDOUT
+        client.debug_dev = STDOUT
         client.set_auth(btc_setting[:domain], btc_setting[:username], btc_setting[:password])
         [client, btc_setting[:endpoint]]
+      end
+
+      def generate_btc_address(client)
+        client[0].post(client[1], {'method': 'getnewaddress'}).body["result"]
       end
 
       def send_to_address(client, address)
         client[0].post(client[1], {'method': 'sendtoaddress','params': [address, 10]})
       end
 
-      def generate(client)
-        sleep(2)
-        client[0].post(client[1], {'method': 'generate','params': [1]})
-        sleep(1)
-      end
-
       def send_btc_if_needed(client, rpc, local_node_id, address)
         while rpc.get_balance(local_node_id) < 1_000_000_000
           send_to_address(client, address)
-          generate(client)
+          sleep(10)
         end
       end
 
@@ -59,7 +57,7 @@ module Lightning
         response.channel
       end
 
-      def open(client, stub, remote_node_id)
+      def open(stub, remote_node_id)
         request = Lightning::Grpc::OpenRequest.new(
           remote_node_id: remote_node_id,
           funding_satoshis: 10_000_000,
@@ -72,13 +70,6 @@ module Lightning
           case
           when response.channel_id_assigned
             channel_id = response.channel_id_assigned.channel_id
-            4.times do
-              generate(client)
-            end
-          when response.short_channel_id_assigned
-            4.times do
-              generate(client)
-            end
           when response.channel_registered
             break
           when response.channel_updated
@@ -96,7 +87,7 @@ module Lightning
         stub.invoice(request)
       end
 
-      def wait_for_route(client, stub, source_node_id, target_node_id)
+      def wait_for_route(stub, source_node_id, target_node_id)
         request = Lightning::Grpc::RouteRequest.new(
           source_node_id: source_node_id,
           target_node_id: target_node_id
@@ -105,12 +96,10 @@ module Lightning
         responses.each do |response|
           case
           when response.route_discovered
-            puts response.route_discovered.inspect
             break
           when response.route_not_found
-            generate(client)
             sleep(30)
-            return wait_for_route(client, stub, source_node_id, target_node_id)
+            return wait_for_route(stub, source_node_id, target_node_id)
           end
         end
       end
@@ -141,9 +130,9 @@ module Lightning
         stub.close(request)
       end
 
-      def wait_for_close(client, stub, channel_id)
+      def wait_for_close(stub, channel_id)
         while get_channel_by_id(stub, channel_id)
-          generate(client)
+          sleep(10)
         end
       end
 

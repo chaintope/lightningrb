@@ -10,14 +10,15 @@ require 'lightning/utils/benchmark'
 include Lightning::Utils::Benchmark
 
 #----------------------------------------------------------------------------------------------------
+Concurrent.use_simple_logger Logger::DEBUG
 
 payment_count = 10
 
 local_node_ip = "localhost"
-local_node_id = "0266e2d965e784a97cdbee9a39ad6aea5bb27fb88ebe1787fa084b2c8c391c9a7a"
+local_node_id = "0296928602758150d2b4a8a253451b887625b94ab0a91f801f1408cb33b9cf0f83"
 
 remote_node_ip = "172.28.1.2"
-remote_node_id = "0353ecf9a7cdd9ddde6c49ce5f2384480d1e09c959d6715413e0d8b690198090f2"
+remote_node_id = "026add811de19c2f67798ebf3cdfff8abec89a2b628d58b099b9ebd7ca4e3c6280"
 
 # BTC fullnode setting
 domain = "http://btc1:18443"
@@ -73,6 +74,8 @@ config = {
 rpc = Lightning::Blockchain::BitcoinService.new(config: config)
 
 client = create_btc_client(btc_setting)
+btc_setting[:coinbase_address] = generate_btc_address(client)
+generator = Lightning::Utils::BlockGenerator.spawn(:generator, btc_setting)
 
 address = rpc.generate_new_address(local_node_id)
 send_btc_if_needed(client, rpc, local_node_id, address)
@@ -82,14 +85,14 @@ connect(stub, remote_node_id, remote_node_ip)
 # Open channel if channel does not exist or channel does not have enough funds
 channel = get_channel(stub, remote_node_id)
 if !channel || channel.to_local_msat < 1000000000
-  channel = open(client, stub, remote_node_id)
+  channel = open(stub, remote_node_id)
 end
 
 # Invoice
 remote_stub = Lightning::Grpc::LightningService::Stub.new("#{remote_node_ip}:8080", :this_channel_is_insecure)
 invoices = (0 ... payment_count).map { invoice(remote_stub) }
 
-wait_for_route(client, stub, local_node_id, remote_node_id)
+wait_for_route(stub, local_node_id, remote_node_id)
 
 # Payment
 log.info("Start payment")
@@ -109,6 +112,7 @@ log.info("End payment")
 
 script_pubkey = Bitcoin::Script.parse_from_addr(address).to_payload.bth
 close(stub, channel, script_pubkey: script_pubkey)
-wait_for_close(client, stub, channel.channel_id)
+wait_for_close(stub, channel.channel_id)
 
+generator.ask!(:terminate!)
 log.info("End")
