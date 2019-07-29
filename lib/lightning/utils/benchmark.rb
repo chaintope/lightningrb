@@ -87,10 +87,12 @@ module Lightning
         stub.invoice(request)
       end
 
-      def wait_for_route(stub, source_node_id, target_node_id)
+      def wait_for_route(stub, source_node_id, target_node_id, channels: [])
+        short_channel_ids = channels.map { |channel| channel.short_channel_id }
         request = Lightning::Grpc::RouteRequest.new(
           source_node_id: source_node_id,
-          target_node_id: target_node_id
+          target_node_id: target_node_id,
+          short_channel_ids: short_channel_ids
         )
         responses = stub.route(request)
         responses.each do |response|

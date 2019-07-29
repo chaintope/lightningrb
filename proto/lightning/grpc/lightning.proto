@@ -161,6 +161,7 @@ message PaymentResponse {
 message RouteRequest {
   string source_node_id = 1;
   string target_node_id = 2;
+  repeated uint64 short_channel_ids = 3;
 }
 
 message RouteResponse {

@@ -10,130 +10,133 @@ require 'lightning/payment/events_pb'
 require 'lightning/router/events_pb'
 require 'lightning/router/messages_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
-  add_message "lightning.grpc.EventsRequest" do
-    optional :operation, :enum, 1, "lightning.grpc.Operation"
-    optional :event_type, :string, 2
-  end
-  add_message "lightning.grpc.EventsResponse" do
-    oneof :event do
-      optional :channel_created, :message, 201, "lightning.channel.events.ChannelCreated"
-      optional :channel_restored, :message, 202, "lightning.channel.events.ChannelRestored"
-      optional :channel_id_assigned, :message, 203, "lightning.channel.events.ChannelIdAssigned"
-      optional :short_channel_id_assigned, :message, 204, "lightning.channel.events.ShortChannelIdAssigned"
-      optional :local_channel_update, :message, 205, "lightning.channel.events.LocalChannelUpdate"
-      optional :local_channel_down, :message, 206, "lightning.channel.events.LocalChannelDown"
-      optional :channel_state_changed, :message, 208, "lightning.channel.events.ChannelStateChanged"
-      optional :channel_signature_received, :message, 209, "lightning.channel.events.ChannelSignatureReceived"
-      optional :channel_closed, :message, 210, "lightning.channel.events.ChannelClosed"
-      optional :payment_sent, :message, 301, "lightning.payment.events.PaymentSent"
-      optional :payment_relayed, :message, 302, "lightning.payment.events.PaymentRelayed"
-      optional :payment_received, :message, 303, "lightning.payment.events.PaymentReceived"
-      optional :payment_succeeded, :message, 304, "lightning.payment.events.PaymentSucceeded"
+  add_file("lightning/grpc/lightning.proto", :syntax => :proto3) do
+    add_message "lightning.grpc.EventsRequest" do
+      optional :operation, :enum, 1, "lightning.grpc.Operation"
+      optional :event_type, :string, 2
     end
-  end
-  add_message "lightning.grpc.ConnectRequest" do
-    optional :remote_node_id, :string, 1
-    optional :host, :string, 2
-    optional :port, :uint32, 3
-  end
-  add_message "lightning.grpc.ConnectResponse" do
-    oneof :event do
-      optional :peer_connected, :message, 1, "lightning.io.events.PeerConnected"
-      optional :peer_already_connected, :message, 2, "lightning.io.events.PeerAlreadyConnected"
-      optional :peer_disconnected, :message, 3, "lightning.io.events.PeerDisconnected"
+    add_message "lightning.grpc.EventsResponse" do
+      oneof :event do
+        optional :channel_created, :message, 201, "lightning.channel.events.ChannelCreated"
+        optional :channel_restored, :message, 202, "lightning.channel.events.ChannelRestored"
+        optional :channel_id_assigned, :message, 203, "lightning.channel.events.ChannelIdAssigned"
+        optional :short_channel_id_assigned, :message, 204, "lightning.channel.events.ShortChannelIdAssigned"
+        optional :local_channel_update, :message, 205, "lightning.channel.events.LocalChannelUpdate"
+        optional :local_channel_down, :message, 206, "lightning.channel.events.LocalChannelDown"
+        optional :channel_state_changed, :message, 208, "lightning.channel.events.ChannelStateChanged"
+        optional :channel_signature_received, :message, 209, "lightning.channel.events.ChannelSignatureReceived"
+        optional :channel_closed, :message, 210, "lightning.channel.events.ChannelClosed"
+        optional :payment_sent, :message, 301, "lightning.payment.events.PaymentSent"
+        optional :payment_relayed, :message, 302, "lightning.payment.events.PaymentRelayed"
+        optional :payment_received, :message, 303, "lightning.payment.events.PaymentReceived"
+        optional :payment_succeeded, :message, 304, "lightning.payment.events.PaymentSucceeded"
+      end
     end
-  end
-  add_message "lightning.grpc.OpenRequest" do
-    optional :remote_node_id, :string, 1
-    optional :funding_satoshis, :uint64, 2
-    optional :push_msat, :uint64, 3
-    optional :channel_flags, :uint32, 4
-  end
-  add_message "lightning.grpc.OpenResponse" do
-    oneof :event do
-      optional :channel_created, :message, 1, "lightning.channel.events.ChannelCreated"
-      optional :channel_restored, :message, 2, "lightning.channel.events.ChannelRestored"
-      optional :channel_id_assigned, :message, 3, "lightning.channel.events.ChannelIdAssigned"
-      optional :short_channel_id_assigned, :message, 4, "lightning.channel.events.ShortChannelIdAssigned"
-      optional :local_channel_update, :message, 5, "lightning.channel.events.LocalChannelUpdate"
-      optional :channel_registered, :message, 6, "lightning.router.events.ChannelRegistered"
-      optional :channel_updated, :message, 7, "lightning.router.events.ChannelUpdated"
+    add_message "lightning.grpc.ConnectRequest" do
+      optional :remote_node_id, :string, 1
+      optional :host, :string, 2
+      optional :port, :uint32, 3
     end
-  end
-  add_message "lightning.grpc.InvoiceRequest" do
-    optional :amount_msat, :uint64, 1
-    optional :description, :string, 2
-  end
-  add_message "lightning.grpc.InvoiceResponse" do
-    optional :prefix, :string, 1
-    optional :amount, :uint64, 2
-    optional :multiplier, :string, 3
-    optional :timestamp, :uint64, 4
-    optional :signature, :string, 5
-    optional :payment_hash, :string, 6
-    optional :description, :string, 7
-    optional :pubkey, :string, 8
-    optional :description_hash, :string, 9
-    optional :expiry, :uint32, 10
-    optional :min_final_cltv_expiry, :uint32, 11
-    optional :fallback_address, :string, 12
-    repeated :routing_info, :message, 13, "lightning.router.messages.RoutingInfo"
-    optional :payload, :string, 14
-  end
-  add_message "lightning.grpc.PaymentRequest" do
-    optional :node_id, :string, 1
-    optional :payment_hash, :string, 2
-    optional :amount_msat, :uint64, 3
-    repeated :short_channel_ids, :uint64, 4
-  end
-  add_message "lightning.grpc.PaymentResponse" do
-    oneof :event do
-      optional :payment_succeeded, :message, 1, "lightning.payment.events.PaymentSucceeded"
+    add_message "lightning.grpc.ConnectResponse" do
+      oneof :event do
+        optional :peer_connected, :message, 1, "lightning.io.events.PeerConnected"
+        optional :peer_already_connected, :message, 2, "lightning.io.events.PeerAlreadyConnected"
+        optional :peer_disconnected, :message, 3, "lightning.io.events.PeerDisconnected"
+      end
     end
-  end
-  add_message "lightning.grpc.RouteRequest" do
-    optional :source_node_id, :string, 1
-    optional :target_node_id, :string, 2
-  end
-  add_message "lightning.grpc.RouteResponse" do
-    oneof :event do
-      optional :route_discovered, :message, 1, "lightning.router.messages.RouteDiscovered"
-      optional :route_not_found, :message, 2, "lightning.router.messages.RouteNotFound"
+    add_message "lightning.grpc.OpenRequest" do
+      optional :remote_node_id, :string, 1
+      optional :funding_satoshis, :uint64, 2
+      optional :push_msat, :uint64, 3
+      optional :channel_flags, :uint32, 4
     end
-  end
-  add_message "lightning.grpc.GetChannelRequest" do
-    optional :channel_id, :string, 1
-  end
-  add_message "lightning.grpc.GetChannelResponse" do
-    optional :channel, :message, 1, "lightning.grpc.Channel"
-  end
-  add_message "lightning.grpc.ListChannelsRequest" do
-    optional :node_id, :string, 1
-  end
-  add_message "lightning.grpc.ListChannelsResponse" do
-    repeated :channel, :message, 1, "lightning.grpc.Channel"
-  end
-  add_message "lightning.grpc.CloseRequest" do
-    optional :channel_id, :string, 1
-    optional :script_pubkey, :string, 2
-  end
-  add_message "lightning.grpc.CloseResponse" do
-    oneof :event do
-      optional :channel_closed, :message, 1, "lightning.channel.events.ChannelClosed"
+    add_message "lightning.grpc.OpenResponse" do
+      oneof :event do
+        optional :channel_created, :message, 1, "lightning.channel.events.ChannelCreated"
+        optional :channel_restored, :message, 2, "lightning.channel.events.ChannelRestored"
+        optional :channel_id_assigned, :message, 3, "lightning.channel.events.ChannelIdAssigned"
+        optional :short_channel_id_assigned, :message, 4, "lightning.channel.events.ShortChannelIdAssigned"
+        optional :local_channel_update, :message, 5, "lightning.channel.events.LocalChannelUpdate"
+        optional :channel_registered, :message, 6, "lightning.router.events.ChannelRegistered"
+        optional :channel_updated, :message, 7, "lightning.router.events.ChannelUpdated"
+      end
     end
-  end
-  add_message "lightning.grpc.Channel" do
-    optional :channel_id, :string, 1
-    optional :status, :string, 2
-    optional :short_channel_id, :uint64, 3
-    optional :to_local_msat, :uint64, 4
-    optional :to_remote_msat, :uint64, 5
-    optional :local_node_id, :string, 6
-    optional :remote_node_id, :string, 7
-  end
-  add_enum "lightning.grpc.Operation" do
-    value :SUBSCRIBE, 0
-    value :UNSUBSCRIBE, 1
+    add_message "lightning.grpc.InvoiceRequest" do
+      optional :amount_msat, :uint64, 1
+      optional :description, :string, 2
+    end
+    add_message "lightning.grpc.InvoiceResponse" do
+      optional :prefix, :string, 1
+      optional :amount, :uint64, 2
+      optional :multiplier, :string, 3
+      optional :timestamp, :uint64, 4
+      optional :signature, :string, 5
+      optional :payment_hash, :string, 6
+      optional :description, :string, 7
+      optional :pubkey, :string, 8
+      optional :description_hash, :string, 9
+      optional :expiry, :uint32, 10
+      optional :min_final_cltv_expiry, :uint32, 11
+      optional :fallback_address, :string, 12
+      repeated :routing_info, :message, 13, "lightning.router.messages.RoutingInfo"
+      optional :payload, :string, 14
+    end
+    add_message "lightning.grpc.PaymentRequest" do
+      optional :node_id, :string, 1
+      optional :payment_hash, :string, 2
+      optional :amount_msat, :uint64, 3
+      repeated :short_channel_ids, :uint64, 4
+    end
+    add_message "lightning.grpc.PaymentResponse" do
+      oneof :event do
+        optional :payment_succeeded, :message, 1, "lightning.payment.events.PaymentSucceeded"
+      end
+    end
+    add_message "lightning.grpc.RouteRequest" do
+      optional :source_node_id, :string, 1
+      optional :target_node_id, :string, 2
+      repeated :short_channel_ids, :uint64, 3
+    end
+    add_message "lightning.grpc.RouteResponse" do
+      oneof :event do
+        optional :route_discovered, :message, 1, "lightning.router.messages.RouteDiscovered"
+        optional :route_not_found, :message, 2, "lightning.router.messages.RouteNotFound"
+      end
+    end
+    add_message "lightning.grpc.GetChannelRequest" do
+      optional :channel_id, :string, 1
+    end
+    add_message "lightning.grpc.GetChannelResponse" do
+      optional :channel, :message, 1, "lightning.grpc.Channel"
+    end
+    add_message "lightning.grpc.ListChannelsRequest" do
+      optional :node_id, :string, 1
+    end
+    add_message "lightning.grpc.ListChannelsResponse" do
+      repeated :channel, :message, 1, "lightning.grpc.Channel"
+    end
+    add_message "lightning.grpc.CloseRequest" do
+      optional :channel_id, :string, 1
+      optional :script_pubkey, :string, 2
+    end
+    add_message "lightning.grpc.CloseResponse" do
+      oneof :event do
+        optional :channel_closed, :message, 1, "lightning.channel.events.ChannelClosed"
+      end
+    end
+    add_message "lightning.grpc.Channel" do
+      optional :channel_id, :string, 1
+      optional :status, :string, 2
+      optional :short_channel_id, :uint64, 3
+      optional :to_local_msat, :uint64, 4
+      optional :to_remote_msat, :uint64, 5
+      optional :local_node_id, :string, 6
+      optional :remote_node_id, :string, 7
+    end
+    add_enum "lightning.grpc.Operation" do
+      value :SUBSCRIBE, 0
+      value :UNSUBSCRIBE, 1
+    end
   end
 end
 
