@@ -118,7 +118,7 @@ module Lightning
         end
 
         def send_to(listener, message)
-          log(Logger::INFO, '/transport', "RECEIVE #{message.inspect}")
+          log(Logger::INFO, '/transport', "RECEIVE #{message.inspect}") unless message.is_a? Lightning::Wire::LightningMessages::GossipQuery
           listener << message
         end
 
@@ -199,8 +199,7 @@ module Lightning
             @buffer, @length = decrypt_and_send(@buffer, @length, @listener)
           when Lightning::Wire::LightningMessages
             ciphertext = encrypt(message.to_payload)
-            log(Logger::DEBUG, '/transport', "SEND_DATA #{message.to_payload.bth}")
-            log(Logger::INFO, '/transport', "SEND #{message.inspect}")
+            log(Logger::INFO, '/transport', "SEND #{message.inspect}") unless message.is_a? Lightning::Wire::LightningMessages::GossipQuery
             @session << Send[ciphertext]
           end
           self
