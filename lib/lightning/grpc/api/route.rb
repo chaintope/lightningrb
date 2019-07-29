@@ -26,7 +26,7 @@ module Lightning
             @events = events
             @context = context
             @request = request
-            context.router << Lightning::Router::Messages::RouteRequest[@request.source_node_id, @request.target_node_id, [], []]
+            context.router << Lightning::Router::Messages::RouteRequest[@request.source_node_id, @request.target_node_id, [], @request.short_channel_ids.to_a]
           end
 
           def on_message(message)
