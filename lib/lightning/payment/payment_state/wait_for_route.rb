@@ -6,10 +6,11 @@ module Lightning
       class WaitForRoute < PaymentState
         include RouteBuilder
         def next(message, data)
-          match message, (on ~Lightning::Router::Messages::RouteResponse do |response|
-            first_hop = response[:hops].first
+          case message
+          when Lightning::Router::Messages::RouteResponse
+            first_hop = message[:hops].first
             final_expiry = block_height + data[:request][:final_cltv_expiry]
-            cmd, shared_secrets = build_command(data[:request], final_expiry, response[:hops])
+            cmd, shared_secrets = build_command(data[:request], final_expiry, message[:hops])
             context.register << Lightning::Channel::Register::ForwardShortId[first_hop.last_update.short_channel_id, cmd]
             goto(
               WaitForComplete.new(node_id, context, payment),
@@ -19,12 +20,13 @@ module Lightning
                 cmd,
                 data[:failures],
                 shared_secrets,
-                response[:ignore_nodes],
-                response[:ignore_channels],
-                response[:hops]
+                message[:ignore_nodes],
+                message[:ignore_channels],
+                message[:hops]
               ]
             )
-          end)
+          when :route_not_found
+          end
         end
 
         def block_height
