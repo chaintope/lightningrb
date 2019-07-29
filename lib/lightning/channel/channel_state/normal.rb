@@ -181,16 +181,12 @@ module Lightning
                   sending: send_list + [closing.closing_signed]
                 )
               else
-                return goto(
-                  Shutdowning.new(channel, context),
-                  data: store(DataShutdown[
-                    data[:commitments],
-                    data[:short_channel_id],
-                    local_shutdown,
-                    message
-                  ]),
-                  sending: send_list
-                )
+                task = Concurrent::TimerTask.new(execution_interval: 10) do
+                  channel.reference << message
+                  task.shutdown
+                end
+                task.execute
+                return [self, data]
               end
             end
           when WatchEventConfirmed
