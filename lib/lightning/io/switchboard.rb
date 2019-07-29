@@ -56,7 +56,7 @@ module Lightning
         end), (on :channels do
           peers.map do |node_id, peer|
             peer.ask!(:channels)
-          end.flatten
+          end.flatten.compact
         end), (on Lightning::Grpc::ListChannelsRequest do
           if message.node_id && !message.node_id.empty?
             peer = peers[message.node_id]
@@ -65,12 +65,12 @@ module Lightning
           else
             peers.map do |node_id, peer|
               peer.ask!(message)
-            end.flatten
+            end.flatten.compact
           end
         end), (on Lightning::Grpc::GetChannelRequest do
           peers.map do |node_id, peer|
             peer.ask!(message)
-          end.flatten.first
+          end.flatten.compact.first
         end), (on :peers do
           peers
         end), (on Lightning::Router::Messages::Data do
