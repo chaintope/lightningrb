@@ -61,7 +61,7 @@ module Lightning
       end
 
       def receive_data(data)
-        log(Logger::INFO, '/server', "receive_data #{data.bth}")
+        log(Logger::DEBUG, '/server', "receive_data #{data.bth}")
         @server_session << Received[data] if @server_session
       end
 

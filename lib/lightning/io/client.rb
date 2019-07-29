@@ -92,7 +92,7 @@ module Lightning
       end
 
       def receive_data(data)
-        log(Logger::INFO, '/client', "receive_data #{data.bth}")
+        log(Logger::DEBUG, '/client', "receive_data #{data.bth}")
         @client << Received[data]
       end
 
