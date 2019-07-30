@@ -232,8 +232,8 @@ describe Lightning::Channel::ChannelState::Normal do
       context 'has pending htlcs' do
         let(:commitment) { build(:commitment, :has_local_received_htlcs, :has_remote_offered_htlcs).get }
 
-        it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Shutdowning }
-        it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataShutdown }
+        it { expect(subject[0]).to be_a Lightning::Channel::ChannelState::Normal }
+        it { expect(subject[1]).to be_a Lightning::Channel::Messages::DataNormal }
       end
     end
 
