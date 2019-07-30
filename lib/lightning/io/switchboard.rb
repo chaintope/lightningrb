@@ -95,7 +95,7 @@ module Lightning
             remote_node_id = message[:remote_node_id] if message[:remote_node_id].is_a? String
             if remote_node_id && peers[remote_node_id]
               peers[remote_node_id] << Unauthenticated[remote_node_id]
-              peers[remote_node_id] << Reconnect
+              peers.delete(remote_node_id)
             end
         end), (on any do
 
