@@ -9,7 +9,7 @@ $ protoc -I ./proto/ --ln_out=lib --plugin=./bin/protoc-gen-ln ./proto/lightning
 ### Generate code for gRPC
 
 ```
-$ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightning/grpc/service.proto
+$ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightning/grpc/lightning.proto
 $ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightning/channel/events.proto
 $ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightning/io/events.proto
 $ grpc_tools_ruby_protoc -I ./proto --ruby_out=lib --grpc_out=lib ./proto/lightning/payment/events.proto

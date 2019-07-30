@@ -17,7 +17,7 @@ module Lightning
         end
 
         def stop
-          channel.ask!(:terminate!) unless channel.ask!(:terminated?)
+          channel << :terminate!
         end
       end
     end

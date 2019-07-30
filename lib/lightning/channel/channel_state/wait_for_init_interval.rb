@@ -65,10 +65,6 @@ module Lightning
               [self, data]
             end
           end)
-
-        rescue => e
-          log(Logger::ERROR, :channel, e.message)
-          [self, data]
         end
       end
 

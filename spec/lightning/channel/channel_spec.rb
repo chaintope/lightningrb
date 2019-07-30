@@ -3,6 +3,20 @@
 require 'spec_helper'
 
 describe Lightning::Channel::Channel do
+  describe 'handler_error' do
+    subject { channel.ask("unsupported_message") }
+
+    let(:channel_context) { build(:channel_context) }
+    let(:channel) { described_class.spawn(:channel, channel_context) }
+
+    it do
+      expect(channel_context.broadcast).to receive(:<<).with(Lightning::Channel::Events::ChannelFailed)
+      subject
+      channel_context.broadcast.ask(:await).wait
+      channel.ask(:await).wait
+    end
+  end
+
   describe '.to_channel_id' do
     vector =
       [

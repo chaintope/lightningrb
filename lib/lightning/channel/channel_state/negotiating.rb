@@ -49,8 +49,7 @@ module Lightning
             return [self, data]
           end
         rescue InvalidCloseFee, RuntimeError => e
-          puts e.backtrace
-          handler_local_error(data)
+          handler_local_error(data, e)
         end
 
         def handle_mutual_close(tx, data, closing_signed: nil)
@@ -67,8 +66,8 @@ module Lightning
           goto(Closing.new(channel, context), data: new_data, sending: closing_signed)
         end
 
-        def handler_local_error(data)
-          [self, data]
+        def handler_local_error(data, e)
+          raise e
         end
       end
     end

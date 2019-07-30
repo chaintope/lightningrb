@@ -59,6 +59,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
         optional :local_channel_update, :message, 5, "lightning.channel.events.LocalChannelUpdate"
         optional :channel_registered, :message, 6, "lightning.router.events.ChannelRegistered"
         optional :channel_updated, :message, 7, "lightning.router.events.ChannelUpdated"
+        optional :channel_failed, :message, 8, "lightning.channel.events.ChannelFailed"
       end
     end
     add_message "lightning.grpc.InvoiceRequest" do

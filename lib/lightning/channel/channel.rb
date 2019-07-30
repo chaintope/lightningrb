@@ -25,9 +25,27 @@ module Lightning
         log(Logger::ERROR, "channel failed")
         log(Logger::ERROR, e.message)
         log(Logger::ERROR, e.backtrace)
-        reference << :terminate! unless reference.ask!(:terminated?)
+        handle_error(e)
+        reference << :terminate!
       ensure
         log_commitments(@data) if @data.is_a? Lightning::Channel::Messages::HasCommitments
+      end
+
+      def handle_error(e)
+        temporary_channel_id = if @data.respond_to?(:temporary_channel_id)
+          @data.temporary_channel_id
+        elsif e.respond_to?(:temporary_channel_id)
+          e.temporary_channel_id
+        end
+        channel_id = @data.channel_id if @data.respond_to?(:channel_id)
+        short_channel_id = @data.short_channel_id if @data.respond_to?(:short_channel_id)
+        @context.broadcast << Lightning::Channel::Events::ChannelFailed.build(
+          reference,
+          temporary_channel_id: temporary_channel_id,
+          channel_id: channel_id,
+          short_channel_id: short_channel_id,
+          reason: e.message
+        )
       end
 
       def log_commitments(data)

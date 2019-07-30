@@ -40,5 +40,17 @@ module Lightning
     autoload :UnexpectedHtlcId, 'lightning/exceptions/unexpected_htlc_id'
     autoload :UnexpectedRevocation, 'lightning/exceptions/unexpected_revocation'
     autoload :UnknownHtlcId, 'lightning/exceptions/unknown_htlc_id'
+
+    class ::StandardError
+      def to_s
+        if instance_variables.present?
+          super() + " " + instance_variables.map do |v|
+            "#{v}: #{instance_variable_get(v)}"
+          end.join(", ")
+        else
+          super()
+        end
+      end
+    end
   end
 end

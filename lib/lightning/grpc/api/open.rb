@@ -34,6 +34,7 @@ module Lightning
             publisher << [:subscribe, Lightning::Channel::Events::LocalChannelUpdate]
             publisher << [:subscribe, Lightning::Router::Events::ChannelRegistered]
             publisher << [:subscribe, Lightning::Router::Events::ChannelUpdated]
+            publisher << [:subscribe, Lightning::Channel::Events::ChannelFailed]
             context.switchboard << Lightning::IO::PeerEvents::OpenChannel[
               request.remote_node_id, request.funding_satoshis, request.push_msat, request.channel_flags, ''
             ]
@@ -62,6 +63,10 @@ module Lightning
               end
             when Lightning::Router::Events::ChannelUpdated
               if message.short_channel_id == @short_channel_id
+                events << message
+              end
+            when Lightning::Channel::Events::ChannelFailed
+              if message.temporary_channel_id == @temporary_channel_id
                 events << message
               end
             end

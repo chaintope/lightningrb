@@ -120,6 +120,7 @@ message OpenResponse {
     lightning.channel.events.LocalChannelUpdate local_channel_update = 5;
     lightning.router.events.ChannelRegistered channel_registered = 6;
     lightning.router.events.ChannelUpdated channel_updated = 7;
+    lightning.channel.events.ChannelFailed channel_failed = 8;
   }
 }
 

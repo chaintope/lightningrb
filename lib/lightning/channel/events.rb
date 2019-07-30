@@ -71,6 +71,13 @@ module Lightning
           new(fields).tap {|e| e.channel = channel }
         end
       end
+
+      class ChannelFailed
+        attr_accessor :channel
+        def self.build(channel, fields = {})
+          new(fields).tap {|e| e.channel = channel }
+        end
+      end
     end
   end
 end

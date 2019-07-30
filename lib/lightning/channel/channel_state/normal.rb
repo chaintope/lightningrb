@@ -278,7 +278,6 @@ module Lightning
 
         def handle_command_success(channel, commitment, msg)
           [self, commitment]
-          # replying "ok"
         end
 
         def origin(c)

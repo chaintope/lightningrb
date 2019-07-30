@@ -74,6 +74,8 @@ module Lightning
             break
           when response.channel_updated
             break
+          when response.channel_failed
+            raise response.channel_failed.inspect
           end
         end
         get_channel_by_id(stub, channel_id)
