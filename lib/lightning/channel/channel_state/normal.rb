@@ -176,7 +176,8 @@ module Lightning
                     local_shutdown,
                     message,
                     [ClosingTxProposed[closing.tx, closing.closing_signed]],
-                    Algebrick::None
+                    Algebrick::None,
+                    data[:additional_field]
                   ]),
                   sending: send_list + [closing.closing_signed]
                 )
