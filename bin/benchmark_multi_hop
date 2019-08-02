@@ -78,8 +78,8 @@ client = create_btc_client(btc_setting)
 btc_setting[:coinbase_address] = generate_btc_address(client)
 generator = Lightning::Utils::BlockGenerator.spawn(:generator, btc_setting)
 
-address = rpc.generate_new_address(node_1_id)
 send_btc_if_needed(client, rpc, node_1_id, address)
+address = stub1.get_new_address(Lightning::Grpc::GetNewAddressRequest.new).address
 
 # Connect to peer(node_1 => node_2)
 connect(stub1, node_2_id, node_2_ip)

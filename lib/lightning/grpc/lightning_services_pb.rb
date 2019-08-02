@@ -18,6 +18,9 @@ module Lightning
         self.service_name = 'lightning.grpc.LightningService'
 
         rpc :Events, stream(EventsRequest), stream(EventsResponse)
+        # *
+        # Get new address.
+        rpc :GetNewAddress, GetNewAddressRequest, GetNewAddressResponse
         #
         # Connect to a remote peer.
         rpc :Connect, ConnectRequest, stream(ConnectResponse)

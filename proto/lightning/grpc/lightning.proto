@@ -16,6 +16,11 @@ import "lightning/router/messages.proto";
 service LightningService {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
 
+  /**
+   * Get new address.
+   */
+  rpc GetNewAddress(GetNewAddressRequest) returns (GetNewAddressResponse);
+
   /*
   * Connect to a remote peer.
   */
@@ -88,6 +93,15 @@ message EventsResponse {
     lightning.payment.events.PaymentReceived payment_received = 303;
     lightning.payment.events.PaymentSucceeded payment_succeeded = 304;
   }
+}
+
+message GetNewAddressRequest {
+
+}
+
+message GetNewAddressResponse {
+  string address = 1;
+  string script_pubkey = 2;
 }
 
 message ConnectRequest {

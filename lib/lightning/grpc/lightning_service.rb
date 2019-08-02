@@ -26,6 +26,14 @@ module Lightning
           log(Logger::ERROR, 'events', "#{e.backtrace}")
         end
 
+        def get_new_address(request, _call)
+          log(Logger::INFO, 'get_new_address', "#{request.inspect}")
+          Lightning::Grpc::Api::GetNewAddress.new(context).execute(request)
+        rescue => e
+          log(Logger::ERROR, 'get_new_address', "#{e.message}")
+          log(Logger::ERROR, 'get_new_address', "#{e.backtrace}")
+        end
+
         # Connect to remote node (if not connected)
         def connect(request, _call)
           log(Logger::INFO, 'connect', "#{request.inspect}")

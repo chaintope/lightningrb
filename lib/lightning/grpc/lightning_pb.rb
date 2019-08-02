@@ -32,6 +32,12 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
         optional :payment_succeeded, :message, 304, "lightning.payment.events.PaymentSucceeded"
       end
     end
+    add_message "lightning.grpc.GetNewAddressRequest" do
+    end
+    add_message "lightning.grpc.GetNewAddressResponse" do
+      optional :address, :string, 1
+      optional :script_pubkey, :string, 2
+    end
     add_message "lightning.grpc.ConnectRequest" do
       optional :remote_node_id, :string, 1
       optional :host, :string, 2
@@ -145,6 +151,8 @@ module Lightning
   module Grpc
     EventsRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.EventsRequest").msgclass
     EventsResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.EventsResponse").msgclass
+    GetNewAddressRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetNewAddressRequest").msgclass
+    GetNewAddressResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetNewAddressResponse").msgclass
     ConnectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectRequest").msgclass
     ConnectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectResponse").msgclass
     OpenRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.OpenRequest").msgclass
