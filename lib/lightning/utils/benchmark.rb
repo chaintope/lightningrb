@@ -19,8 +19,9 @@ module Lightning
         client[0].post(client[1], {'method': 'sendtoaddress','params': [address, 10]})
       end
 
-      def send_btc_if_needed(client, rpc, local_node_id, address)
-        while rpc.get_balance(local_node_id) < 1_000_000_000
+      def send_btc_if_needed(client, stub, local_node_id, address)
+        request = Lightning::Grpc::GetBalanceRequest.new
+        while stub.get_balance(request).balance < 1_000_000_000
           send_to_address(client, address)
           sleep(10)
         end

@@ -34,6 +34,14 @@ module Lightning
           log(Logger::ERROR, 'get_new_address', "#{e.backtrace}")
         end
 
+        def get_balance(request, _call)
+          log(Logger::INFO, 'get_balance', "#{request.inspect}")
+          Lightning::Grpc::Api::GetBalance.new(context).execute(request)
+        rescue => e
+          log(Logger::ERROR, 'get_balance', "#{e.message}")
+          log(Logger::ERROR, 'get_balance', "#{e.backtrace}")
+        end
+
         # Connect to remote node (if not connected)
         def connect(request, _call)
           log(Logger::INFO, 'connect', "#{request.inspect}")

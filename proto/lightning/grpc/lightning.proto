@@ -21,6 +21,11 @@ service LightningService {
    */
   rpc GetNewAddress(GetNewAddressRequest) returns (GetNewAddressResponse);
 
+  /**
+   * Get Balance of this node.
+   */
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+
   /*
   * Connect to a remote peer.
   */
@@ -102,6 +107,14 @@ message GetNewAddressRequest {
 message GetNewAddressResponse {
   string address = 1;
   string script_pubkey = 2;
+}
+
+message GetBalanceRequest {
+
+}
+
+message GetBalanceResponse {
+  uint64 balance = 1;
 }
 
 message ConnectRequest {

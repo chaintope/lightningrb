@@ -4,6 +4,7 @@ module Lightning
   module Grpc
     module Api
       autoload :GetNewAddress, 'lightning/grpc/api/get_new_address'
+      autoload :GetBalance, 'lightning/grpc/api/get_balance'
       autoload :Connect, 'lightning/grpc/api/connect'
       autoload :Events, 'lightning/grpc/api/events'
       autoload :Invoice, 'lightning/grpc/api/invoice'

@@ -21,6 +21,9 @@ module Lightning
         # *
         # Get new address.
         rpc :GetNewAddress, GetNewAddressRequest, GetNewAddressResponse
+        # *
+        # Get Balance of this node.
+        rpc :GetBalance, GetBalanceRequest, GetBalanceResponse
         #
         # Connect to a remote peer.
         rpc :Connect, ConnectRequest, stream(ConnectResponse)

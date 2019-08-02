@@ -38,6 +38,11 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :address, :string, 1
       optional :script_pubkey, :string, 2
     end
+    add_message "lightning.grpc.GetBalanceRequest" do
+    end
+    add_message "lightning.grpc.GetBalanceResponse" do
+      optional :balance, :uint64, 1
+    end
     add_message "lightning.grpc.ConnectRequest" do
       optional :remote_node_id, :string, 1
       optional :host, :string, 2
@@ -153,6 +158,8 @@ module Lightning
     EventsResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.EventsResponse").msgclass
     GetNewAddressRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetNewAddressRequest").msgclass
     GetNewAddressResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetNewAddressResponse").msgclass
+    GetBalanceRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetBalanceRequest").msgclass
+    GetBalanceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.GetBalanceResponse").msgclass
     ConnectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectRequest").msgclass
     ConnectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.ConnectResponse").msgclass
     OpenRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("lightning.grpc.OpenRequest").msgclass

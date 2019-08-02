@@ -78,7 +78,7 @@ btc_setting[:coinbase_address] = generate_btc_address(client)
 generator = Lightning::Utils::BlockGenerator.spawn(:generator, btc_setting)
 
 address = stub.get_new_address(Lightning::Grpc::GetNewAddressRequest.new).address
-send_btc_if_needed(client, rpc, local_node_id, address)
+send_btc_if_needed(client, stub, local_node_id, address)
 
 connect(stub, remote_node_id, remote_node_ip)
 
