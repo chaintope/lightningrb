@@ -53,7 +53,7 @@ describe Lightning::IO::Switchboard do
         switchboard.ask(:await).wait
       end
 
-      it { expect(subject.size).to eq 1 }
+      it { expect(subject.size).to eq 0 }
     end
 
     context 'with Lightning::Grpc::ListChannelsRequest' do
