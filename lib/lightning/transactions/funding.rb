@@ -3,12 +3,12 @@
 module Lightning
   module Transactions
     module Funding
-      def self.make_funding_tx(wallet, funding_pubkey_script, funding_satoshis, funding_tx_feerate_per_kw, options: {})
+      def self.make_funding_tx(wallet, account_name, funding_pubkey_script, funding_satoshis, funding_tx_feerate_per_kw, options: {})
         tx = Bitcoin::Tx.new
         tx.version = 2
         tx.lock_time = 0
         outputs = [ Bitcoin::TxOut.new(value: funding_satoshis, script_pubkey: funding_pubkey_script) ]
-        signed_tx = wallet&.complete(tx, outputs, options: options)
+        signed_tx = wallet&.complete(tx, account_name, outputs, options: options)
         MakeFundingTxResponse[signed_tx, funding_tx_output_index]
       end
 

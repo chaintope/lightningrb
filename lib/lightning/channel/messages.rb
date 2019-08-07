@@ -621,6 +621,7 @@ module Lightning
 
       InputInitFunder = Algebrick.type do
         fields! temporary_channel_id: String,
+                account_name: String,
                 funding_satoshis: Numeric,
                 push_msat: Numeric,
                 initial_feerate_per_kw: Numeric,

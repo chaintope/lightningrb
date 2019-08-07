@@ -36,7 +36,7 @@ module Lightning
             publisher << [:subscribe, Lightning::Router::Events::ChannelUpdated]
             publisher << [:subscribe, Lightning::Channel::Events::ChannelFailed]
             context.switchboard << Lightning::IO::PeerEvents::OpenChannel[
-              request.remote_node_id, request.funding_satoshis, request.push_msat, request.channel_flags, ''
+              request.remote_node_id, request.account_name, request.funding_satoshis, request.push_msat, request.channel_flags, ''
             ]
           end
 

@@ -187,6 +187,7 @@ module Lightning
             temporary_channel_id = SecureRandom.hex(32)
             channel << Lightning::Channel::Messages::InputInitFunder[
               temporary_channel_id,
+              message.account_name,
               message.funding_satoshis,
               message.push_msat,
               context.node_params.feerates_per_kw,

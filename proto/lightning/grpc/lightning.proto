@@ -106,9 +106,10 @@ message ConnectResponse {
 
 message OpenRequest {
   string remote_node_id = 1 [(lightning.wire.hex) = true, (lightning.wire.length) = 33];
-  uint64 funding_satoshis = 2;
-  uint64 push_msat = 3;
-  uint32 channel_flags = 4;
+  string account_name = 2;
+  uint64 funding_satoshis = 3;
+  uint64 push_msat = 4;
+  uint32 channel_flags = 5;
 }
 
 message OpenResponse {

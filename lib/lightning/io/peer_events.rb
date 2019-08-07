@@ -10,6 +10,7 @@ module Lightning
         Reconnect = atom
         OpenChannel = type do
           fields! remote_node_id: String,
+                  account_name: String,
                   funding_satoshis: Numeric,
                   push_msat: Numeric,
                   channel_flags: Numeric,

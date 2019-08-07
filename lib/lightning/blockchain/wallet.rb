@@ -10,7 +10,7 @@ module Lightning
         @spv = spv
       end
 
-      def complete(tx, outputs, options: {})
+      def complete(tx, account_name, outputs, options: {})
         outputs.each { |output| tx.outputs << output }
         amount = tx.outputs.sum(&:value)
         sum = 0
@@ -22,7 +22,7 @@ module Lightning
           break if sum >= amount
         end
         raise Lightning::Exceptions::InsufficientFundsInWallet.new(sum, amount) if sum < amount
-        complete_change(sum, amount, tx)
+        complete_change(account_name, sum, amount, tx)
         signed_tx = sign(tx, account_name)
         signed_tx
       end
@@ -32,7 +32,7 @@ module Lightning
         Bitcoin::Tx.parse_from_payload(sign["hex"].htb)
       end
 
-      def complete_change(sum, amount, tx)
+      def complete_change(account_name, sum, amount, tx)
         return if sum == amount
         # FIXME
         fee = 10_000
@@ -44,10 +44,6 @@ module Lightning
       def commit(tx)
         spv.broadcast(tx)
         tx
-      end
-
-      def account_name
-        context.node_params.node_id
       end
 
       def to_s

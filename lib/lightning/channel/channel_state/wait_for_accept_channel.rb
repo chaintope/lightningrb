@@ -40,7 +40,7 @@ module Lightning
             )
             # TODO : Implements Fee provider.
             funding_tx_feerate_per_kw = 1
-            @channel << Funding.make_funding_tx(context.wallet, funding_pubkey_script, funding_satoshis, funding_tx_feerate_per_kw, options: open_channel)
+            @channel << Funding.make_funding_tx(context.wallet, data[:init_funder][:account_name], funding_pubkey_script, funding_satoshis, funding_tx_feerate_per_kw, options: open_channel)
 
             goto(
               WaitForFundingInternal.new(@channel, context),
